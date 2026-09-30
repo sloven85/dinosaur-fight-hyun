@@ -32,6 +32,8 @@ export class CharacterSelectScene extends BaseScene {
   private cpuTimer = 0;
   private cpuPicked = false;
   private readonly portraits = new Map<string, HTMLImageElement>();
+  /** rig의 마스터까지 준비된 캐릭터. 나머지는 임시 도형으로 표시한다(계획서 16절 프롬프트 4). */
+  private readonly readyIds = new Set<string>();
 
   enter(context: GameContext): void {
     super.enter(context);
@@ -41,7 +43,11 @@ export class CharacterSelectScene extends BaseScene {
   private async preloadPortraits(context: GameContext): Promise<void> {
     await Promise.all(
       CHARACTERS.map(async (character) => {
-        const rig = await context.assets.loadJson<{ portrait?: { usable?: boolean } }>(character.rigPath);
+        const rig = await context.assets.loadJson<{
+          portrait?: { usable?: boolean };
+          master?: { usable?: boolean };
+        }>(character.rigPath);
+        if (rig?.master?.usable === true) this.readyIds.add(character.id);
         if (rig?.portrait?.usable === false) return;
         const image = await context.assets.loadImage(character.portraitPath);
         if (image) this.portraits.set(character.id, image);
@@ -161,6 +167,25 @@ export class CharacterSelectScene extends BaseScene {
         color: COLORS.accent,
       });
     }
+
+    // 에셋 준비 상태를 카드마다 명확히 알려 준다.
+    const ready = this.readyIds.has(character.id);
+    const badgeW = 104;
+    fillRoundRect(
+      g,
+      x + CELL_W - badgeW - 8,
+      y + 8,
+      badgeW,
+      30,
+      10,
+      ready ? COLORS.accent : 'rgba(0, 0, 0, 0.45)',
+      null,
+      0,
+    );
+    drawText(g, ready ? '에셋 준비' : '임시 도형', x + CELL_W - badgeW / 2 - 8, y + 23, {
+      font: FONTS.tiny,
+      color: ready ? '#101418' : 'rgba(255, 255, 255, 0.85)',
+    });
   }
 
   private renderStatus(g: CanvasRenderingContext2D, width: number): void {

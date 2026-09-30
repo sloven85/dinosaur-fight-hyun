@@ -3,9 +3,14 @@ import {
   ARENA_RIGHT,
   BASE_MOVE_SPEED,
   FIXED_DT,
+  GLIDE_FALL_SPEED,
+  GLIDE_MAX_FRAMES,
   GRAVITY,
   INPUT_BUFFER_FRAMES,
   JUMP_VELOCITY,
+  LEAP_CHARGE_FRAMES,
+  LEAP_CHARGE_SPEED,
+  LEAP_CHARGE_VELOCITY,
   MAX_METER,
   METER_PER_SECOND,
   SPECIAL_FLASH_FRAMES,
@@ -73,13 +78,24 @@ export class Fighter {
   kbFrames = 0;
   kbPerFrame = 0;
 
+  /** 동일 캐릭터 대전에서 2P에 보조색을 적용할지. Match가 정한다(계획서 4절). */
+  useAlternatePalette = false;
+  /** 이번에 뜬 뒤 남은 활공 프레임. 착지하면 회복된다(프테라노돈). */
+  glideFrames = GLIDE_MAX_FRAMES;
+  /** 이번 틱에 활공 중이었는지(렌더링·테스트용). */
+  gliding = false;
+
   private airAttackUsed = false;
   private bufferedAttack: AttackKind | null = null;
   private bufferFrames = 0;
   private inputLeft = false;
   private inputRight = false;
   private inputUp = false;
+  private inputUpHeld = false;
   private inputDown = false;
+  /** 도약 돌진 전진 잔여 프레임과 프레임당 이동량. */
+  private leapFrames = 0;
+  private leapPerFrame = 0;
 
   constructor(
     player: PlayerIndex,
@@ -205,6 +221,12 @@ export class Fighter {
       this.kbFrames -= 1;
     }
 
+    // 도약 돌진 전진분. 넉백과 별개로 적용한다.
+    if (this.leapFrames > 0) {
+      this.x += this.leapPerFrame;
+      this.leapFrames -= 1;
+    }
+
     this.meter = Math.min(MAX_METER, this.meter + METER_PER_SECOND * dt);
 
     switch (this.state) {
@@ -255,6 +277,10 @@ export class Fighter {
     this.consecutiveHits = 0;
     this.kbFrames = 0;
     this.kbPerFrame = 0;
+    this.leapFrames = 0;
+    this.leapPerFrame = 0;
+    this.glideFrames = GLIDE_MAX_FRAMES;
+    this.gliding = false;
     this.airAttackUsed = false;
     this.bufferedAttack = null;
     this.bufferFrames = 0;
@@ -276,6 +302,7 @@ export class Fighter {
     this.inputLeft = input.isHeld(player, 'left');
     this.inputRight = input.isHeld(player, 'right');
     this.inputUp = input.isPressed(player, 'up');
+    this.inputUpHeld = input.isHeld(player, 'up');
     this.inputDown = input.isHeld(player, 'down');
 
     if (input.isPressed(player, 'special')) this.bufferAttack('special');
@@ -314,6 +341,15 @@ export class Fighter {
     this.bufferedAttack = null;
     if (kind === 'special') this.meter -= move.meterCost;
     if (!this.onGround) this.airAttackUsed = true;
+
+    // 파키케팔로사우루스: 지상 강공격은 앞으로 뛰어들며 시작한다(도약 돌진).
+    if (kind === 'heavy' && this.onGround && this.data.traits?.leapCharge) {
+      this.vy = LEAP_CHARGE_VELOCITY;
+      this.onGround = false;
+      this.airAttackUsed = true;
+      this.leapFrames = LEAP_CHARGE_FRAMES;
+      this.leapPerFrame = this.facing * LEAP_CHARGE_SPEED * FIXED_DT;
+    }
     return true;
   }
 
@@ -355,8 +391,24 @@ export class Fighter {
   }
 
   private applyGravity(): void {
-    if (this.onGround) return;
+    if (this.onGround) {
+      // 착지하면 활공 프레임을 회복한다.
+      this.glideFrames = GLIDE_MAX_FRAMES;
+      this.gliding = false;
+      return;
+    }
+
     this.vy += GRAVITY * FIXED_DT;
+
+    // 프테라노돈: 공중에서 위를 누르고 있으면 제한된 프레임 동안 천천히 하강한다.
+    if (this.data.traits?.glide && this.glideFrames > 0 && this.inputUpHeld && this.vy > 0) {
+      this.gliding = true;
+      this.glideFrames -= 1;
+      this.vy = Math.min(this.vy, GLIDE_FALL_SPEED);
+    } else {
+      this.gliding = false;
+    }
+
     this.y += this.vy * FIXED_DT;
     if (this.y >= 0) {
       this.y = 0;

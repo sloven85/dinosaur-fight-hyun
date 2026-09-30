@@ -4,6 +4,47 @@ import type { PoseName } from './rig';
 
 const CROUCH_SQUASH = 0.75;
 
+/** 동일 캐릭터 대전에서 2P를 구분하는 테두리 색(계획서 4절: 파란 테두리). */
+const TWO_P_OUTLINE = '#2E6BFF';
+const OUTLINE_OFFSETS: ReadonlyArray<readonly [number, number]> = [
+  [4, 0],
+  [-4, 0],
+  [0, 4],
+  [0, -4],
+];
+/** 보조색 보정 강도. 원본 그림을 완전히 덮지 않고 피부색만 기울인다. */
+const ALT_PALETTE_ALPHA = 0.32;
+
+const tintCache = new Map<string, HTMLCanvasElement>();
+
+/**
+ * 원본 이미지를 한 가지 색으로 보정한 사본을 만들어 캐시한다.
+ * source-atop이라 그림의 불투명한 픽셀에만 색이 얹힌다(배경은 건드리지 않는다).
+ */
+function tintedSprite(image: HTMLImageElement, color: string): HTMLCanvasElement | null {
+  const key = `${image.src}|${color}`;
+  const cached = tintCache.get(key);
+  if (cached) return cached;
+
+  const width = image.naturalWidth || image.width;
+  const height = image.naturalHeight || image.height;
+  if (!width || !height) return null;
+
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  const g = canvas.getContext('2d');
+  if (!g) return null;
+
+  g.drawImage(image, 0, 0);
+  g.globalCompositeOperation = 'source-atop';
+  g.fillStyle = color;
+  g.fillRect(0, 0, width, height);
+
+  tintCache.set(key, canvas);
+  return canvas;
+}
+
 interface SpriteChoice {
   image: HTMLImageElement;
   rootX: number;
@@ -44,7 +85,34 @@ export function renderFighter(
     g.globalAlpha = 0.55;
   }
 
+  const altSkin = fighter.useAlternatePalette ? fighter.data.alternatePalette.skin : null;
+
+  // 2P 파란 테두리는 스프라이트 뒤에 그린다.
+  if (altSkin) {
+    const outline = tintedSprite(choice.image, TWO_P_OUTLINE);
+    if (outline) {
+      g.save();
+      g.globalAlpha = 0.85;
+      for (const [dx, dy] of OUTLINE_OFFSETS) {
+        g.drawImage(outline, -choice.rootX + dx, -choice.rootY + dy);
+      }
+      g.restore();
+    }
+  }
+
   g.drawImage(choice.image, -choice.rootX, -choice.rootY);
+
+  // 2P 보조색 보정은 원본 위에 옅게 얹는다.
+  if (altSkin) {
+    const tinted = tintedSprite(choice.image, altSkin);
+    if (tinted) {
+      g.save();
+      g.globalAlpha = ALT_PALETTE_ALPHA;
+      g.drawImage(tinted, -choice.rootX, -choice.rootY);
+      g.restore();
+    }
+  }
+
   g.restore();
 
   if (fighter.state === 'down' || fighter.state === 'victory') return;
@@ -164,7 +232,7 @@ function renderPlaceholder(g: CanvasRenderingContext2D, fighter: Fighter, feetY:
   const height = fighter.data.displayHeight * (crouch ? CROUCH_SQUASH : down ? 0.4 : 1);
   const bodyW = fighter.data.displayHeight * 0.62 * (down ? 1.4 : 1);
 
-  g.fillStyle = fighter.data.color;
+  g.fillStyle = fighter.useAlternatePalette ? fighter.data.alternatePalette.skin : fighter.data.color;
   g.strokeStyle = 'rgba(0, 0, 0, 0.35)';
   g.lineWidth = 4;
   g.beginPath();
@@ -185,4 +253,11 @@ function drawNameTag(g: CanvasRenderingContext2D, fighter: Fighter, feetY: numbe
   g.textBaseline = 'middle';
   g.fillStyle = '#f2f4f8';
   g.fillText(fighter.data.name, fighter.x, feetY - fighter.data.displayHeight - 22);
+
+  // 동일 캐릭터 대전: 2P는 발밑에 표시한다(계획서 4절).
+  if (fighter.useAlternatePalette) {
+    g.font = 'bold 26px "Noto Sans KR", system-ui, sans-serif';
+    g.fillStyle = TWO_P_OUTLINE;
+    g.fillText('2P', fighter.x, feetY - 34);
+  }
 }

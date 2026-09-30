@@ -47,6 +47,19 @@ export const GUARD_MIN_HEALTH = 1;
 export const CONSECUTIVE_HIT_LIMIT = 3;
 export const HIT_INVULN_FRAMES = 30;
 
+/** 계획서 16절 프롬프트 4: 파키케팔로사우루스 도약 돌진(지상 강공격 시작 시). */
+export const LEAP_CHARGE_VELOCITY = -760;
+/** 도약 중 앞으로 나가는 속도(디자인 px/초). */
+export const LEAP_CHARGE_SPEED = 520;
+/** 도약 전진이 유지되는 프레임 수. */
+export const LEAP_CHARGE_FRAMES = 18;
+
+/** 계획서 16절 프롬프트 4: 프테라노돈 제한된 활공. */
+/** 활공 중 하강 속도 상한(디자인 px/초). */
+export const GLIDE_FALL_SPEED = 150;
+/** 한 번 뜬 뒤 활공할 수 있는 최대 프레임(1.5초). */
+export const GLIDE_MAX_FRAMES = 90;
+
 /** 계획서 3절 입력 보관: 공격 버튼의 새 누름을 최대 120ms 보관(60Hz에서 7프레임). */
 export const INPUT_BUFFER_FRAMES = 7;
 

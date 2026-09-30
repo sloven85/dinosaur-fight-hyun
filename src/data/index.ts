@@ -9,6 +9,14 @@ export interface MoveSet {
   special: string;
 }
 
+/** 계획서 16절 프롬프트 4: 캐릭터별 이동 특성. */
+export interface CharacterTraits {
+  /** 파키케팔로사우루스: 지상 강공격을 앞으로 뛰어들며 시작한다(도약 돌진). */
+  leapCharge?: boolean;
+  /** 프테라노돈: 공중에서 위를 누르면 제한된 프레임 동안 천천히 활공한다. */
+  glide?: boolean;
+}
+
 export interface CharacterData {
   id: string;
   name: string;
@@ -28,6 +36,11 @@ export interface CharacterData {
   portraitPath: string;
   moves: MoveSet;
   alternatePalette: { skin: string };
+  /**
+   * 계획서 16절 프롬프트 4의 캐릭터별 이동 특성.
+   * 6개 아키타입 공통 코드는 그대로 두고, 이 플래그로만 개성을 준다.
+   */
+  traits?: CharacterTraits;
   description: string;
   /** 선택 카드에 작게 붙이는 표기(예: 익룡 게스트). */
   cardNote?: string;

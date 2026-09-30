@@ -47,6 +47,8 @@ export class Match {
   matchWinner: PlayerIndex | null = null;
   /** 이번 라운드가 무승부였는지(연출 표시용). */
   roundWasDraw = false;
+  /** 두 플레이어가 같은 캐릭터인지(계획서 4절: 동일 캐릭터 대전 허용, 2P 보조색). */
+  readonly mirrorMatch: boolean;
 
   constructor(
     private readonly mode: GameMode,
@@ -56,10 +58,13 @@ export class Match {
       emptyAssets(characterIds[1]),
     ],
   ) {
+    this.mirrorMatch = characterIds[0] === characterIds[1];
     this.fighters = [
       new Fighter(0, characterIds[0], START_X_P1, 1, assets[0]),
       new Fighter(1, characterIds[1], START_X_P2, -1, assets[1]),
     ];
+    // 동일 캐릭터일 때만 2P에 보조색을 적용해 구분한다.
+    this.fighters[1].useAlternatePalette = this.mirrorMatch;
   }
 
   /** 2P가 CPU인 경로에서는 입력을 주지 않는다. AIController는 프롬프트 5에서 붙인다. */
@@ -122,6 +127,7 @@ export class Match {
     this.timerFrames = ROUND_SECONDS * SIMULATION_HZ;
     this.p1.resetForRound(START_X_P1, 1);
     this.p2.resetForRound(START_X_P2, -1);
+    this.p2.useAlternatePalette = this.mirrorMatch;
   }
 
   private endRound(winner: PlayerIndex | null): void {
