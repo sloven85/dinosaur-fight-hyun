@@ -1,0 +1,88 @@
+{
+  "moves": [
+    {
+      "id": "tyranno_bite_light",
+      "kind": "light",
+      "name": "약한 물기",
+      "startupFrames": 6,
+      "activeFrames": 4,
+      "recoveryFrames": 14,
+      "damage": 10,
+      "knockback": 70,
+      "hitstunFrames": 12,
+      "hitstopFrames": 3,
+      "meterCost": 0,
+      "hitboxes": [{ "startFrame": 6, "endFrame": 9, "x": 70, "y": -320, "width": 150, "height": 120 }]
+    },
+    {
+      "id": "tyranno_bite_heavy",
+      "kind": "heavy",
+      "name": "강한 물기",
+      "startupFrames": 14,
+      "activeFrames": 6,
+      "recoveryFrames": 24,
+      "damage": 18,
+      "knockback": 120,
+      "hitstunFrames": 20,
+      "hitstopFrames": 5,
+      "meterCost": 0,
+      "hitboxes": [{ "startFrame": 14, "endFrame": 19, "x": 80, "y": -360, "width": 210, "height": 170 }]
+    },
+    {
+      "id": "tyranno_roar",
+      "kind": "special",
+      "name": "티라노 로어",
+      "startupFrames": 24,
+      "activeFrames": 10,
+      "recoveryFrames": 38,
+      "damage": 28,
+      "knockback": 180,
+      "hitstunFrames": 28,
+      "hitstopFrames": 7,
+      "meterCost": 100,
+      "hitboxes": [{ "startFrame": 24, "endFrame": 33, "x": 100, "y": -390, "width": 250, "height": 210 }]
+    },
+    {
+      "id": "trike_horn_light",
+      "kind": "light",
+      "name": "짧은 들이받기",
+      "startupFrames": 6,
+      "activeFrames": 4,
+      "recoveryFrames": 14,
+      "damage": 10,
+      "knockback": 70,
+      "hitstunFrames": 12,
+      "hitstopFrames": 3,
+      "meterCost": 0,
+      "hitboxes": [{ "startFrame": 6, "endFrame": 9, "x": 80, "y": -300, "width": 160, "height": 120 }]
+    },
+    {
+      "id": "trike_horn_heavy",
+      "kind": "heavy",
+      "name": "뿔 밀어내기",
+      "startupFrames": 14,
+      "activeFrames": 6,
+      "recoveryFrames": 24,
+      "damage": 18,
+      "knockback": 120,
+      "hitstunFrames": 20,
+      "hitstopFrames": 5,
+      "meterCost": 0,
+      "hitboxes": [{ "startFrame": 14, "endFrame": 19, "x": 90, "y": -330, "width": 220, "height": 160 }]
+    },
+    {
+      "id": "trike_rush",
+      "kind": "special",
+      "name": "트리플 혼 러시",
+      "startupFrames": 24,
+      "activeFrames": 10,
+      "recoveryFrames": 38,
+      "damage": 28,
+      "knockback": 180,
+      "hitstunFrames": 28,
+      "hitstopFrames": 7,
+      "meterCost": 100,
+      "hitboxes": [{ "startFrame": 24, "endFrame": 33, "x": 110, "y": -340, "width": 270, "height": 190 }]
+    }
+  ]
+}

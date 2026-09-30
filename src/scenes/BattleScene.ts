@@ -1,73 +1,39 @@
-import {
-  BASE_MOVE_SPEED,
-  GRAVITY,
-  JUMP_VELOCITY,
-  ROUND_SECONDS,
-} from '../core/constants';
+import { MAX_METER, ROUNDS_TO_WIN } from '../core/constants';
 import type { GameContext } from '../core/GameContext';
-import { getCharacter, getStage, type CharacterData } from '../data';
-import { PLAYERS, type InputManager, type PlayerIndex } from '../input/InputManager';
+import { getStage } from '../data';
+import { Match } from '../combat/Match';
+import type { Fighter } from '../combat/Fighter';
+import { attackPhase, type Rect } from '../combat/types';
 import { BaseScene } from './BaseScene';
 import { ResultScene } from './ResultScene';
 import { drawText, fillRoundRect } from '../ui/draw';
 import { COLORS, FONTS } from '../ui/theme';
 
-const ARENA_LEFT = 170;
-const ARENA_RIGHT = 1750;
-const MIN_GAP = 150;
+const HUD_BAR_W = 700;
+const HUD_BAR_H = 42;
 
-const MAX_METER = 100;
-const START_METER = 50;
-
-interface Fighter {
-  readonly player: PlayerIndex;
-  readonly data: CharacterData;
-  x: number;
-  y: number;
-  vy: number;
-  onGround: boolean;
-  facing: 1 | -1;
-  crouching: boolean;
-  readonly health: number;
-  readonly meter: number;
-}
-
-/**
- * 대전 화면 골격. 실제 전투(공격·가드·판정·게이지)는 계획서 16절 프롬프트 2에서 붙인다.
- * 지금은 두 플레이어의 좌우 이동·점프·웅크리기와 HUD·타이머만 동작한다.
- */
+/** 계획서 16절 프롬프트 2: 대전 화면. 전투 규칙은 Match가 담당한다. */
 export class BattleScene extends BaseScene {
   readonly pausable = true;
 
-  private timer = ROUND_SECONDS;
-  private fighters!: [Fighter, Fighter];
+  private match!: Match;
+  private debugBoxes = false;
 
   enter(context: GameContext): void {
     super.enter(context);
-    this.timer = ROUND_SECONDS;
-    this.fighters = [
-      createFighter(0, context.session.characters[0], 560, 1),
-      createFighter(1, context.session.characters[1], 1360, -1),
-    ];
+    const { session } = context;
+    this.match = new Match(session.mode, session.characters);
   }
 
   protected tick(dt: number): void {
-    const session = this.context.session;
+    const input = this.context.input;
 
-    for (const player of PLAYERS) {
-      // 2P가 CPU인 경우는 프롬프트 5에서 AIController로 채운다.
-      if (session.mode === 'cpu' && player === 1) continue;
-      updateMovement(this.fighters[player], this.context.input, dt);
-    }
+    if (input.consumeDebugToggle()) this.debugBoxes = !this.debugBoxes;
 
-    updateFacing(this.fighters[0], this.fighters[1]);
-    separate(this.fighters[0], this.fighters[1]);
+    this.match.step(input, dt);
 
-    this.timer -= dt;
-    if (this.timer <= 0) {
-      this.timer = 0;
-      // 프롬프트 2에서 남은 체력 비율로 승패를 판정한다. 지금은 1P 승리로 연결만 확인한다.
-      this.context.setScene(new ResultScene(0));
+    if (this.match.phase === 'matchOver') {
+      this.context.setScene(new ResultScene(this.match.matchWinner));
     }
   }
 
@@ -86,134 +52,206 @@ export class BattleScene extends BaseScene {
     g.lineTo(width, stage.groundY);
     g.stroke();
 
-    for (const fighter of this.fighters) {
-      renderFighter(g, fighter, stage.groundY);
+    for (const fighter of this.match.fighters) {
+      this.renderFighter(g, fighter, stage.groundY);
     }
 
     this.renderHud(g, width);
+    this.renderRoundText(g, width, height);
 
-    drawText(g, '이동·점프만 동작합니다 · 전투는 다음 단계에서 구현', width / 2, height - 40, {
-      font: FONTS.small,
-      color: COLORS.textDim,
-    });
+    if (this.debugBoxes) {
+      this.renderDebugBoxes(g, stage.groundY);
+      drawText(g, 'F3: 판정 상자 표시', width / 2, height - 40, {
+        font: FONTS.small,
+        color: COLORS.textDim,
+      });
+    }
   }
 
-  private renderHud(g: CanvasRenderingContext2D, width: number): void {
-    const barW = 700;
-    const barH = 42;
+  // --- 캐릭터 ---
 
-    renderBar(g, 60, 60, barW, barH, this.fighters[0].health / this.fighters[0].data.baseHealth, COLORS.health, false);
+  private renderFighter(g: CanvasRenderingContext2D, fighter: Fighter, groundY: number): void {
+    const down = fighter.state === 'down';
+    const height = fighter.bodyHeight * (down ? 0.4 : 1);
+    const bodyW = fighter.bodyWidth * (down ? 1.4 : 1);
+    const feetY = groundY + fighter.y;
+
+    const lean =
+      fighter.state === 'attack'
+        ? attackPhase(fighter.attack!.move, fighter.attack!.frame) === 'active'
+          ? 26
+          : 12
+        : fighter.state === 'hit'
+          ? -18
+          : 0;
+
+    const x = fighter.x - bodyW / 2 + fighter.facing * lean;
+    const y = feetY - height;
+
+    if (fighter.state === 'attack') this.renderAttackArc(g, fighter);
+
+    const outline =
+      fighter.invulnFrames > 0 ? '#ffffff' : fighter.state === 'hit' ? '#ffd166' : 'rgba(0, 0, 0, 0.35)';
+    fillRoundRect(g, x, y, bodyW, height, down ? 40 : 26, fighter.data.color, outline, 4);
+
+    if (!down) {
+      const eyeX = fighter.facing === 1 ? x + bodyW * 0.72 : x + bodyW * 0.28;
+      g.beginPath();
+      g.arc(eyeX, y + height * 0.18, 12, 0, Math.PI * 2);
+      g.fillStyle = '#ffffff';
+      g.fill();
+    }
+
+    drawText(g, fighter.data.name, fighter.x, y - 34, { font: FONTS.small, color: COLORS.text });
+  }
+
+  /** 판정과 분리된 시각 연출. 실제 피해는 Match가 판정한다(연출 강화는 프롬프트 6). */
+  private renderAttackArc(g: CanvasRenderingContext2D, fighter: Fighter): void {
+    if (!fighter.attack) return;
+    if (attackPhase(fighter.attack.move, fighter.attack.frame) !== 'active') return;
+
+    const box = fighter.activeHitboxes()[0];
+    if (!box) return;
+
+    g.save();
+    g.globalAlpha = 0.35;
+    g.fillStyle = fighter.attack.move.kind === 'special' ? COLORS.accent : '#ffffff';
+    g.beginPath();
+    g.ellipse(
+      (box.left + box.right) / 2,
+      (box.top + box.bottom) / 2,
+      (box.right - box.left) / 2,
+      (box.bottom - box.top) / 2,
+      0,
+      0,
+      Math.PI * 2,
+    );
+    g.fill();
+    g.restore();
+  }
+
+  // --- HUD ---
+
+  private renderHud(g: CanvasRenderingContext2D, width: number): void {
+    const [p1, p2] = this.match.fighters;
+
     renderBar(
       g,
-      width - 60 - barW,
       60,
-      barW,
-      barH,
-      this.fighters[1].health / this.fighters[1].data.baseHealth,
+      60,
+      HUD_BAR_W,
+      HUD_BAR_H,
+      p1.health / p1.data.baseHealth,
+      COLORS.health,
+      false,
+    );
+    renderBar(
+      g,
+      width - 60 - HUD_BAR_W,
+      60,
+      HUD_BAR_W,
+      HUD_BAR_H,
+      p2.health / p2.data.baseHealth,
       COLORS.health,
       true,
     );
 
-    drawText(g, `${Math.ceil(this.timer)}`, width / 2, 84, { font: FONTS.heading, color: COLORS.text });
+    drawText(g, `${this.match.timeLeftSeconds}`, width / 2, 84, {
+      font: FONTS.heading,
+      color: COLORS.text,
+    });
 
-    for (const fighter of this.fighters) {
-      const isP1 = fighter.player === 0;
-      const meterX = isP1 ? 60 : width - 60 - 480;
-      renderBar(g, meterX, 118, 480, 18, fighter.meter / MAX_METER, COLORS.meter, !isP1);
-    }
+    this.renderRoundPips(g, 60, 118, false, p1.roundWins);
+    this.renderRoundPips(g, width - 60, 118, true, p2.roundWins);
 
-    drawText(g, '1P', 60, 190, { font: FONTS.small, color: COLORS.p1, align: 'left' });
-    drawText(g, '2P', width - 60, 190, { font: FONTS.small, color: COLORS.p2, align: 'right' });
-  }
-}
+    this.renderMeter(g, 60, 160, p1.meter, p1.specialFlashFrames > 0, false);
+    this.renderMeter(g, width - 60 - 480, 160, p2.meter, p2.specialFlashFrames > 0, true);
 
-function createFighter(
-  player: PlayerIndex,
-  characterId: string,
-  x: number,
-  facing: 1 | -1,
-): Fighter {
-  const data = getCharacter(characterId);
-  return {
-    player,
-    data,
-    x,
-    y: 0,
-    vy: 0,
-    onGround: true,
-    facing,
-    crouching: false,
-    health: data.baseHealth,
-    meter: START_METER,
-  };
-}
-
-function updateMovement(fighter: Fighter, input: InputManager, dt: number): void {
-  const speed = BASE_MOVE_SPEED * fighter.data.speedScale;
-  const player = fighter.player;
-
-  fighter.crouching = fighter.onGround && input.isHeld(player, 'down');
-
-  let direction = 0;
-  if (input.isHeld(player, 'left')) direction -= 1;
-  if (input.isHeld(player, 'right')) direction += 1;
-  if (fighter.crouching) direction = 0;
-
-  fighter.x += direction * speed * dt;
-
-  if (fighter.onGround && input.isPressed(player, 'up')) {
-    fighter.vy = JUMP_VELOCITY;
-    fighter.onGround = false;
+    drawText(g, '1P', 60, 256, { font: FONTS.small, color: COLORS.p1, align: 'left' });
+    drawText(g, '2P', width - 60, 256, { font: FONTS.small, color: COLORS.p2, align: 'right' });
   }
 
-  if (!fighter.onGround) {
-    fighter.vy += GRAVITY * dt;
-    fighter.y += fighter.vy * dt;
-    if (fighter.y >= 0) {
-      fighter.y = 0;
-      fighter.vy = 0;
-      fighter.onGround = true;
+  private renderRoundPips(
+    g: CanvasRenderingContext2D,
+    x: number,
+    y: number,
+    right: boolean,
+    wins: number,
+  ): void {
+    for (let i = 0; i < ROUNDS_TO_WIN; i++) {
+      const cx = right ? x - i * 34 : x + i * 34;
+      g.beginPath();
+      g.arc(cx, y, 12, 0, Math.PI * 2);
+      g.fillStyle = i < wins ? COLORS.accent : COLORS.healthBack;
+      g.fill();
     }
   }
 
-  fighter.x = clamp(fighter.x, ARENA_LEFT, ARENA_RIGHT);
-}
+  private renderMeter(
+    g: CanvasRenderingContext2D,
+    x: number,
+    y: number,
+    meter: number,
+    flash: boolean,
+    right: boolean,
+  ): void {
+    const full = meter >= MAX_METER;
+    const color = flash && !full ? '#ffffff' : full ? COLORS.accent : COLORS.meter;
+    renderBar(g, x, y, 480, 18, meter / MAX_METER, color, right);
+    if (full) {
+      drawText(g, '특수기 준비', right ? x + 480 - 90 : x + 90, y + 44, {
+        font: FONTS.small,
+        color: COLORS.accent,
+      });
+    }
+  }
 
-function updateFacing(a: Fighter, b: Fighter): void {
-  if (a.x === b.x) return;
-  a.facing = a.x < b.x ? 1 : -1;
-  b.facing = b.x < a.x ? 1 : -1;
-}
+  // --- 라운드 연출 ---
 
-function separate(a: Fighter, b: Fighter): void {
-  const gap = Math.abs(a.x - b.x);
-  if (gap >= MIN_GAP) return;
-  const push = (MIN_GAP - gap) / 2;
-  if (a.x <= b.x) {
-    a.x = clamp(a.x - push, ARENA_LEFT, ARENA_RIGHT);
-    b.x = clamp(b.x + push, ARENA_LEFT, ARENA_RIGHT);
-  } else {
-    a.x = clamp(a.x + push, ARENA_LEFT, ARENA_RIGHT);
-    b.x = clamp(b.x - push, ARENA_LEFT, ARENA_RIGHT);
+  private renderRoundText(g: CanvasRenderingContext2D, width: number, height: number): void {
+    const { phase, phaseFrames } = this.match;
+
+    if (phase === 'intro') {
+      const label = phaseFrames < 60 ? `라운드 ${this.match.roundNumber}` : '시작!';
+      drawText(g, label, width / 2, height / 2 - 120, { font: FONTS.title, color: COLORS.accent });
+      return;
+    }
+
+    if (phase === 'roundOver') {
+      const label =
+        this.match.roundWinner === null ? '무승부' : `${this.match.roundWinner + 1}P 라운드 승리`;
+      drawText(g, label, width / 2, height / 2 - 140, { font: FONTS.heading, color: COLORS.text });
+      return;
+    }
+
+    if (phase === 'matchOver') {
+      const label = this.match.matchWinner === null ? '무승부' : `${this.match.matchWinner + 1}P 승리`;
+      drawText(g, label, width / 2, height / 2 - 140, { font: FONTS.heading, color: COLORS.text });
+    }
+  }
+
+  // --- 개발용 판정 상자 ---
+
+  private renderDebugBoxes(g: CanvasRenderingContext2D, groundY: number): void {
+    for (const fighter of this.match.fighters) {
+      const hurt = fighter.hurtbox();
+      drawBox(g, shift(hurt, groundY), '#4dabf7');
+      for (const box of fighter.activeHitboxes()) {
+        drawBox(g, shift(box, groundY), '#ff6b6b');
+      }
+    }
   }
 }
 
-function renderFighter(g: CanvasRenderingContext2D, fighter: Fighter, groundY: number): void {
-  const height = fighter.data.displayHeight * (fighter.crouching ? 0.75 : 1);
-  const bodyW = height * 0.62;
-  const feetY = groundY + fighter.y;
-  const x = fighter.x - bodyW / 2;
-  const y = feetY - height;
+/** 판정 상자는 지면 기준 y라서 화면 좌표로 옮겨 그린다. */
+function shift(box: Rect, groundY: number): Rect {
+  return { left: box.left, right: box.right, top: box.top + groundY, bottom: box.bottom + groundY };
+}
 
-  fillRoundRect(g, x, y, bodyW, height, 26, fighter.data.color, 'rgba(0, 0, 0, 0.35)', 4);
-
-  const eyeX = fighter.facing === 1 ? x + bodyW * 0.72 : x + bodyW * 0.28;
-  g.beginPath();
-  g.arc(eyeX, y + height * 0.18, 12, 0, Math.PI * 2);
-  g.fillStyle = '#ffffff';
-  g.fill();
-
-  drawText(g, fighter.data.name, fighter.x, y - 34, { font: FONTS.small, color: COLORS.text });
+function drawBox(g: CanvasRenderingContext2D, box: Rect, color: string): void {
+  g.strokeStyle = color;
+  g.lineWidth = 3;
+  g.strokeRect(box.left, box.top, box.right - box.left, box.bottom - box.top);
 }
 
 function renderBar(
@@ -226,14 +264,10 @@ function renderBar(
   color: string,
   mirrored: boolean,
 ): void {
-  const clamped = clamp(ratio, 0, 1);
+  const clamped = Math.min(1, Math.max(0, ratio));
   fillRoundRect(g, x, y, w, h, h / 2, COLORS.healthBack, null);
   const fillW = w * clamped;
   if (fillW > 0) {
     fillRoundRect(g, mirrored ? x + w - fillW : x, y, fillW, h, h / 2, color, null);
   }
-}
-
-function clamp(value: number, min: number, max: number): number {
-  return Math.min(max, Math.max(min, value));
 }

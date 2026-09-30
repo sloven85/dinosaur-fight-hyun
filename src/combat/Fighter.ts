@@ -1,0 +1,324 @@
+import {
+  ARENA_LEFT,
+  ARENA_RIGHT,
+  BASE_MOVE_SPEED,
+  FIXED_DT,
+  GRAVITY,
+  INPUT_BUFFER_FRAMES,
+  JUMP_VELOCITY,
+  MAX_METER,
+  METER_PER_SECOND,
+  SPECIAL_FLASH_FRAMES,
+  START_METER,
+} from '../core/constants';
+import { getCharacter, getMove, type CharacterData } from '../data';
+import type { Action } from '../input/actions';
+import type { PlayerIndex } from '../input/InputManager';
+import {
+  attackPhase,
+  moveTotalFrames,
+  type AttackInstance,
+  type AttackKind,
+  type FighterState,
+  type MoveData,
+  type Rect,
+} from './types';
+
+let nextAttackId = 1;
+
+/** 몸통 판정 폭 비율(디자인 높이 대비). */
+const BODY_WIDTH_RATIO = 0.62;
+const CROUCH_HEIGHT_RATIO = 0.75;
+
+/** Fighter가 필요로 하는 입력 표면. CPU는 항상 false를 돌려주는 구현을 쓴다(프롬프트 5). */
+export interface FighterInput {
+  isHeld(player: PlayerIndex, action: Action): boolean;
+  isPressed(player: PlayerIndex, action: Action): boolean;
+}
+
+export const NULL_INPUT: FighterInput = {
+  isHeld: () => false,
+  isPressed: () => false,
+};
+
+/**
+ * 한 캐릭터의 전투 상태·물리·기술을 담는다.
+ * 계획서 15절 상태(idle·walk·crouch·jump·attack·hit·down·victory)를 따른다.
+ */
+export class Fighter {
+  readonly player: PlayerIndex;
+  readonly data: CharacterData;
+  readonly moves: Record<AttackKind, MoveData>;
+
+  x: number;
+  y = 0;
+  vy = 0;
+  onGround = true;
+  facing: 1 | -1;
+  state: FighterState = 'idle';
+
+  health: number;
+  meter = START_METER;
+  roundWins = 0;
+
+  attack: AttackInstance | null = null;
+  hitstunFrames = 0;
+  hitstopFrames = 0;
+  invulnFrames = 0;
+  specialFlashFrames = 0;
+  consecutiveHits = 0;
+
+  kbFrames = 0;
+  kbPerFrame = 0;
+
+  private airAttackUsed = false;
+  private bufferedAttack: AttackKind | null = null;
+  private bufferFrames = 0;
+  private inputLeft = false;
+  private inputRight = false;
+  private inputUp = false;
+  private inputDown = false;
+
+  constructor(player: PlayerIndex, characterId: string, x: number, facing: 1 | -1) {
+    this.player = player;
+    this.data = getCharacter(characterId);
+    this.x = x;
+    this.facing = facing;
+    this.health = this.data.baseHealth;
+    this.moves = {
+      light: getMove(this.data.moves.light),
+      heavy: getMove(this.data.moves.heavy),
+      special: getMove(this.data.moves.special),
+    };
+  }
+
+  // --- 판정 상자 ---
+
+  get bodyWidth(): number {
+    return this.data.displayHeight * BODY_WIDTH_RATIO;
+  }
+
+  get bodyHeight(): number {
+    const ratio = this.state === 'crouch' ? CROUCH_HEIGHT_RATIO : 1;
+    return this.data.displayHeight * ratio;
+  }
+
+  hurtbox(): Rect {
+    const halfW = this.bodyWidth / 2;
+    return {
+      left: this.x - halfW,
+      right: this.x + halfW,
+      top: this.y - this.bodyHeight,
+      bottom: this.y,
+    };
+  }
+
+  /** 판정 프레임에만 켜지는 공격 상자. 렌더링과 분리되어 있다(계획서 16절 프롬프트 2). */
+  activeHitboxes(): Rect[] {
+    if (this.state !== 'attack' || !this.attack) return [];
+    const { move, frame } = this.attack;
+    if (attackPhase(move, frame) !== 'active') return [];
+
+    const boxes: Rect[] = [];
+    for (const hitbox of move.hitboxes) {
+      if (frame < hitbox.startFrame || frame > hitbox.endFrame) continue;
+      const top = this.y + hitbox.y;
+      const bottom = top + hitbox.height;
+      const left = this.facing === 1 ? this.x + hitbox.x : this.x - hitbox.x - hitbox.width;
+      boxes.push({ left, right: left + hitbox.width, top, bottom });
+    }
+    return boxes;
+  }
+
+  // --- 규칙 판정 ---
+
+  canAct(): boolean {
+    return (
+      this.state === 'idle' || this.state === 'walk' || this.state === 'crouch' || this.state === 'jump'
+    );
+  }
+
+  /** 계획서 2절: 지상 대기·이동에서만, 상대 반대 방향 입력 시 자동 가드. */
+  isGuarding(opponent: Fighter): boolean {
+    if (!this.onGround) return false;
+    if (this.state !== 'idle' && this.state !== 'walk') return false;
+    const awayIsLeft = this.x <= opponent.x;
+    return awayIsLeft ? this.inputLeft : this.inputRight;
+  }
+
+  isMeterFull(): boolean {
+    return this.meter >= MAX_METER;
+  }
+
+  // --- 진행 ---
+
+  step(input: FighterInput, dt: number): void {
+    if (this.state === 'down' || this.state === 'victory') return;
+
+    if (this.hitstopFrames > 0) {
+      this.hitstopFrames -= 1;
+      return;
+    }
+
+    if (this.invulnFrames > 0) this.invulnFrames -= 1;
+    if (this.specialFlashFrames > 0) this.specialFlashFrames -= 1;
+
+    this.readInput(input);
+    this.tickBuffer();
+
+    if (this.kbFrames > 0) {
+      this.x += this.kbPerFrame;
+      this.kbFrames -= 1;
+    }
+
+    this.meter = Math.min(MAX_METER, this.meter + METER_PER_SECOND * dt);
+
+    switch (this.state) {
+      case 'hit':
+        this.hitstunFrames -= 1;
+        if (this.hitstunFrames <= 0) this.state = this.onGround ? 'idle' : 'jump';
+        break;
+      case 'attack':
+        this.advanceAttack();
+        break;
+      default:
+        if (!this.tryStartAttack()) this.updateFreeMovement();
+        break;
+    }
+
+    this.applyGravity();
+    this.x = clamp(this.x, ARENA_LEFT, ARENA_RIGHT);
+  }
+
+  resetForRound(x: number, facing: 1 | -1): void {
+    this.x = x;
+    this.y = 0;
+    this.vy = 0;
+    this.onGround = true;
+    this.facing = facing;
+    this.state = 'idle';
+    this.health = this.data.baseHealth;
+    this.meter = START_METER;
+    this.attack = null;
+    this.hitstunFrames = 0;
+    this.hitstopFrames = 0;
+    this.invulnFrames = 0;
+    this.specialFlashFrames = 0;
+    this.consecutiveHits = 0;
+    this.kbFrames = 0;
+    this.kbPerFrame = 0;
+    this.airAttackUsed = false;
+    this.bufferedAttack = null;
+    this.bufferFrames = 0;
+  }
+
+  resetRoundWins(): void {
+    this.roundWins = 0;
+  }
+
+  /** 계획서 3절: 준비 → 판정 → 회복. */
+  currentPhase(): ReturnType<typeof attackPhase> | null {
+    return this.attack ? attackPhase(this.attack.move, this.attack.frame) : null;
+  }
+
+  // --- 내부 ---
+
+  private readInput(input: FighterInput): void {
+    const player = this.player;
+    this.inputLeft = input.isHeld(player, 'left');
+    this.inputRight = input.isHeld(player, 'right');
+    this.inputUp = input.isPressed(player, 'up');
+    this.inputDown = input.isHeld(player, 'down');
+
+    if (input.isPressed(player, 'special')) this.bufferAttack('special');
+    else if (input.isPressed(player, 'heavy')) this.bufferAttack('heavy');
+    else if (input.isPressed(player, 'light')) this.bufferAttack('light');
+  }
+
+  private bufferAttack(kind: AttackKind): void {
+    this.bufferedAttack = kind;
+    this.bufferFrames = INPUT_BUFFER_FRAMES;
+  }
+
+  private tickBuffer(): void {
+    if (this.bufferedAttack === null) return;
+    this.bufferFrames -= 1;
+    if (this.bufferFrames <= 0) this.bufferedAttack = null;
+  }
+
+  private tryStartAttack(): boolean {
+    if (!this.canAct() || this.bufferedAttack === null) return false;
+
+    const kind = this.bufferedAttack;
+    if (!this.onGround && kind !== 'light') return false;
+    if (!this.onGround && this.airAttackUsed) return false;
+
+    if (kind === 'special' && !this.isMeterFull()) {
+      // 계획서 2절: 게이지가 부족하면 발동하지 않고 아이콘만 짧게 깜빡인다.
+      this.specialFlashFrames = SPECIAL_FLASH_FRAMES;
+      this.bufferedAttack = null;
+      return false;
+    }
+
+    const move = this.moves[kind];
+    this.attack = { move, attackId: nextAttackId++, frame: 0, hitTargets: new Set() };
+    this.state = 'attack';
+    this.bufferedAttack = null;
+    if (kind === 'special') this.meter -= move.meterCost;
+    if (!this.onGround) this.airAttackUsed = true;
+    return true;
+  }
+
+  private advanceAttack(): void {
+    if (!this.attack) {
+      this.state = this.onGround ? 'idle' : 'jump';
+      return;
+    }
+    this.attack.frame += 1;
+    if (this.attack.frame >= moveTotalFrames(this.attack.move)) {
+      this.attack = null;
+      this.state = this.onGround ? 'idle' : 'jump';
+    }
+  }
+
+  private updateFreeMovement(): void {
+    const direction = (this.inputRight ? 1 : 0) - (this.inputLeft ? 1 : 0);
+    const speed = BASE_MOVE_SPEED * this.data.speedScale * FIXED_DT;
+
+    if (this.onGround) {
+      if (this.inputDown) {
+        this.state = 'crouch';
+        return;
+      }
+      this.state = direction === 0 ? 'idle' : 'walk';
+      this.x += direction * speed;
+
+      if (this.inputUp) {
+        this.vy = JUMP_VELOCITY;
+        this.onGround = false;
+        this.state = 'jump';
+        this.airAttackUsed = false;
+      }
+      return;
+    }
+
+    this.state = 'jump';
+    this.x += direction * speed;
+  }
+
+  private applyGravity(): void {
+    if (this.onGround) return;
+    this.vy += GRAVITY * FIXED_DT;
+    this.y += this.vy * FIXED_DT;
+    if (this.y >= 0) {
+      this.y = 0;
+      this.vy = 0;
+      this.onGround = true;
+      if (this.state === 'jump') this.state = 'idle';
+    }
+  }
+}
+
+function clamp(value: number, min: number, max: number): number {
+  return Math.min(max, Math.max(min, value));
+}

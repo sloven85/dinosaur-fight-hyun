@@ -1,5 +1,7 @@
 import charactersJson from './characters.json';
 import stagesJson from './stages.json';
+import movesJson from './moves.json';
+import type { MoveData } from '../combat/types';
 
 export interface MoveSet {
   light: string;
@@ -37,6 +39,15 @@ export interface StageData {
 
 export const CHARACTERS = charactersJson.characters as CharacterData[];
 export const STAGES = stagesJson.stages as StageData[];
+export const MOVES = movesJson.moves as MoveData[];
+
+export function getMove(id: string): MoveData {
+  const found = MOVES.find((move) => move.id === id);
+  if (!found) {
+    throw new Error(`알 수 없는 기술 id: ${id}`);
+  }
+  return found;
+}
 
 export function getCharacter(id: string): CharacterData {
   const found = CHARACTERS.find((character) => character.id === id);

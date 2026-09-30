@@ -20,6 +20,8 @@ export class SceneManager {
   change(scene: Scene): void {
     this.current?.exit();
     this.current = scene;
+    // 새 화면으로 눌림 엣지가 새지 않게 한다(계획서 16절 프롬프트 2 완료 기준).
+    this.context.input.resetEdges();
     scene.enter(this.context);
   }
 

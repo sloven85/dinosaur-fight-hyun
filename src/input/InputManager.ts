@@ -26,7 +26,11 @@ const PREVENT_DEFAULT_CODES = new Set([
   'ArrowRight',
   'Space',
   'Tab',
+  'F3',
 ]);
+
+/** 개발용 판정 상자 표시 토글 키. */
+const DEBUG_TOGGLE_CODE = 'F3';
 
 type HeldMap = Record<Action, boolean>;
 
@@ -51,6 +55,7 @@ export class InputManager {
   private readonly players: PlayerSlot[];
   private readonly keys = new Set<string>();
   private pause: PauseReason | null = null;
+  private debugTogglePressed = false;
 
   constructor(private readonly win: Window = window) {
     this.players = PLAYERS.map((index) => ({
@@ -145,6 +150,18 @@ export class InputManager {
     this.clearEdges();
   }
 
+  /** 화면 전환 시 눌림/뗌 엣지를 비워 새 화면으로 입력이 새지 않게 한다. */
+  resetEdges(): void {
+    this.clearEdges();
+  }
+
+  /** 개발용 판정 상자 토글(F3). 한 번 소비하면 다시 false가 된다. */
+  consumeDebugToggle(): boolean {
+    const pressed = this.debugTogglePressed;
+    this.debugTogglePressed = false;
+    return pressed;
+  }
+
   // --- 내부 ---
 
   private readPads(): (Gamepad | null)[] {
@@ -235,6 +252,7 @@ export class InputManager {
   }
 
   private readonly onKeyDown = (event: KeyboardEvent): void => {
+    if (event.code === DEBUG_TOGGLE_CODE) this.debugTogglePressed = true;
     if (PREVENT_DEFAULT_CODES.has(event.code)) event.preventDefault();
     this.keys.add(event.code);
   };
