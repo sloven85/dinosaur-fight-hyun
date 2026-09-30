@@ -21,4 +21,5 @@ export const FONTS = {
   button: 'bold 48px "Noto Sans KR", system-ui, sans-serif',
   body: '32px "Noto Sans KR", system-ui, sans-serif',
   small: '24px "Noto Sans KR", system-ui, sans-serif',
+  tiny: '18px "Noto Sans KR", system-ui, sans-serif',
 } as const;

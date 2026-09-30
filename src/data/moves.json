@@ -1,7 +1,7 @@
 {
   "moves": [
     {
-      "id": "tyranno_bite_light",
+      "id": "tyrannosaurus_light",
       "kind": "light",
       "name": "약한 물기",
       "startupFrames": 6,
@@ -12,10 +12,19 @@
       "hitstunFrames": 12,
       "hitstopFrames": 3,
       "meterCost": 0,
-      "hitboxes": [{ "startFrame": 6, "endFrame": 9, "x": 70, "y": -320, "width": 150, "height": 120 }]
+      "hitboxes": [
+        {
+          "startFrame": 6,
+          "endFrame": 9,
+          "x": 73,
+          "y": -301,
+          "width": 155,
+          "height": 129
+        }
+      ]
     },
     {
-      "id": "tyranno_bite_heavy",
+      "id": "tyrannosaurus_heavy",
       "kind": "heavy",
       "name": "강한 물기",
       "startupFrames": 14,
@@ -26,10 +35,19 @@
       "hitstunFrames": 20,
       "hitstopFrames": 5,
       "meterCost": 0,
-      "hitboxes": [{ "startFrame": 14, "endFrame": 19, "x": 80, "y": -360, "width": 210, "height": 170 }]
+      "hitboxes": [
+        {
+          "startFrame": 14,
+          "endFrame": 19,
+          "x": 82,
+          "y": -335,
+          "width": 215,
+          "height": 181
+        }
+      ]
     },
     {
-      "id": "tyranno_roar",
+      "id": "tyrannosaurus_special",
       "kind": "special",
       "name": "티라노 로어",
       "startupFrames": 24,
@@ -40,10 +58,19 @@
       "hitstunFrames": 28,
       "hitstopFrames": 7,
       "meterCost": 100,
-      "hitboxes": [{ "startFrame": 24, "endFrame": 33, "x": 100, "y": -390, "width": 250, "height": 210 }]
+      "hitboxes": [
+        {
+          "startFrame": 24,
+          "endFrame": 33,
+          "x": 103,
+          "y": -365,
+          "width": 258,
+          "height": 224
+        }
+      ]
     },
     {
-      "id": "trike_horn_light",
+      "id": "triceratops_light",
       "kind": "light",
       "name": "짧은 들이받기",
       "startupFrames": 6,
@@ -54,10 +81,19 @@
       "hitstunFrames": 12,
       "hitstopFrames": 3,
       "meterCost": 0,
-      "hitboxes": [{ "startFrame": 6, "endFrame": 9, "x": 80, "y": -300, "width": 160, "height": 120 }]
+      "hitboxes": [
+        {
+          "startFrame": 6,
+          "endFrame": 9,
+          "x": 72,
+          "y": -266,
+          "width": 153,
+          "height": 114
+        }
+      ]
     },
     {
-      "id": "trike_horn_heavy",
+      "id": "triceratops_heavy",
       "kind": "heavy",
       "name": "뿔 밀어내기",
       "startupFrames": 14,
@@ -68,10 +104,19 @@
       "hitstunFrames": 20,
       "hitstopFrames": 5,
       "meterCost": 0,
-      "hitboxes": [{ "startFrame": 14, "endFrame": 19, "x": 90, "y": -330, "width": 220, "height": 160 }]
+      "hitboxes": [
+        {
+          "startFrame": 14,
+          "endFrame": 19,
+          "x": 81,
+          "y": -296,
+          "width": 213,
+          "height": 160
+        }
+      ]
     },
     {
-      "id": "trike_rush",
+      "id": "triceratops_special",
       "kind": "special",
       "name": "트리플 혼 러시",
       "startupFrames": 24,
@@ -82,7 +127,706 @@
       "hitstunFrames": 28,
       "hitstopFrames": 7,
       "meterCost": 100,
-      "hitboxes": [{ "startFrame": 24, "endFrame": 33, "x": 110, "y": -340, "width": 270, "height": 190 }]
+      "hitboxes": [
+        {
+          "startFrame": 24,
+          "endFrame": 33,
+          "x": 102,
+          "y": -323,
+          "width": 255,
+          "height": 198
+        }
+      ]
+    },
+    {
+      "id": "velociraptor_light",
+      "kind": "light",
+      "name": "짧은 발차기",
+      "startupFrames": 6,
+      "activeFrames": 4,
+      "recoveryFrames": 14,
+      "damage": 10,
+      "knockback": 70,
+      "hitstunFrames": 12,
+      "hitstopFrames": 3,
+      "meterCost": 0,
+      "hitboxes": [
+        {
+          "startFrame": 6,
+          "endFrame": 9,
+          "x": 49,
+          "y": -224,
+          "width": 104,
+          "height": 96
+        }
+      ]
+    },
+    {
+      "id": "velociraptor_heavy",
+      "kind": "heavy",
+      "name": "발톱 차기",
+      "startupFrames": 14,
+      "activeFrames": 6,
+      "recoveryFrames": 24,
+      "damage": 18,
+      "knockback": 120,
+      "hitstunFrames": 20,
+      "hitstopFrames": 5,
+      "meterCost": 0,
+      "hitboxes": [
+        {
+          "startFrame": 14,
+          "endFrame": 19,
+          "x": 55,
+          "y": -250,
+          "width": 144,
+          "height": 134
+        }
+      ]
+    },
+    {
+      "id": "velociraptor_special",
+      "kind": "special",
+      "name": "랩터 러시",
+      "startupFrames": 24,
+      "activeFrames": 10,
+      "recoveryFrames": 38,
+      "damage": 28,
+      "knockback": 180,
+      "hitstunFrames": 28,
+      "hitstopFrames": 7,
+      "meterCost": 100,
+      "hitboxes": [
+        {
+          "startFrame": 24,
+          "endFrame": 33,
+          "x": 69,
+          "y": -272,
+          "width": 173,
+          "height": 166
+        }
+      ]
+    },
+    {
+      "id": "spinosaurus_light",
+      "kind": "light",
+      "name": "팔 밀치기",
+      "startupFrames": 6,
+      "activeFrames": 4,
+      "recoveryFrames": 14,
+      "damage": 10,
+      "knockback": 70,
+      "hitstunFrames": 12,
+      "hitstopFrames": 3,
+      "meterCost": 0,
+      "hitboxes": [
+        {
+          "startFrame": 6,
+          "endFrame": 9,
+          "x": 75,
+          "y": -308,
+          "width": 158,
+          "height": 132
+        }
+      ]
+    },
+    {
+      "id": "spinosaurus_heavy",
+      "kind": "heavy",
+      "name": "꼬리 쓸기",
+      "startupFrames": 14,
+      "activeFrames": 6,
+      "recoveryFrames": 24,
+      "damage": 18,
+      "knockback": 120,
+      "hitstunFrames": 20,
+      "hitstopFrames": 5,
+      "meterCost": 0,
+      "hitboxes": [
+        {
+          "startFrame": 14,
+          "endFrame": 19,
+          "x": 84,
+          "y": -343,
+          "width": 220,
+          "height": 185
+        }
+      ]
+    },
+    {
+      "id": "spinosaurus_special",
+      "kind": "special",
+      "name": "세일 슬래시",
+      "startupFrames": 24,
+      "activeFrames": 10,
+      "recoveryFrames": 38,
+      "damage": 28,
+      "knockback": 180,
+      "hitstunFrames": 28,
+      "hitstopFrames": 7,
+      "meterCost": 100,
+      "hitboxes": [
+        {
+          "startFrame": 24,
+          "endFrame": 33,
+          "x": 106,
+          "y": -374,
+          "width": 264,
+          "height": 229
+        }
+      ]
+    },
+    {
+      "id": "ankylosaurus_light",
+      "kind": "light",
+      "name": "어깨 밀기",
+      "startupFrames": 6,
+      "activeFrames": 4,
+      "recoveryFrames": 14,
+      "damage": 10,
+      "knockback": 70,
+      "hitstunFrames": 12,
+      "hitstopFrames": 3,
+      "meterCost": 0,
+      "hitboxes": [
+        {
+          "startFrame": 6,
+          "endFrame": 9,
+          "x": 55,
+          "y": -231,
+          "width": 116,
+          "height": 99
+        }
+      ]
+    },
+    {
+      "id": "ankylosaurus_heavy",
+      "kind": "heavy",
+      "name": "꼬리곤봉 치기",
+      "startupFrames": 14,
+      "activeFrames": 6,
+      "recoveryFrames": 24,
+      "damage": 18,
+      "knockback": 120,
+      "hitstunFrames": 20,
+      "hitstopFrames": 5,
+      "meterCost": 0,
+      "hitboxes": [
+        {
+          "startFrame": 14,
+          "endFrame": 19,
+          "x": 61,
+          "y": -257,
+          "width": 162,
+          "height": 139
+        }
+      ]
+    },
+    {
+      "id": "ankylosaurus_special",
+      "kind": "special",
+      "name": "해머 테일 스매시",
+      "startupFrames": 24,
+      "activeFrames": 10,
+      "recoveryFrames": 38,
+      "damage": 28,
+      "knockback": 180,
+      "hitstunFrames": 28,
+      "hitstopFrames": 7,
+      "meterCost": 100,
+      "hitboxes": [
+        {
+          "startFrame": 24,
+          "endFrame": 33,
+          "x": 78,
+          "y": -280,
+          "width": 194,
+          "height": 172
+        }
+      ]
+    },
+    {
+      "id": "stegosaurus_light",
+      "kind": "light",
+      "name": "몸통 밀기",
+      "startupFrames": 6,
+      "activeFrames": 4,
+      "recoveryFrames": 14,
+      "damage": 10,
+      "knockback": 70,
+      "hitstunFrames": 12,
+      "hitstopFrames": 3,
+      "meterCost": 0,
+      "hitboxes": [
+        {
+          "startFrame": 6,
+          "endFrame": 9,
+          "x": 84,
+          "y": -266,
+          "width": 178,
+          "height": 114
+        }
+      ]
+    },
+    {
+      "id": "stegosaurus_heavy",
+      "kind": "heavy",
+      "name": "꼬리 가시 휘두르기",
+      "startupFrames": 14,
+      "activeFrames": 6,
+      "recoveryFrames": 24,
+      "damage": 18,
+      "knockback": 120,
+      "hitstunFrames": 20,
+      "hitstopFrames": 5,
+      "meterCost": 0,
+      "hitboxes": [
+        {
+          "startFrame": 14,
+          "endFrame": 19,
+          "x": 94,
+          "y": -296,
+          "width": 247,
+          "height": 160
+        }
+      ]
+    },
+    {
+      "id": "stegosaurus_special",
+      "kind": "special",
+      "name": "스파이크 휩",
+      "startupFrames": 24,
+      "activeFrames": 10,
+      "recoveryFrames": 38,
+      "damage": 28,
+      "knockback": 180,
+      "hitstunFrames": 28,
+      "hitstopFrames": 7,
+      "meterCost": 100,
+      "hitboxes": [
+        {
+          "startFrame": 24,
+          "endFrame": 33,
+          "x": 119,
+          "y": -323,
+          "width": 296,
+          "height": 198
+        }
+      ]
+    },
+    {
+      "id": "carnotaurus_light",
+      "kind": "light",
+      "name": "머리 밀기",
+      "startupFrames": 6,
+      "activeFrames": 4,
+      "recoveryFrames": 14,
+      "damage": 10,
+      "knockback": 70,
+      "hitstunFrames": 12,
+      "hitstopFrames": 3,
+      "meterCost": 0,
+      "hitboxes": [
+        {
+          "startFrame": 6,
+          "endFrame": 9,
+          "x": 76,
+          "y": -280,
+          "width": 161,
+          "height": 120
+        }
+      ]
+    },
+    {
+      "id": "carnotaurus_heavy",
+      "kind": "heavy",
+      "name": "들이받기",
+      "startupFrames": 14,
+      "activeFrames": 6,
+      "recoveryFrames": 24,
+      "damage": 18,
+      "knockback": 120,
+      "hitstunFrames": 20,
+      "hitstopFrames": 5,
+      "meterCost": 0,
+      "hitboxes": [
+        {
+          "startFrame": 14,
+          "endFrame": 19,
+          "x": 85,
+          "y": -312,
+          "width": 224,
+          "height": 168
+        }
+      ]
+    },
+    {
+      "id": "carnotaurus_special",
+      "kind": "special",
+      "name": "카르노 차지",
+      "startupFrames": 24,
+      "activeFrames": 10,
+      "recoveryFrames": 38,
+      "damage": 28,
+      "knockback": 180,
+      "hitstunFrames": 28,
+      "hitstopFrames": 7,
+      "meterCost": 100,
+      "hitboxes": [
+        {
+          "startFrame": 24,
+          "endFrame": 33,
+          "x": 108,
+          "y": -340,
+          "width": 269,
+          "height": 208
+        }
+      ]
+    },
+    {
+      "id": "pachycephalosaurus_light",
+      "kind": "light",
+      "name": "머리 톡 치기",
+      "startupFrames": 6,
+      "activeFrames": 4,
+      "recoveryFrames": 14,
+      "damage": 10,
+      "knockback": 70,
+      "hitstunFrames": 12,
+      "hitstopFrames": 3,
+      "meterCost": 0,
+      "hitboxes": [
+        {
+          "startFrame": 6,
+          "endFrame": 9,
+          "x": 69,
+          "y": -252,
+          "width": 145,
+          "height": 108
+        }
+      ]
+    },
+    {
+      "id": "pachycephalosaurus_heavy",
+      "kind": "heavy",
+      "name": "강한 박치기",
+      "startupFrames": 14,
+      "activeFrames": 6,
+      "recoveryFrames": 24,
+      "damage": 18,
+      "knockback": 120,
+      "hitstunFrames": 20,
+      "hitstopFrames": 5,
+      "meterCost": 0,
+      "hitboxes": [
+        {
+          "startFrame": 14,
+          "endFrame": 19,
+          "x": 77,
+          "y": -281,
+          "width": 202,
+          "height": 151
+        }
+      ]
+    },
+    {
+      "id": "pachycephalosaurus_special",
+      "kind": "special",
+      "name": "미티어 헤드버트",
+      "startupFrames": 24,
+      "activeFrames": 10,
+      "recoveryFrames": 38,
+      "damage": 28,
+      "knockback": 180,
+      "hitstunFrames": 28,
+      "hitstopFrames": 7,
+      "meterCost": 100,
+      "hitboxes": [
+        {
+          "startFrame": 24,
+          "endFrame": 33,
+          "x": 97,
+          "y": -306,
+          "width": 242,
+          "height": 187
+        }
+      ]
+    },
+    {
+      "id": "therizinosaurus_light",
+      "kind": "light",
+      "name": "팔 긁기",
+      "startupFrames": 6,
+      "activeFrames": 4,
+      "recoveryFrames": 14,
+      "damage": 10,
+      "knockback": 70,
+      "hitstunFrames": 12,
+      "hitstopFrames": 3,
+      "meterCost": 0,
+      "hitboxes": [
+        {
+          "startFrame": 6,
+          "endFrame": 9,
+          "x": 93,
+          "y": -294,
+          "width": 197,
+          "height": 126
+        }
+      ]
+    },
+    {
+      "id": "therizinosaurus_heavy",
+      "kind": "heavy",
+      "name": "크게 휘두르기",
+      "startupFrames": 14,
+      "activeFrames": 6,
+      "recoveryFrames": 24,
+      "damage": 18,
+      "knockback": 120,
+      "hitstunFrames": 20,
+      "hitstopFrames": 5,
+      "meterCost": 0,
+      "hitboxes": [
+        {
+          "startFrame": 14,
+          "endFrame": 19,
+          "x": 104,
+          "y": -328,
+          "width": 273,
+          "height": 176
+        }
+      ]
+    },
+    {
+      "id": "therizinosaurus_special",
+      "kind": "special",
+      "name": "클로 크레센트",
+      "startupFrames": 24,
+      "activeFrames": 10,
+      "recoveryFrames": 38,
+      "damage": 28,
+      "knockback": 180,
+      "hitstunFrames": 28,
+      "hitstopFrames": 7,
+      "meterCost": 100,
+      "hitboxes": [
+        {
+          "startFrame": 24,
+          "endFrame": 33,
+          "x": 131,
+          "y": -357,
+          "width": 328,
+          "height": 218
+        }
+      ]
+    },
+    {
+      "id": "dilophosaurus_light",
+      "kind": "light",
+      "name": "주둥이 타격",
+      "startupFrames": 6,
+      "activeFrames": 4,
+      "recoveryFrames": 14,
+      "damage": 10,
+      "knockback": 70,
+      "hitstunFrames": 12,
+      "hitstopFrames": 3,
+      "meterCost": 0,
+      "hitboxes": [
+        {
+          "startFrame": 6,
+          "endFrame": 9,
+          "x": 61,
+          "y": -245,
+          "width": 129,
+          "height": 105
+        }
+      ]
+    },
+    {
+      "id": "dilophosaurus_heavy",
+      "kind": "heavy",
+      "name": "앞발 차기",
+      "startupFrames": 14,
+      "activeFrames": 6,
+      "recoveryFrames": 24,
+      "damage": 18,
+      "knockback": 120,
+      "hitstunFrames": 20,
+      "hitstopFrames": 5,
+      "meterCost": 0,
+      "hitboxes": [
+        {
+          "startFrame": 14,
+          "endFrame": 19,
+          "x": 68,
+          "y": -273,
+          "width": 179,
+          "height": 147
+        }
+      ]
+    },
+    {
+      "id": "dilophosaurus_special",
+      "kind": "special",
+      "name": "크레스트 플래시",
+      "startupFrames": 24,
+      "activeFrames": 10,
+      "recoveryFrames": 38,
+      "damage": 28,
+      "knockback": 180,
+      "hitstunFrames": 28,
+      "hitstopFrames": 7,
+      "meterCost": 100,
+      "hitboxes": [
+        {
+          "startFrame": 24,
+          "endFrame": 33,
+          "x": 86,
+          "y": -297,
+          "width": 214,
+          "height": 182
+        }
+      ]
+    },
+    {
+      "id": "brachiosaurus_light",
+      "kind": "light",
+      "name": "앞발 밀기",
+      "startupFrames": 6,
+      "activeFrames": 4,
+      "recoveryFrames": 14,
+      "damage": 10,
+      "knockback": 70,
+      "hitstunFrames": 12,
+      "hitstopFrames": 3,
+      "meterCost": 0,
+      "hitboxes": [
+        {
+          "startFrame": 6,
+          "endFrame": 9,
+          "x": 100,
+          "y": -420,
+          "width": 212,
+          "height": 180
+        }
+      ]
+    },
+    {
+      "id": "brachiosaurus_heavy",
+      "kind": "heavy",
+      "name": "앞발 내려찍기",
+      "startupFrames": 14,
+      "activeFrames": 6,
+      "recoveryFrames": 24,
+      "damage": 18,
+      "knockback": 120,
+      "hitstunFrames": 20,
+      "hitstopFrames": 5,
+      "meterCost": 0,
+      "hitboxes": [
+        {
+          "startFrame": 14,
+          "endFrame": 19,
+          "x": 112,
+          "y": -468,
+          "width": 294,
+          "height": 252
+        }
+      ]
+    },
+    {
+      "id": "brachiosaurus_special",
+      "kind": "special",
+      "name": "기가 스텝",
+      "startupFrames": 24,
+      "activeFrames": 10,
+      "recoveryFrames": 38,
+      "damage": 28,
+      "knockback": 180,
+      "hitstunFrames": 28,
+      "hitstopFrames": 7,
+      "meterCost": 100,
+      "hitboxes": [
+        {
+          "startFrame": 24,
+          "endFrame": 33,
+          "x": 141,
+          "y": -510,
+          "width": 353,
+          "height": 312
+        }
+      ]
+    },
+    {
+      "id": "pteranodon_light",
+      "kind": "light",
+      "name": "부리 톡 치기",
+      "startupFrames": 6,
+      "activeFrames": 4,
+      "recoveryFrames": 14,
+      "damage": 10,
+      "knockback": 70,
+      "hitstunFrames": 12,
+      "hitstopFrames": 3,
+      "meterCost": 0,
+      "hitboxes": [
+        {
+          "startFrame": 6,
+          "endFrame": 9,
+          "x": 55,
+          "y": -252,
+          "width": 117,
+          "height": 108
+        }
+      ]
+    },
+    {
+      "id": "pteranodon_heavy",
+      "kind": "heavy",
+      "name": "날개 밀기",
+      "startupFrames": 14,
+      "activeFrames": 6,
+      "recoveryFrames": 24,
+      "damage": 18,
+      "knockback": 120,
+      "hitstunFrames": 20,
+      "hitstopFrames": 5,
+      "meterCost": 0,
+      "hitboxes": [
+        {
+          "startFrame": 14,
+          "endFrame": 19,
+          "x": 62,
+          "y": -281,
+          "width": 162,
+          "height": 151
+        }
+      ]
+    },
+    {
+      "id": "pteranodon_special",
+      "kind": "special",
+      "name": "스카이 다이브",
+      "startupFrames": 24,
+      "activeFrames": 10,
+      "recoveryFrames": 38,
+      "damage": 28,
+      "knockback": 180,
+      "hitstunFrames": 28,
+      "hitstopFrames": 7,
+      "meterCost": 100,
+      "hitboxes": [
+        {
+          "startFrame": 24,
+          "endFrame": 33,
+          "x": 78,
+          "y": -306,
+          "width": 194,
+          "height": 187
+        }
+      ]
     }
   ]
 }

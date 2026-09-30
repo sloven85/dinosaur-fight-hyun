@@ -12,18 +12,25 @@ export interface MoveSet {
 export interface CharacterData {
   id: string;
   name: string;
+  /** 계획서 4절 6개 아키타입(standard·charge·speed·power·reach·trick) 중 하나. */
   archetype: string;
+  /** 화면 표시용 유형 이름(예: 돌진 변형). */
+  archetypeLabel: string;
   baseHealth: number;
   speedScale: number;
   damageScale: number;
   displayHeight: number;
   /** 임시 도형 렌더링용 대표색. 계획서 4절 색상 열. */
   color: string;
+  /** 배·프릴·등판 등 보조색. 계획서 5~10절. */
+  accentColor: string;
   rigPath: string;
   portraitPath: string;
   moves: MoveSet;
   alternatePalette: { skin: string };
   description: string;
+  /** 선택 카드에 작게 붙이는 표기(예: 익룡 게스트). */
+  cardNote?: string;
 }
 
 export interface StageData {

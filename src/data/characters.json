@@ -4,39 +4,278 @@
       "id": "tyrannosaurus",
       "name": "티라노사우루스",
       "archetype": "standard",
+      "archetypeLabel": "표준",
       "baseHealth": 100,
-      "speedScale": 1.0,
-      "damageScale": 1.0,
+      "speedScale": 1,
+      "damageScale": 1,
       "displayHeight": 430,
       "color": "#245D3B",
+      "accentColor": "#D9C48A",
       "rigPath": "assets/characters/tyrannosaurus/rig.json",
       "portraitPath": "assets/characters/tyrannosaurus/portrait.png",
       "moves": {
-        "light": "tyranno_bite_light",
-        "heavy": "tyranno_bite_heavy",
-        "special": "tyranno_roar"
+        "light": "tyrannosaurus_light",
+        "heavy": "tyrannosaurus_heavy",
+        "special": "tyrannosaurus_special"
       },
-      "alternatePalette": { "skin": "#367A91" },
+      "alternatePalette": {
+        "skin": "#326E86"
+      },
       "description": "묵직한 물기의 기본 공룡"
     },
     {
       "id": "triceratops",
       "name": "트리케라톱스",
       "archetype": "charge",
+      "archetypeLabel": "돌진",
       "baseHealth": 112,
       "speedScale": 0.84,
       "damageScale": 1.06,
       "displayHeight": 380,
       "color": "#B78A40",
+      "accentColor": "#E0CFA0",
       "rigPath": "assets/characters/triceratops/rig.json",
       "portraitPath": "assets/characters/triceratops/portrait.png",
       "moves": {
-        "light": "trike_horn_light",
-        "heavy": "trike_horn_heavy",
-        "special": "trike_rush"
+        "light": "triceratops_light",
+        "heavy": "triceratops_heavy",
+        "special": "triceratops_special"
       },
-      "alternatePalette": { "skin": "#4E6FA8" },
+      "alternatePalette": {
+        "skin": "#7B8588"
+      },
       "description": "뿔로 밀어붙이는 돌진형"
+    },
+    {
+      "id": "velociraptor",
+      "name": "벨로키랍토르",
+      "archetype": "speed",
+      "archetypeLabel": "스피드",
+      "baseHealth": 88,
+      "speedScale": 1.24,
+      "damageScale": 0.86,
+      "displayHeight": 320,
+      "color": "#D9792E",
+      "accentColor": "#7A4A22",
+      "rigPath": "assets/characters/velociraptor/rig.json",
+      "portraitPath": "assets/characters/velociraptor/portrait.png",
+      "moves": {
+        "light": "velociraptor_light",
+        "heavy": "velociraptor_heavy",
+        "special": "velociraptor_special"
+      },
+      "alternatePalette": {
+        "skin": "#8C7C7F"
+      },
+      "description": "빠른 발차기와 연타의 스피드형"
+    },
+    {
+      "id": "spinosaurus",
+      "name": "스피노사우루스",
+      "archetype": "standard",
+      "archetypeLabel": "표준",
+      "baseHealth": 102,
+      "speedScale": 0.96,
+      "damageScale": 1,
+      "displayHeight": 440,
+      "color": "#287B86",
+      "accentColor": "#28446B",
+      "rigPath": "assets/characters/spinosaurus/rig.json",
+      "portraitPath": "assets/characters/spinosaurus/portrait.png",
+      "moves": {
+        "light": "spinosaurus_light",
+        "heavy": "spinosaurus_heavy",
+        "special": "spinosaurus_special"
+      },
+      "alternatePalette": {
+        "skin": "#347DAB"
+      },
+      "description": "넓은 사거리의 균형형"
+    },
+    {
+      "id": "ankylosaurus",
+      "name": "안킬로사우루스",
+      "archetype": "power",
+      "archetypeLabel": "파워",
+      "baseHealth": 118,
+      "speedScale": 0.74,
+      "damageScale": 1.12,
+      "displayHeight": 330,
+      "color": "#74523C",
+      "accentColor": "#B99C70",
+      "rigPath": "assets/characters/ankylosaurus/rig.json",
+      "portraitPath": "assets/characters/ankylosaurus/portrait.png",
+      "moves": {
+        "light": "ankylosaurus_light",
+        "heavy": "ankylosaurus_heavy",
+        "special": "ankylosaurus_special"
+      },
+      "alternatePalette": {
+        "skin": "#5A6986"
+      },
+      "description": "단단한 갑옷과 꼬리곤봉의 파워형"
+    },
+    {
+      "id": "stegosaurus",
+      "name": "스테고사우루스",
+      "archetype": "reach",
+      "archetypeLabel": "리치",
+      "baseHealth": 108,
+      "speedScale": 0.82,
+      "damageScale": 1.02,
+      "displayHeight": 380,
+      "color": "#77A65A",
+      "accentColor": "#C85848",
+      "rigPath": "assets/characters/stegosaurus/rig.json",
+      "portraitPath": "assets/characters/stegosaurus/portrait.png",
+      "moves": {
+        "light": "stegosaurus_light",
+        "heavy": "stegosaurus_heavy",
+        "special": "stegosaurus_special"
+      },
+      "alternatePalette": {
+        "skin": "#5B9395"
+      },
+      "description": "긴 꼬리 가시로 견제하는 리치형"
+    },
+    {
+      "id": "carnotaurus",
+      "name": "카르노타우루스",
+      "archetype": "charge",
+      "archetypeLabel": "돌진",
+      "baseHealth": 98,
+      "speedScale": 1.12,
+      "damageScale": 1,
+      "displayHeight": 400,
+      "color": "#A64837",
+      "accentColor": "#C97A4A",
+      "rigPath": "assets/characters/carnotaurus/rig.json",
+      "portraitPath": "assets/characters/carnotaurus/portrait.png",
+      "moves": {
+        "light": "carnotaurus_light",
+        "heavy": "carnotaurus_heavy",
+        "special": "carnotaurus_special"
+      },
+      "alternatePalette": {
+        "skin": "#736484"
+      },
+      "description": "빠르게 파고드는 돌진형"
+    },
+    {
+      "id": "pachycephalosaurus",
+      "name": "파키케팔로사우루스",
+      "archetype": "charge",
+      "archetypeLabel": "돌진 변형",
+      "baseHealth": 104,
+      "speedScale": 1,
+      "damageScale": 1.02,
+      "displayHeight": 360,
+      "color": "#8F8270",
+      "accentColor": "#D9CFB4",
+      "rigPath": "assets/characters/pachycephalosaurus/rig.json",
+      "portraitPath": "assets/characters/pachycephalosaurus/portrait.png",
+      "moves": {
+        "light": "pachycephalosaurus_light",
+        "heavy": "pachycephalosaurus_heavy",
+        "special": "pachycephalosaurus_special"
+      },
+      "alternatePalette": {
+        "skin": "#6781A0"
+      },
+      "description": "두개골 박치기의 돌진 변형"
+    },
+    {
+      "id": "therizinosaurus",
+      "name": "테리지노사우루스",
+      "archetype": "reach",
+      "archetypeLabel": "리치",
+      "baseHealth": 96,
+      "speedScale": 0.88,
+      "damageScale": 1.02,
+      "displayHeight": 420,
+      "color": "#857493",
+      "accentColor": "#C9C3D0",
+      "rigPath": "assets/characters/therizinosaurus/rig.json",
+      "portraitPath": "assets/characters/therizinosaurus/portrait.png",
+      "moves": {
+        "light": "therizinosaurus_light",
+        "heavy": "therizinosaurus_heavy",
+        "special": "therizinosaurus_special"
+      },
+      "alternatePalette": {
+        "skin": "#627AB2"
+      },
+      "description": "긴 발톱으로 멀리서 견제하는 리치형"
+    },
+    {
+      "id": "dilophosaurus",
+      "name": "딜로포사우루스",
+      "archetype": "trick",
+      "archetypeLabel": "트릭",
+      "baseHealth": 90,
+      "speedScale": 1.15,
+      "damageScale": 0.92,
+      "displayHeight": 350,
+      "color": "#A3B94A",
+      "accentColor": "#E3C254",
+      "rigPath": "assets/characters/dilophosaurus/rig.json",
+      "portraitPath": "assets/characters/dilophosaurus/portrait.png",
+      "moves": {
+        "light": "dilophosaurus_light",
+        "heavy": "dilophosaurus_heavy",
+        "special": "dilophosaurus_special"
+      },
+      "alternatePalette": {
+        "skin": "#719C8D"
+      },
+      "description": "볏으로 교란하는 트릭형"
+    },
+    {
+      "id": "brachiosaurus",
+      "name": "브라키오사우루스",
+      "archetype": "power",
+      "archetypeLabel": "파워",
+      "baseHealth": 120,
+      "speedScale": 0.68,
+      "damageScale": 1.14,
+      "displayHeight": 600,
+      "color": "#86AABB",
+      "accentColor": "#D8C9BE",
+      "rigPath": "assets/characters/brachiosaurus/rig.json",
+      "portraitPath": "assets/characters/brachiosaurus/portrait.png",
+      "moves": {
+        "light": "brachiosaurus_light",
+        "heavy": "brachiosaurus_heavy",
+        "special": "brachiosaurus_special"
+      },
+      "alternatePalette": {
+        "skin": "#6395C6"
+      },
+      "description": "거대한 발구르기의 파워형"
+    },
+    {
+      "id": "pteranodon",
+      "name": "프테라노돈",
+      "archetype": "speed",
+      "archetypeLabel": "스피드 변형",
+      "baseHealth": 86,
+      "speedScale": 1.18,
+      "damageScale": 0.88,
+      "displayHeight": 360,
+      "color": "#5B568E",
+      "accentColor": "#A39DC8",
+      "rigPath": "assets/characters/pteranodon/rig.json",
+      "portraitPath": "assets/characters/pteranodon/portrait.png",
+      "moves": {
+        "light": "pteranodon_light",
+        "heavy": "pteranodon_heavy",
+        "special": "pteranodon_special"
+      },
+      "alternatePalette": {
+        "skin": "#4D6BAF"
+      },
+      "description": "낮은 활공과 급강하의 익룡 게스트",
+      "cardNote": "익룡 게스트"
     }
   ]
 }
