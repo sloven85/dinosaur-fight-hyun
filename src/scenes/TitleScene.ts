@@ -1,36 +1,53 @@
-import type { Scene } from './Scene';
+import { BaseScene } from './BaseScene';
+import { ModeScene } from './ModeScene';
+import { drawButton, drawText } from '../ui/draw';
+import { COLORS, FONTS } from '../ui/theme';
 
-/**
- * 임시 타이틀 화면. 실제 시작 버튼·모드 선택은 계획서 16절 프롬프트 1에서 붙인다.
- * 지금은 파이프라인(고정 스텝 루프 + 캔버스 렌더)이 도는지 확인하는 용도다.
- */
-export class TitleScene implements Scene {
+export class TitleScene extends BaseScene {
   private elapsed = 0;
 
-  enter(): void {
-    this.elapsed = 0;
-  }
-
-  exit(): void {}
-
-  update(dt: number): void {
+  protected tick(dt: number): void {
     this.elapsed += dt;
+    if (this.context.input.anyPressed('confirm')) {
+      this.context.setScene(new ModeScene());
+    }
   }
 
-  render(ctx: CanvasRenderingContext2D, width: number, height: number): void {
-    ctx.fillStyle = '#1b2430';
-    ctx.fillRect(0, 0, width, height);
+  render(g: CanvasRenderingContext2D, width: number, height: number): void {
+    g.fillStyle = COLORS.bg;
+    g.fillRect(0, 0, width, height);
 
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
+    drawText(g, '다이노 파이터즈', width / 2, 250, { font: FONTS.title, color: COLORS.text });
+    drawText(g, 'Dino Fighters', width / 2, 355, { font: FONTS.heading, color: COLORS.textDim });
 
-    ctx.fillStyle = '#f2f4f8';
-    ctx.font = 'bold 104px "Noto Sans KR", system-ui, sans-serif';
-    ctx.fillText('다이노 파이터즈', width / 2, height / 2 - 50);
+    const pulse = 0.75 + 0.25 * Math.sin(this.elapsed * 3);
+    g.globalAlpha = pulse;
+    drawButton(g, width / 2 - 220, 500, 440, 120, '시작', true);
+    g.globalAlpha = 1;
 
-    const pulse = 0.6 + 0.4 * Math.sin(this.elapsed * 2);
-    ctx.fillStyle = `rgba(143, 163, 184, ${pulse.toFixed(3)})`;
-    ctx.font = '40px "Noto Sans KR", system-ui, sans-serif';
-    ctx.fillText('Dino Fighters — 준비 중', width / 2, height / 2 + 70);
+    drawText(g, '패드의 아래쪽 얼굴 버튼을 누르면 참가합니다', width / 2, 690, {
+      font: FONTS.body,
+      color: COLORS.textDim,
+    });
+
+    const p1 = this.context.input.padIndex(0);
+    const p2 = this.context.input.padIndex(1);
+    drawText(g, `1P 패드  ${padLabel(p1)}`, width / 2 - 280, 800, {
+      font: FONTS.small,
+      color: COLORS.p1,
+    });
+    drawText(g, `2P 패드  ${padLabel(p2)}`, width / 2 + 280, 800, {
+      font: FONTS.small,
+      color: COLORS.p2,
+    });
+
+    drawText(g, 'Enter 또는 패드 확인 버튼으로 시작 · Esc 일시정지', width / 2, 970, {
+      font: FONTS.small,
+      color: COLORS.textDim,
+    });
   }
+}
+
+function padLabel(index: number | null): string {
+  return index === null ? '미참가' : `참가 (index ${index})`;
 }

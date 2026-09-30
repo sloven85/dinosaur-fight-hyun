@@ -1,0 +1,42 @@
+{
+  "characters": [
+    {
+      "id": "tyrannosaurus",
+      "name": "티라노사우루스",
+      "archetype": "standard",
+      "baseHealth": 100,
+      "speedScale": 1.0,
+      "damageScale": 1.0,
+      "displayHeight": 430,
+      "color": "#245D3B",
+      "rigPath": "assets/characters/tyrannosaurus/rig.json",
+      "portraitPath": "assets/characters/tyrannosaurus/portrait.png",
+      "moves": {
+        "light": "tyranno_bite_light",
+        "heavy": "tyranno_bite_heavy",
+        "special": "tyranno_roar"
+      },
+      "alternatePalette": { "skin": "#367A91" },
+      "description": "묵직한 물기의 기본 공룡"
+    },
+    {
+      "id": "triceratops",
+      "name": "트리케라톱스",
+      "archetype": "charge",
+      "baseHealth": 112,
+      "speedScale": 0.84,
+      "damageScale": 1.06,
+      "displayHeight": 380,
+      "color": "#B78A40",
+      "rigPath": "assets/characters/triceratops/rig.json",
+      "portraitPath": "assets/characters/triceratops/portrait.png",
+      "moves": {
+        "light": "trike_horn_light",
+        "heavy": "trike_horn_heavy",
+        "special": "trike_rush"
+      },
+      "alternatePalette": { "skin": "#4E6FA8" },
+      "description": "뿔로 밀어붙이는 돌진형"
+    }
+  ]
+}
