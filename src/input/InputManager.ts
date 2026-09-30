@@ -54,6 +54,12 @@ interface PlayerSlot {
 export class InputManager {
   private readonly players: PlayerSlot[];
   private readonly keys = new Set<string>();
+  /**
+   * 이번 틱 사이에 눌렸다가 뗀 키(짧은 탭)를 한 틱 동안 살려 둔다.
+   * 키보드 이벤트는 즉시 들어오지만 판정은 60Hz 틱마다 하므로, 아주 짧은 탭이
+   * 두 틱 사이에 끼면 통째로 사라질 수 있다. 4세가 빠르게 누르는 경우를 위해 보관한다.
+   */
+  private pendingPresses = new Set<string>();
   private pause: PauseReason | null = null;
   private debugTogglePressed = false;
 
@@ -85,10 +91,14 @@ export class InputManager {
     const pads = this.readPads();
     this.assignJoiningPads(pads);
 
+    // 이번 틱에만 유효한 짧은 탭을 먼저 꺼내 둔다.
+    const tapped = this.pendingPresses;
+    this.pendingPresses = new Set();
+
     for (const player of PLAYERS) {
       const slot = this.players[player];
       const next = createHeldMap();
-      this.applyKeyboard(slot, next);
+      this.applyKeyboard(slot, next, tapped);
       if (slot.padIndex !== null) {
         this.applyGamepad(next, pads[slot.padIndex] ?? null);
       }
@@ -182,10 +192,10 @@ export class InputManager {
     }
   }
 
-  private applyKeyboard(slot: PlayerSlot, held: HeldMap): void {
+  private applyKeyboard(slot: PlayerSlot, held: HeldMap, tapped: ReadonlySet<string>): void {
     for (const action of ACTIONS) {
       const codes = slot.keyboard[action];
-      if (codes.some((code) => this.keys.has(code))) {
+      if (codes.some((code) => this.keys.has(code) || tapped.has(code))) {
         held[action] = true;
       }
     }
@@ -227,6 +237,7 @@ export class InputManager {
 
   /** 눌림/뗌 엣지만 지운다. held는 유지해 같은 입력이 곧바로 재발동하지 않게 한다. */
   private clearEdges(): void {
+    this.pendingPresses.clear();
     for (const slot of this.players) {
       for (const action of ACTIONS) {
         slot.states[action].pressed = false;
@@ -248,12 +259,15 @@ export class InputManager {
   /** 포커스 이탈·패드 해제 시 눌린 키 상태를 모두 비운다(계획서 1절). */
   private clearAll(): void {
     this.keys.clear();
+    this.pendingPresses.clear();
     for (const slot of this.players) this.clearSlot(slot);
   }
 
   private readonly onKeyDown = (event: KeyboardEvent): void => {
     if (event.code === DEBUG_TOGGLE_CODE) this.debugTogglePressed = true;
     if (PREVENT_DEFAULT_CODES.has(event.code)) event.preventDefault();
+    // 자동 반복(꾹 누름)은 새 누름이 아니므로 보관하지 않는다.
+    if (!this.keys.has(event.code)) this.pendingPresses.add(event.code);
     this.keys.add(event.code);
   };
 
