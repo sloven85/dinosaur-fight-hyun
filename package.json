@@ -1,0 +1,20 @@
+{
+  "name": "dinosaur-fight-hyun",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "다이노 파이터즈 (Dino Fighters) — 웹 로컬 2인 대전 격투게임",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3",
+    "vite": "^7.1.7"
+  },
+  "allowScripts": {
+    "esbuild@0.28.2": true
+  }
+}
