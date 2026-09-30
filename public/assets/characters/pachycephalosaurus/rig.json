@@ -1,0 +1,112 @@
+{
+  "canvas": {
+    "width": 2048,
+    "height": 1536
+  },
+  "root": {
+    "x": 1024,
+    "y": 1280
+  },
+  "master": {
+    "imagePath": "master_side.png",
+    "usable": true,
+    "box": {
+      "minX": 859,
+      "minY": 929,
+      "maxX": 1179,
+      "maxY": 1279,
+      "w": 321,
+      "h": 351,
+      "cx": 1019,
+      "feet": 1279,
+      "fill": 0.5178351128506892
+    }
+  },
+  "portrait": {
+    "imagePath": "portrait.png",
+    "usable": true
+  },
+  "poses": {
+    "heavy": {
+      "imagePath": "poses/heavy.png",
+      "rootX": 1039,
+      "rootY": 1261,
+      "usable": true,
+      "box": {
+        "minX": 861,
+        "minY": 939,
+        "maxX": 1206,
+        "maxY": 1260,
+        "w": 346,
+        "h": 322,
+        "cx": 1033.5,
+        "feet": 1260,
+        "fill": 0.5226277241230747
+      }
+    },
+    "special": {
+      "imagePath": "poses/special.png",
+      "rootX": 1029,
+      "rootY": 1273,
+      "usable": true,
+      "box": {
+        "minX": 881,
+        "minY": 937,
+        "maxX": 1167,
+        "maxY": 1272,
+        "w": 287,
+        "h": 336,
+        "cx": 1024,
+        "feet": 1272,
+        "fill": 0.5560913389746143
+      }
+    },
+    "hit": {
+      "imagePath": "poses/hit.png",
+      "rootX": 1012,
+      "rootY": 1256,
+      "usable": false,
+      "box": {
+        "minX": 688,
+        "minY": 953,
+        "maxX": 1326,
+        "maxY": 1255,
+        "w": 639,
+        "h": 303,
+        "cx": 1007,
+        "feet": 1255,
+        "fill": 0.6842271081568251
+      }
+    },
+    "down": {
+      "imagePath": "poses/down.png",
+      "rootX": 1020,
+      "rootY": 1262,
+      "usable": true,
+      "box": {
+        "minX": 883,
+        "minY": 938,
+        "maxX": 1147,
+        "maxY": 1261,
+        "w": 265,
+        "h": 324,
+        "cx": 1015,
+        "feet": 1261,
+        "fill": 0.6501630561378989
+      }
+    },
+    "victory": {
+      "imagePath": "poses/victory.png",
+      "rootX": 1024,
+      "rootY": 1280,
+      "usable": false,
+      "box": null
+    }
+  },
+  "parts": {
+    "sheet": "parts/parts_sheet.png",
+    "extractedDir": "parts/extracted",
+    "manualRiggingRequired": true,
+    "productionReady": false
+  }
+}

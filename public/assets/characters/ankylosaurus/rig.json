@@ -1,0 +1,122 @@
+{
+  "canvas": {
+    "width": 2048,
+    "height": 1536
+  },
+  "root": {
+    "x": 1024,
+    "y": 1280
+  },
+  "master": {
+    "imagePath": "master_side.png",
+    "usable": true,
+    "box": {
+      "minX": 762,
+      "minY": 950,
+      "maxX": 1286,
+      "maxY": 1279,
+      "w": 525,
+      "h": 330,
+      "cx": 1024,
+      "feet": 1279,
+      "fill": 0.5451139971139971
+    }
+  },
+  "portrait": {
+    "imagePath": "portrait.png",
+    "usable": true
+  },
+  "poses": {
+    "heavy": {
+      "imagePath": "poses/heavy.png",
+      "rootX": 1034,
+      "rootY": 1261,
+      "usable": true,
+      "box": {
+        "minX": 849,
+        "minY": 959,
+        "maxX": 1218,
+        "maxY": 1260,
+        "w": 370,
+        "h": 302,
+        "cx": 1033.5,
+        "feet": 1260,
+        "fill": 0.5332110255951316
+      }
+    },
+    "special": {
+      "imagePath": "poses/special.png",
+      "rootX": 1024,
+      "rootY": 1263,
+      "usable": true,
+      "box": {
+        "minX": 869,
+        "minY": 957,
+        "maxX": 1178,
+        "maxY": 1262,
+        "w": 310,
+        "h": 306,
+        "cx": 1023.5,
+        "feet": 1262,
+        "fill": 0.49479232553236346
+      }
+    },
+    "hit": {
+      "imagePath": "poses/hit.png",
+      "rootX": 1015,
+      "rootY": 1262,
+      "usable": true,
+      "box": {
+        "minX": 847,
+        "minY": 958,
+        "maxX": 1183,
+        "maxY": 1261,
+        "w": 337,
+        "h": 304,
+        "cx": 1015,
+        "feet": 1261,
+        "fill": 0.6043260971419647
+      }
+    },
+    "down": {
+      "imagePath": "poses/down.png",
+      "rootX": 1009,
+      "rootY": 1250,
+      "usable": true,
+      "box": {
+        "minX": 761,
+        "minY": 970,
+        "maxX": 1257,
+        "maxY": 1249,
+        "w": 497,
+        "h": 280,
+        "cx": 1009,
+        "feet": 1249,
+        "fill": 0.8021989077321069
+      }
+    },
+    "victory": {
+      "imagePath": "poses/victory.png",
+      "rootX": 1017,
+      "rootY": 1266,
+      "usable": true,
+      "box": {
+        "minX": 945,
+        "minY": 954,
+        "maxX": 1088,
+        "maxY": 1265,
+        "w": 144,
+        "h": 312,
+        "cx": 1016.5,
+        "feet": 1265,
+        "fill": 0.7371572293447294
+      }
+    }
+  },
+  "parts": {
+    "sheet": "parts/parts_sheet.png",
+    "extractedDir": "parts/extracted",
+    "manualRiggingRequired": true,
+    "productionReady": false
+  }
+}

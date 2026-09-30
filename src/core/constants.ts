@@ -20,9 +20,9 @@ export const BASE_MOVE_SPEED = 360;
 export const JUMP_VELOCITY = -900;
 export const GRAVITY = 2400;
 
-/** 경기장 좌우 한계. 양끝을 통과하지 않는다. */
-export const ARENA_LEFT = 170;
-export const ARENA_RIGHT = 1750;
+/** 화면 안쪽 여유. 스프라이트가 화면 밖으로 잘리지 않도록 이 안에서만 움직인다. */
+export const ARENA_LEFT = 60;
+export const ARENA_RIGHT = 1860;
 export const START_X_P1 = 620;
 export const START_X_P2 = 1300;
 

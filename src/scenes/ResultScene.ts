@@ -1,4 +1,5 @@
 import type { PlayerIndex } from '../input/InputManager';
+import type { CharacterAssets } from '../rendering/CharacterAssets';
 import { BaseScene } from './BaseScene';
 import { BattleScene } from './BattleScene';
 import { CharacterSelectScene } from './CharacterSelectScene';
@@ -15,13 +16,16 @@ interface ResultOption {
 export class ResultScene extends BaseScene {
   private index = 0;
 
-  constructor(private readonly winner: PlayerIndex | null) {
+  constructor(
+    private readonly winner: PlayerIndex | null,
+    private readonly characterAssets: [CharacterAssets, CharacterAssets] | null = null,
+  ) {
     super();
   }
 
   private get options(): ResultOption[] {
     return [
-      { label: '다시 할래', run: () => this.context.setScene(new BattleScene()) },
+      { label: '다시 할래', run: () => this.context.setScene(new BattleScene(this.characterAssets)) },
       { label: '공룡 바꾸기', run: () => this.context.setScene(new CharacterSelectScene()) },
       { label: '처음으로', run: () => this.context.setScene(new TitleScene()) },
     ];

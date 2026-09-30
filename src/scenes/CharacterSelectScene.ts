@@ -1,3 +1,4 @@
+import type { GameContext } from '../core/GameContext';
 import { CHARACTERS, getMove, type CharacterData } from '../data';
 import { PLAYERS } from '../input/InputManager';
 import { BaseScene } from './BaseScene';
@@ -30,6 +31,23 @@ export class CharacterSelectScene extends BaseScene {
   ];
   private cpuTimer = 0;
   private cpuPicked = false;
+  private readonly portraits = new Map<string, HTMLImageElement>();
+
+  enter(context: GameContext): void {
+    super.enter(context);
+    void this.preloadPortraits(context);
+  }
+
+  private async preloadPortraits(context: GameContext): Promise<void> {
+    await Promise.all(
+      CHARACTERS.map(async (character) => {
+        const rig = await context.assets.loadJson<{ portrait?: { usable?: boolean } }>(character.rigPath);
+        if (rig?.portrait?.usable === false) return;
+        const image = await context.assets.loadImage(character.portraitPath);
+        if (image) this.portraits.set(character.id, image);
+      }),
+    );
+  }
 
   protected tick(dt: number): void {
     const input = this.context.input;
@@ -118,13 +136,19 @@ export class CharacterSelectScene extends BaseScene {
   private renderCard(g: CanvasRenderingContext2D, x: number, y: number, character: CharacterData): void {
     fillRoundRect(g, x, y, CELL_W, CELL_H, 18, character.color, COLORS.panelBorder, 3);
 
-    // 초상 PNG가 오기 전까지 보조색 원으로 자리를 잡아 둔다.
-    g.beginPath();
-    g.arc(x + CELL_W / 2, y + 52, 38, 0, Math.PI * 2);
-    g.fillStyle = character.accentColor;
-    g.globalAlpha = 0.9;
-    g.fill();
-    g.globalAlpha = 1;
+    const portrait = this.portraits.get(character.id);
+    if (portrait) {
+      const size = 92;
+      g.drawImage(portrait, x + (CELL_W - size) / 2, y + 8, size, size);
+    } else {
+      // 초상을 아직 못 받았을 때는 보조색 원으로 자리를 잡아 둔다.
+      g.beginPath();
+      g.arc(x + CELL_W / 2, y + 52, 38, 0, Math.PI * 2);
+      g.fillStyle = character.accentColor;
+      g.globalAlpha = 0.9;
+      g.fill();
+      g.globalAlpha = 1;
+    }
 
     drawText(g, character.name, x + CELL_W / 2, y + 112, { font: FONTS.small, color: '#ffffff' });
     drawText(g, character.archetypeLabel, x + CELL_W / 2, y + 142, {

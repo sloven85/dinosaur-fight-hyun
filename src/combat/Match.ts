@@ -1,6 +1,4 @@
 import {
-  ARENA_LEFT,
-  ARENA_RIGHT,
   CONSECUTIVE_HIT_LIMIT,
   GUARD_DAMAGE_SPECIAL_RATIO,
   GUARD_KNOCKBACK_RATIO,
@@ -21,6 +19,7 @@ import {
 } from '../core/constants';
 import type { GameMode } from '../core/session';
 import type { PlayerIndex } from '../input/InputManager';
+import { emptyAssets, type CharacterAssets } from '../rendering/CharacterAssets';
 import { Fighter, NULL_INPUT, type FighterInput } from './Fighter';
 import { rectsOverlap, type MoveData } from './types';
 
@@ -52,10 +51,14 @@ export class Match {
   constructor(
     private readonly mode: GameMode,
     characterIds: [string, string],
+    assets: [CharacterAssets, CharacterAssets] = [
+      emptyAssets(characterIds[0]),
+      emptyAssets(characterIds[1]),
+    ],
   ) {
     this.fighters = [
-      new Fighter(0, characterIds[0], START_X_P1, 1),
-      new Fighter(1, characterIds[1], START_X_P2, -1),
+      new Fighter(0, characterIds[0], START_X_P1, 1, assets[0]),
+      new Fighter(1, characterIds[1], START_X_P2, -1, assets[1]),
     ];
   }
 
@@ -183,12 +186,14 @@ export class Match {
 
     const push = (minGap - gap) / 2;
     if (a.x <= b.x) {
-      a.x = clamp(a.x - push, ARENA_LEFT, ARENA_RIGHT);
-      b.x = clamp(b.x + push, ARENA_LEFT, ARENA_RIGHT);
+      a.x -= push;
+      b.x += push;
     } else {
-      a.x = clamp(a.x + push, ARENA_LEFT, ARENA_RIGHT);
-      b.x = clamp(b.x - push, ARENA_LEFT, ARENA_RIGHT);
+      a.x += push;
+      b.x -= push;
     }
+    a.clampToArena();
+    b.clampToArena();
   }
 
   /** 동일 틱의 양쪽 타격을 모아 함께 해결한다(계획서 16절 프롬프트 2). */
@@ -282,8 +287,4 @@ export class Match {
   private opponentOf(fighter: Fighter): Fighter {
     return fighter.player === 0 ? this.p2 : this.p1;
   }
-}
-
-function clamp(value: number, min: number, max: number): number {
-  return Math.min(max, Math.max(min, value));
 }

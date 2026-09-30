@@ -1,6 +1,7 @@
 import type { GameContext } from '../core/GameContext';
 import type { Session } from '../core/session';
 import type { InputManager } from '../input/InputManager';
+import type { AssetLoader } from '../rendering/AssetLoader';
 import type { Scene } from './Scene';
 
 /** 현재 화면 하나를 보관하고 전환을 관리한다(계획서 14절 GameState 흐름). */
@@ -8,10 +9,11 @@ export class SceneManager {
   private current: Scene | null = null;
   readonly context: GameContext;
 
-  constructor(input: InputManager, session: Session) {
+  constructor(input: InputManager, session: Session, assets: AssetLoader) {
     this.context = {
       input,
       session,
+      assets,
       setScene: (scene) => this.change(scene),
       requestPause: () => input.requestPause('menu'),
     };

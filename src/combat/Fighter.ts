@@ -14,6 +14,7 @@ import {
 import { getCharacter, getMove, type CharacterData } from '../data';
 import type { Action } from '../input/actions';
 import type { PlayerIndex } from '../input/InputManager';
+import { emptyAssets, type CharacterAssets } from '../rendering/CharacterAssets';
 import {
   attackPhase,
   moveTotalFrames,
@@ -49,6 +50,7 @@ export class Fighter {
   readonly player: PlayerIndex;
   readonly data: CharacterData;
   readonly moves: Record<AttackKind, MoveData>;
+  readonly assets: CharacterAssets;
 
   x: number;
   y = 0;
@@ -79,9 +81,16 @@ export class Fighter {
   private inputUp = false;
   private inputDown = false;
 
-  constructor(player: PlayerIndex, characterId: string, x: number, facing: 1 | -1) {
+  constructor(
+    player: PlayerIndex,
+    characterId: string,
+    x: number,
+    facing: 1 | -1,
+    assets: CharacterAssets = emptyAssets(characterId),
+  ) {
     this.player = player;
     this.data = getCharacter(characterId);
+    this.assets = assets;
     this.x = x;
     this.facing = facing;
     this.health = this.data.baseHealth;
@@ -94,23 +103,48 @@ export class Fighter {
 
   // --- 판정 상자 ---
 
+  private get masterBox() {
+    const rig = this.assets.rig;
+    if (!rig || !rig.master.usable || !rig.master.box) return null;
+    return { box: rig.master.box, rootX: rig.root.x, rootY: rig.root.y };
+  }
+
   get bodyWidth(): number {
-    return this.data.displayHeight * BODY_WIDTH_RATIO;
+    const master = this.masterBox;
+    return master ? master.box.w : this.data.displayHeight * BODY_WIDTH_RATIO;
   }
 
   get bodyHeight(): number {
-    const ratio = this.state === 'crouch' ? CROUCH_HEIGHT_RATIO : 1;
-    return this.data.displayHeight * ratio;
+    const master = this.masterBox;
+    const base = master ? master.box.h : this.data.displayHeight;
+    return base * (this.state === 'crouch' ? CROUCH_HEIGHT_RATIO : 1);
   }
 
+  /**
+   * 몸통 판정. 리그의 실측 마스터 경계를 그대로 쓴다(계획서 3절: 몸통 판정은 리그 데이터에 둔다).
+   * 리그가 없으면 표시 높이 기반 임시 판정으로 대체한다.
+   */
   hurtbox(): Rect {
-    const halfW = this.bodyWidth / 2;
-    return {
-      left: this.x - halfW,
-      right: this.x + halfW,
-      top: this.y - this.bodyHeight,
-      bottom: this.y,
-    };
+    const master = this.masterBox;
+    if (!master) {
+      const halfW = this.bodyWidth / 2;
+      return {
+        left: this.x - halfW,
+        right: this.x + halfW,
+        top: this.y - this.bodyHeight,
+        bottom: this.y,
+      };
+    }
+
+    const crouch = this.state === 'crouch' ? CROUCH_HEIGHT_RATIO : 1;
+    const left = master.box.minX - master.rootX;
+    const right = master.box.maxX - master.rootX;
+    const top = (master.box.minY - master.rootY) * crouch;
+    const bottom = master.box.maxY - master.rootY;
+
+    return this.facing === 1
+      ? { left: this.x + left, right: this.x + right, top: this.y + top, bottom: this.y + bottom }
+      : { left: this.x - right, right: this.x - left, top: this.y + top, bottom: this.y + bottom };
   }
 
   /** 판정 프레임에만 켜지는 공격 상자. 렌더링과 분리되어 있다(계획서 16절 프롬프트 2). */
@@ -187,7 +221,21 @@ export class Fighter {
     }
 
     this.applyGravity();
-    this.x = clamp(this.x, ARENA_LEFT, ARENA_RIGHT);
+    this.clampToArena();
+  }
+
+  /** 스프라이트 실측 폭을 고려해 화면 밖으로 나가지 않게 한다(계획서 2절: 양끝을 통과하지 않는다). */
+  clampToArena(): void {
+    const master = this.masterBox;
+    if (!master) {
+      this.x = clamp(this.x, ARENA_LEFT, ARENA_RIGHT);
+      return;
+    }
+    const left = master.box.minX - master.rootX;
+    const right = master.box.maxX - master.rootX;
+    const minX = this.facing === 1 ? ARENA_LEFT - left : ARENA_LEFT + right;
+    const maxX = this.facing === 1 ? ARENA_RIGHT - right : ARENA_RIGHT + left;
+    this.x = Math.min(Math.max(this.x, minX), Math.max(minX, maxX));
   }
 
   resetForRound(x: number, facing: 1 | -1): void {

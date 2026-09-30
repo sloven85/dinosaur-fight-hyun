@@ -1,6 +1,7 @@
 import { DESIGN_HEIGHT, DESIGN_WIDTH, FIXED_DT, MAX_FRAME_DELTA } from './constants';
 import { createSession } from './session';
 import { InputManager } from '../input/InputManager';
+import { AssetLoader } from '../rendering/AssetLoader';
 import { SceneManager } from '../scenes/SceneManager';
 import { TitleScene } from '../scenes/TitleScene';
 import { renderPauseOverlay } from '../ui/PauseOverlay';
@@ -13,6 +14,7 @@ import { renderPauseOverlay } from '../ui/PauseOverlay';
 export class Game {
   private readonly ctx: CanvasRenderingContext2D;
   private readonly input: InputManager;
+  private readonly assets: AssetLoader;
   private readonly scenes: SceneManager;
   private running = false;
   private accumulator = 0;
@@ -28,7 +30,8 @@ export class Game {
     canvas.height = DESIGN_HEIGHT;
 
     this.input = new InputManager();
-    this.scenes = new SceneManager(this.input, createSession());
+    this.assets = new AssetLoader();
+    this.scenes = new SceneManager(this.input, createSession(), this.assets);
     this.scenes.change(new TitleScene());
   }
 

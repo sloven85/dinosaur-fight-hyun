@@ -3,7 +3,9 @@ import type { GameContext } from '../core/GameContext';
 import { getStage } from '../data';
 import { Match } from '../combat/Match';
 import type { Fighter } from '../combat/Fighter';
-import { attackPhase, type Rect } from '../combat/types';
+import type { Rect } from '../combat/types';
+import { renderFighter } from '../rendering/FighterRenderer';
+import type { CharacterAssets } from '../rendering/CharacterAssets';
 import { BaseScene } from './BaseScene';
 import { ResultScene } from './ResultScene';
 import { drawText, fillRoundRect } from '../ui/draw';
@@ -12,28 +14,37 @@ import { COLORS, FONTS } from '../ui/theme';
 const HUD_BAR_W = 700;
 const HUD_BAR_H = 42;
 
-/** 계획서 16절 프롬프트 2: 대전 화면. 전투 규칙은 Match가 담당한다. */
+/** 계획서 16절 프롬프트 2·3: 대전 화면. 전투 규칙은 Match, 보이는 모양은 FighterRenderer가 맡는다. */
 export class BattleScene extends BaseScene {
   readonly pausable = true;
 
   private match!: Match;
   private debugBoxes = false;
+  private elapsed = 0;
+
+  constructor(private readonly characterAssets: [CharacterAssets, CharacterAssets] | null = null) {
+    super();
+  }
 
   enter(context: GameContext): void {
     super.enter(context);
     const { session } = context;
-    this.match = new Match(session.mode, session.characters);
+    this.elapsed = 0;
+    this.match = this.characterAssets
+      ? new Match(session.mode, session.characters, this.characterAssets)
+      : new Match(session.mode, session.characters);
   }
 
   protected tick(dt: number): void {
     const input = this.context.input;
+    this.elapsed += dt;
 
     if (input.consumeDebugToggle()) this.debugBoxes = !this.debugBoxes;
 
     this.match.step(input, dt);
 
     if (this.match.phase === 'matchOver') {
-      this.context.setScene(new ResultScene(this.match.matchWinner));
+      this.context.setScene(new ResultScene(this.match.matchWinner, this.characterAssets));
     }
   }
 
@@ -53,7 +64,7 @@ export class BattleScene extends BaseScene {
     g.stroke();
 
     for (const fighter of this.match.fighters) {
-      this.renderFighter(g, fighter, stage.groundY);
+      renderFighter(g, fighter, stage.groundY, this.elapsed);
     }
 
     this.renderHud(g, width);
@@ -68,83 +79,12 @@ export class BattleScene extends BaseScene {
     }
   }
 
-  // --- 캐릭터 ---
-
-  private renderFighter(g: CanvasRenderingContext2D, fighter: Fighter, groundY: number): void {
-    const down = fighter.state === 'down';
-    const height = fighter.bodyHeight * (down ? 0.4 : 1);
-    const bodyW = fighter.bodyWidth * (down ? 1.4 : 1);
-    const feetY = groundY + fighter.y;
-
-    const lean =
-      fighter.state === 'attack'
-        ? attackPhase(fighter.attack!.move, fighter.attack!.frame) === 'active'
-          ? 26
-          : 12
-        : fighter.state === 'hit'
-          ? -18
-          : 0;
-
-    const x = fighter.x - bodyW / 2 + fighter.facing * lean;
-    const y = feetY - height;
-
-    if (fighter.state === 'attack') this.renderAttackArc(g, fighter);
-
-    const outline =
-      fighter.invulnFrames > 0 ? '#ffffff' : fighter.state === 'hit' ? '#ffd166' : 'rgba(0, 0, 0, 0.35)';
-    fillRoundRect(g, x, y, bodyW, height, down ? 40 : 26, fighter.data.color, outline, 4);
-
-    if (!down) {
-      const eyeX = fighter.facing === 1 ? x + bodyW * 0.72 : x + bodyW * 0.28;
-      g.beginPath();
-      g.arc(eyeX, y + height * 0.18, 12, 0, Math.PI * 2);
-      g.fillStyle = '#ffffff';
-      g.fill();
-    }
-
-    drawText(g, fighter.data.name, fighter.x, y - 34, { font: FONTS.small, color: COLORS.text });
-  }
-
-  /** 판정과 분리된 시각 연출. 실제 피해는 Match가 판정한다(연출 강화는 프롬프트 6). */
-  private renderAttackArc(g: CanvasRenderingContext2D, fighter: Fighter): void {
-    if (!fighter.attack) return;
-    if (attackPhase(fighter.attack.move, fighter.attack.frame) !== 'active') return;
-
-    const box = fighter.activeHitboxes()[0];
-    if (!box) return;
-
-    g.save();
-    g.globalAlpha = 0.35;
-    g.fillStyle = fighter.attack.move.kind === 'special' ? COLORS.accent : '#ffffff';
-    g.beginPath();
-    g.ellipse(
-      (box.left + box.right) / 2,
-      (box.top + box.bottom) / 2,
-      (box.right - box.left) / 2,
-      (box.bottom - box.top) / 2,
-      0,
-      0,
-      Math.PI * 2,
-    );
-    g.fill();
-    g.restore();
-  }
-
   // --- HUD ---
 
   private renderHud(g: CanvasRenderingContext2D, width: number): void {
     const [p1, p2] = this.match.fighters;
 
-    renderBar(
-      g,
-      60,
-      60,
-      HUD_BAR_W,
-      HUD_BAR_H,
-      p1.health / p1.data.baseHealth,
-      COLORS.health,
-      false,
-    );
+    renderBar(g, 60, 60, HUD_BAR_W, HUD_BAR_H, p1.health / p1.data.baseHealth, COLORS.health, false);
     renderBar(
       g,
       width - 60 - HUD_BAR_W,
@@ -234,8 +174,7 @@ export class BattleScene extends BaseScene {
 
   private renderDebugBoxes(g: CanvasRenderingContext2D, groundY: number): void {
     for (const fighter of this.match.fighters) {
-      const hurt = fighter.hurtbox();
-      drawBox(g, shift(hurt, groundY), '#4dabf7');
+      drawBox(g, shift(fighter.hurtbox(), groundY), '#4dabf7');
       for (const box of fighter.activeHitboxes()) {
         drawBox(g, shift(box, groundY), '#ff6b6b');
       }
@@ -271,3 +210,5 @@ function renderBar(
     fillRoundRect(g, mirrored ? x + w - fillW : x, y, fillW, h, h / 2, color, null);
   }
 }
+
+export type { Fighter };
