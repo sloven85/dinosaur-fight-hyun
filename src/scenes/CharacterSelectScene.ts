@@ -60,6 +60,11 @@ export class CharacterSelectScene extends BaseScene {
     const session = this.context.session;
     const anyLocked = this.picks[0].locked || this.picks[1].locked;
 
+    // 계획서 2절 어른용 설정. 선택 화면에서만 쓰는 약·강공격 버튼으로 난이도·도움 설정을 바꾼다.
+    // (확인·취소와 겹치지 않게 light·heavy를 쓰고, 2인 대전에서도 값을 저장해 둔다.)
+    if (input.anyPressed('heavy')) this.context.settings.cycleDifficulty();
+    if (input.anyPressed('light')) this.context.settings.toggleAssist();
+
     if (input.anyPressed('cancel')) {
       if (anyLocked) {
         this.resetPicks();
@@ -136,7 +141,60 @@ export class CharacterSelectScene extends BaseScene {
       }
     }
 
+    this.renderSettingsPanel(g);
     this.renderStatus(g, width);
+  }
+
+  /**
+   * 계획서 2절: 난이도와 도움 설정 상태를 선택 화면에 명확히 보여 준다.
+   * 카드·HUD와 섞이지 않도록 왼쪽 위에 별도 판으로 둔다(C3).
+   */
+  private renderSettingsPanel(g: CanvasRenderingContext2D): void {
+    const settings = this.context.settings.value;
+    const cpuMode = this.context.session.mode === 'cpu';
+    const x = 40;
+    const y = 40;
+    const w = 380;
+    const h = cpuMode ? 176 : 206;
+
+    fillRoundRect(g, x, y, w, h, 18, COLORS.panel, COLORS.panelBorder, 3);
+    drawText(g, '어른 설정', x + 24, y + 36, {
+      font: FONTS.small,
+      color: COLORS.accent,
+      align: 'left',
+    });
+
+    drawText(
+      g,
+      `난이도 · ${settings.cpuDifficulty === 'easy' ? '쉬움' : '보통'} (강공격 버튼으로 변경)`,
+      x + 24,
+      y + 78,
+      { font: FONTS.tiny, color: COLORS.text, align: 'left' },
+    );
+    drawText(
+      g,
+      `도움 설정 · ${settings.assist ? '켜짐' : '꺼짐'} (약공격 버튼으로 변경)`,
+      x + 24,
+      y + 114,
+      {
+        font: FONTS.tiny,
+        color: settings.assist ? COLORS.accent : COLORS.textDim,
+        align: 'left',
+      },
+    );
+    drawText(g, '1P 체력 1.5배 + CPU 공격 빈도 감소', x + 24, y + 144, {
+      font: FONTS.tiny,
+      color: COLORS.textDim,
+      align: 'left',
+    });
+
+    if (!cpuMode) {
+      drawText(g, '2인 대전에서는 도움 설정이 적용되지 않습니다', x + 24, y + 178, {
+        font: FONTS.tiny,
+        color: COLORS.textDim,
+        align: 'left',
+      });
+    }
   }
 
   private renderCard(g: CanvasRenderingContext2D, x: number, y: number, character: CharacterData): void {

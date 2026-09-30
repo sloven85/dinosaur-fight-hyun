@@ -14,34 +14,99 @@ const OUTLINE_OFFSETS: ReadonlyArray<readonly [number, number]> = [
 ];
 /** 보조색 보정 강도. 원본 그림을 완전히 덮지 않고 피부색만 기울인다. */
 const ALT_PALETTE_ALPHA = 0.32;
-
-const tintCache = new Map<string, HTMLCanvasElement>();
-
 /**
- * 원본 이미지를 한 가지 색으로 보정한 사본을 만들어 캐시한다.
- * source-atop이라 그림의 불투명한 픽셀에만 색이 얹힌다(배경은 건드리지 않는다).
+ * 피부 대표색과 이 정도 색 차이 안의 픽셀만 보조색 대상으로 본다.
+ * 눈·이빨처럼 밝거나 어두운 픽셀은 범위를 벗어나 그대로 남는다(B6: 반전 금지).
  */
-function tintedSprite(image: HTMLImageElement, color: string): HTMLCanvasElement | null {
-  const key = `${image.src}|${color}`;
-  const cached = tintCache.get(key);
-  if (cached) return cached;
+const SKIN_MATCH_TOLERANCE = 96;
 
+const solidTintCache = new Map<string, HTMLCanvasElement>();
+const skinTintCache = new Map<string, HTMLCanvasElement>();
+
+function hexToRgb(hex: string): [number, number, number] | null {
+  const match = /^#?([0-9a-f]{6})$/i.exec(hex.trim());
+  if (!match) return null;
+  const value = Number.parseInt(match[1], 16);
+  return [(value >> 16) & 255, (value >> 8) & 255, value & 255];
+}
+
+function spriteSize(image: HTMLImageElement): { width: number; height: number } | null {
   const width = image.naturalWidth || image.width;
   const height = image.naturalHeight || image.height;
   if (!width || !height) return null;
+  return { width, height };
+}
+
+/**
+ * 실루엣 전체를 한 색으로 채운 사본(2P 파란 테두리용).
+ * source-atop이라 그림의 불투명한 픽셀에만 색이 얹힌다(배경은 건드리지 않는다).
+ */
+function solidTintedSprite(image: HTMLImageElement, color: string): HTMLCanvasElement | null {
+  const key = `${image.src}|${color}`;
+  const cached = solidTintCache.get(key);
+  if (cached) return cached;
+
+  const size = spriteSize(image);
+  if (!size) return null;
 
   const canvas = document.createElement('canvas');
-  canvas.width = width;
-  canvas.height = height;
+  canvas.width = size.width;
+  canvas.height = size.height;
   const g = canvas.getContext('2d');
   if (!g) return null;
 
   g.drawImage(image, 0, 0);
   g.globalCompositeOperation = 'source-atop';
   g.fillStyle = color;
-  g.fillRect(0, 0, width, height);
+  g.fillRect(0, 0, size.width, size.height);
 
-  tintCache.set(key, canvas);
+  solidTintCache.set(key, canvas);
+  return canvas;
+}
+
+/**
+ * 피부로 보이는 픽셀만 보조색으로 바꾼 사본(2P 보조색).
+ * 파츠 마스크가 없는 지금은 대표 피부색과의 색 차이로 피부를 추정한다.
+ * 눈·이빨·발톱처럼 색이 다른 부위는 손대지 않아 반전되지 않는다(B6).
+ */
+function skinTintedSprite(
+  image: HTMLImageElement,
+  baseColor: string,
+  tintColor: string,
+): HTMLCanvasElement | null {
+  const key = `${image.src}|${baseColor}|${tintColor}|skin`;
+  const cached = skinTintCache.get(key);
+  if (cached) return cached;
+
+  const size = spriteSize(image);
+  const base = hexToRgb(baseColor);
+  const tint = hexToRgb(tintColor);
+  if (!size || !base || !tint) return null;
+
+  const canvas = document.createElement('canvas');
+  canvas.width = size.width;
+  canvas.height = size.height;
+  const g = canvas.getContext('2d', { willReadFrequently: true });
+  if (!g) return null;
+
+  g.drawImage(image, 0, 0);
+  const pixels = g.getImageData(0, 0, size.width, size.height);
+  const data = pixels.data;
+  const limit = SKIN_MATCH_TOLERANCE * SKIN_MATCH_TOLERANCE;
+
+  for (let i = 0; i < data.length; i += 4) {
+    if (data[i + 3] === 0) continue;
+    const dr = data[i] - base[0];
+    const dg = data[i + 1] - base[1];
+    const db = data[i + 2] - base[2];
+    if (dr * dr + dg * dg + db * db > limit) continue;
+    data[i] = tint[0];
+    data[i + 1] = tint[1];
+    data[i + 2] = tint[2];
+  }
+
+  g.putImageData(pixels, 0, 0);
+  skinTintCache.set(key, canvas);
   return canvas;
 }
 
@@ -89,7 +154,7 @@ export function renderFighter(
 
   // 2P 파란 테두리는 스프라이트 뒤에 그린다.
   if (altSkin) {
-    const outline = tintedSprite(choice.image, TWO_P_OUTLINE);
+    const outline = solidTintedSprite(choice.image, TWO_P_OUTLINE);
     if (outline) {
       g.save();
       g.globalAlpha = 0.85;
@@ -102,9 +167,9 @@ export function renderFighter(
 
   g.drawImage(choice.image, -choice.rootX, -choice.rootY);
 
-  // 2P 보조색 보정은 원본 위에 옅게 얹는다.
+  // 2P 보조색 보정은 피부 픽셀만 원본 위에 옅게 얹는다(눈·이빨은 그대로).
   if (altSkin) {
-    const tinted = tintedSprite(choice.image, altSkin);
+    const tinted = skinTintedSprite(choice.image, fighter.data.color, altSkin);
     if (tinted) {
       g.save();
       g.globalAlpha = ALT_PALETTE_ALPHA;
@@ -233,11 +298,18 @@ function renderPlaceholder(g: CanvasRenderingContext2D, fighter: Fighter, feetY:
   const bodyW = fighter.data.displayHeight * 0.62 * (down ? 1.4 : 1);
 
   g.fillStyle = fighter.useAlternatePalette ? fighter.data.alternatePalette.skin : fighter.data.color;
-  g.strokeStyle = 'rgba(0, 0, 0, 0.35)';
-  g.lineWidth = 4;
   g.beginPath();
   g.roundRect(fighter.x - bodyW / 2, feetY - height, bodyW, height, down ? 40 : 26);
   g.fill();
+
+  // 에셋이 없어도 2P를 알아볼 수 있게 같은 파란 테두리를 임시 도형에도 두른다.
+  if (fighter.useAlternatePalette) {
+    g.strokeStyle = TWO_P_OUTLINE;
+    g.lineWidth = 10;
+    g.stroke();
+  }
+  g.strokeStyle = 'rgba(0, 0, 0, 0.35)';
+  g.lineWidth = 4;
   g.stroke();
 
   g.fillStyle = 'rgba(255,255,255,0.9)';

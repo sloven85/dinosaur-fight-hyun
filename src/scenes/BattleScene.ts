@@ -28,11 +28,13 @@ export class BattleScene extends BaseScene {
 
   enter(context: GameContext): void {
     super.enter(context);
-    const { session } = context;
+    const { session, settings } = context;
     this.elapsed = 0;
+    // 다시 하기를 눌러 새 경기를 시작할 때도 저장된 난이도·도움 설정을 그대로 다시 읽는다.
+    const options = { difficulty: settings.difficulty, assist: settings.assist };
     this.match = this.characterAssets
-      ? new Match(session.mode, session.characters, this.characterAssets)
-      : new Match(session.mode, session.characters);
+      ? new Match(session.mode, session.characters, this.characterAssets, options)
+      : new Match(session.mode, session.characters, undefined, options);
   }
 
   protected tick(dt: number): void {
@@ -84,14 +86,15 @@ export class BattleScene extends BaseScene {
   private renderHud(g: CanvasRenderingContext2D, width: number): void {
     const [p1, p2] = this.match.fighters;
 
-    renderBar(g, 60, 60, HUD_BAR_W, HUD_BAR_H, p1.health / p1.data.baseHealth, COLORS.health, false);
+    // 도움 설정으로 최대 체력이 달라질 수 있어 data.baseHealth가 아니라 maxHealth로 나눈다.
+    renderBar(g, 60, 60, HUD_BAR_W, HUD_BAR_H, p1.health / p1.maxHealth, COLORS.health, false);
     renderBar(
       g,
       width - 60 - HUD_BAR_W,
       60,
       HUD_BAR_W,
       HUD_BAR_H,
-      p2.health / p2.data.baseHealth,
+      p2.health / p2.maxHealth,
       COLORS.health,
       true,
     );
@@ -109,6 +112,29 @@ export class BattleScene extends BaseScene {
 
     drawText(g, '1P', 60, 256, { font: FONTS.small, color: COLORS.p1, align: 'left' });
     drawText(g, '2P', width - 60, 256, { font: FONTS.small, color: COLORS.p2, align: 'right' });
+
+    this.renderSettingsChip(g, width);
+  }
+
+  /**
+   * 1인 대전에서만 현재 난이도·도움 설정을 알려 준다.
+   * 체력바·게이지·캐릭터와 섞이지 않게 중앙 빈칸의 별도 판으로 그린다(C3).
+   */
+  private renderSettingsChip(g: CanvasRenderingContext2D, width: number): void {
+    if (this.context.session.mode !== 'cpu') return;
+
+    const label = `난이도 ${this.match.difficulty === 'easy' ? '쉬움' : '보통'}${
+      this.match.assistActive ? ' · 도움 설정 켜짐' : ''
+    }`;
+    const chipW = 380;
+    const chipH = 44;
+    const x = width / 2 - chipW / 2;
+    const y = 158;
+    fillRoundRect(g, x, y, chipW, chipH, 22, 'rgba(8, 12, 16, 0.72)', COLORS.panelBorder, 2);
+    drawText(g, label, width / 2, y + chipH / 2, {
+      font: FONTS.tiny,
+      color: this.match.assistActive ? COLORS.accent : COLORS.textDim,
+    });
   }
 
   private renderRoundPips(

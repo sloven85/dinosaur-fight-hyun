@@ -1,5 +1,6 @@
 import { DESIGN_HEIGHT, DESIGN_WIDTH, FIXED_DT, MAX_FRAME_DELTA } from './constants';
 import { createSession } from './session';
+import { createSettings, type SettingsStore } from './settings';
 import { InputManager } from '../input/InputManager';
 import { AssetLoader } from '../rendering/AssetLoader';
 import { SceneManager } from '../scenes/SceneManager';
@@ -15,6 +16,7 @@ export class Game {
   private readonly ctx: CanvasRenderingContext2D;
   private readonly input: InputManager;
   private readonly assets: AssetLoader;
+  private readonly settings: SettingsStore;
   private readonly scenes: SceneManager;
   private running = false;
   private accumulator = 0;
@@ -31,7 +33,9 @@ export class Game {
 
     this.input = new InputManager();
     this.assets = new AssetLoader();
-    this.scenes = new SceneManager(this.input, createSession(), this.assets);
+    // 저장된 설정이 없거나 저장소를 못 쓰면 기본값으로 시작한다.
+    this.settings = createSettings();
+    this.scenes = new SceneManager(this.input, createSession(), this.assets, this.settings);
     this.scenes.change(new TitleScene());
   }
 

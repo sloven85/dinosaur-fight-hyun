@@ -9,6 +9,20 @@ export interface MoveSet {
   special: string;
 }
 
+/**
+ * 계획서 19절 CPU 검수(C1): CPU 행동에서 종 아키타입이 드러나게 하는 성향.
+ * 6개 아키타입 코드를 재사용하되 캐릭터별로 어느 성향을 쓸지 데이터로 정한다.
+ */
+export type CpuStyle =
+  | 'balanced'
+  | 'bruiser'
+  | 'rusher'
+  | 'rushdown'
+  | 'counter'
+  | 'zoning'
+  | 'leaper'
+  | 'trickster';
+
 /** 계획서 16절 프롬프트 4: 캐릭터별 이동 특성. */
 export interface CharacterTraits {
   /** 파키케팔로사우루스: 지상 강공격을 앞으로 뛰어들며 시작한다(도약 돌진). */
@@ -36,6 +50,8 @@ export interface CharacterData {
   portraitPath: string;
   moves: MoveSet;
   alternatePalette: { skin: string };
+  /** CPU가 이 캐릭터를 조종할 때의 행동 성향(계획서 19절 C1). */
+  cpuStyle: CpuStyle;
   /**
    * 계획서 16절 프롬프트 4의 캐릭터별 이동 특성.
    * 6개 아키타입 공통 코드는 그대로 두고, 이 플래그로만 개성을 준다.

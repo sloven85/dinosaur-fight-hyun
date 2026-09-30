@@ -17,6 +17,12 @@ import {
   START_X_P1,
   START_X_P2,
 } from '../core/constants';
+import { AIController } from '../ai/AIController';
+import {
+  ASSIST_CPU_ATTACK_FREQUENCY_SCALE,
+  P1_ASSIST_HEALTH_MULTIPLIER,
+  type CpuDifficulty,
+} from '../core/settings';
 import type { GameMode } from '../core/session';
 import type { PlayerIndex } from '../input/InputManager';
 import { emptyAssets, type CharacterAssets } from '../rendering/CharacterAssets';
@@ -24,6 +30,13 @@ import { Fighter, NULL_INPUT, type FighterInput } from './Fighter';
 import { rectsOverlap, type MoveData } from './types';
 
 export type RoundPhase = 'intro' | 'fight' | 'roundOver' | 'matchOver';
+
+/** 계획서 16절 프롬프트 5: 난이도·도움 설정·테스트용 난수원. */
+export interface MatchOptions {
+  difficulty?: CpuDifficulty;
+  assist?: boolean;
+  random?: () => number;
+}
 
 interface HitEvent {
   attacker: Fighter;
@@ -49,6 +62,12 @@ export class Match {
   roundWasDraw = false;
   /** 두 플레이어가 같은 캐릭터인지(계획서 4절: 동일 캐릭터 대전 허용, 2P 보조색). */
   readonly mirrorMatch: boolean;
+  /** 고른 CPU 난이도. */
+  readonly difficulty: CpuDifficulty;
+  /** 도움 설정이 실제로 켜져 있는지(1인 대전에서만 적용). */
+  readonly assistActive: boolean;
+
+  private readonly cpu: AIController | null;
 
   constructor(
     private readonly mode: GameMode,
@@ -57,20 +76,48 @@ export class Match {
       emptyAssets(characterIds[0]),
       emptyAssets(characterIds[1]),
     ],
+    options: MatchOptions = {},
   ) {
     this.mirrorMatch = characterIds[0] === characterIds[1];
+    this.difficulty = options.difficulty ?? 'easy';
+    // 계획서 2절: 도움 설정은 1P 체력 1.5배 + CPU 공격 빈도 감소. 기본값은 꺼짐.
+    this.assistActive = this.mode === 'cpu' && options.assist === true;
+
     this.fighters = [
       new Fighter(0, characterIds[0], START_X_P1, 1, assets[0]),
       new Fighter(1, characterIds[1], START_X_P2, -1, assets[1]),
     ];
     // 동일 캐릭터일 때만 2P에 보조색을 적용해 구분한다.
     this.fighters[1].useAlternatePalette = this.mirrorMatch;
+
+    this.cpu =
+      this.mode === 'cpu'
+        ? new AIController(1, {
+            difficulty: this.difficulty,
+            attackFrequencyScale: this.assistActive ? ASSIST_CPU_ATTACK_FREQUENCY_SCALE : 1,
+            random: options.random,
+          })
+        : null;
+
+    this.applyAssistHealth();
   }
 
-  /** 2P가 CPU인 경로에서는 입력을 주지 않는다. AIController는 프롬프트 5에서 붙인다. */
+  /** CPU 컨트롤러(1인 대전에서만 존재). 테스트·디버그용. */
+  get cpuController(): AIController | null {
+    return this.cpu;
+  }
+
+  /** 2P가 CPU인 경로에서는 사람 입력 대신 AIController의 Action을 쓴다(프롬프트 5). */
   private inputFor(player: PlayerIndex, input: FighterInput): FighterInput {
-    if (this.mode === 'cpu' && player === 1) return NULL_INPUT;
+    if (this.mode === 'cpu' && player === 1) return this.cpu ?? NULL_INPUT;
     return input;
+  }
+
+  /** 도움 설정이 켜져 있으면 1P 최대 체력을 1.5배로 잡는다. */
+  private applyAssistHealth(): void {
+    if (this.assistActive) {
+      this.fighters[0].setMaxHealthMultiplier(P1_ASSIST_HEALTH_MULTIPLIER);
+    }
   }
 
   get p1(): Fighter {
@@ -97,6 +144,8 @@ export class Match {
         break;
 
       case 'fight':
+        // CPU는 이번 틱의 공개 상태를 보고 Action을 정한 뒤, 사람과 같은 경로로 step한다.
+        this.cpu?.update(this.p2, this.p1, dt);
         for (const fighter of this.fighters) {
           fighter.step(this.inputFor(fighter.player, input), dt);
         }
@@ -125,9 +174,12 @@ export class Match {
     this.roundWinner = null;
     this.roundWasDraw = false;
     this.timerFrames = ROUND_SECONDS * SIMULATION_HZ;
+    this.applyAssistHealth();
     this.p1.resetForRound(START_X_P1, 1);
     this.p2.resetForRound(START_X_P2, -1);
     this.p2.useAlternatePalette = this.mirrorMatch;
+    // 라운드가 바뀌면 CPU 판단·휴식·특수기 쿨다운도 정확히 초기화한다.
+    this.cpu?.reset();
   }
 
   private endRound(winner: PlayerIndex | null): void {
@@ -281,8 +333,9 @@ export class Match {
 
   /** 계획서 2절: 시간 종료 시 절대 체력이 아닌 남은 체력 비율을 비교한다. */
   private resolveTimeout(): void {
-    const ratioP1 = this.p1.health / this.p1.data.baseHealth;
-    const ratioP2 = this.p2.health / this.p2.data.baseHealth;
+    // 도움 설정으로 최대 체력이 달라져도 공정하게 비교한다.
+    const ratioP1 = this.p1.health / this.p1.maxHealth;
+    const ratioP2 = this.p2.health / this.p2.maxHealth;
     if (Math.abs(ratioP1 - ratioP2) < 1e-6) {
       this.endRound(null);
     } else {

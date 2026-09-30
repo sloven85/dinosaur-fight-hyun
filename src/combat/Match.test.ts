@@ -139,3 +139,71 @@ describe('전투 규칙', () => {
     expect(match.timerFrames).toBe(ROUND_SECONDS * SIMULATION_HZ);
   });
 });
+
+describe('1인 대전 CPU와 도움 설정 (프롬프트 5)', () => {
+  it('1인 대전에서만 CPU 컨트롤러가 생기고, 2P가 스스로 움직인다', () => {
+    const cpuMatch = new Match('cpu', ['tyrannosaurus', 'triceratops'], undefined, {
+      difficulty: 'easy',
+      random: () => 0,
+    });
+    const versusMatch = new Match('versus', ['tyrannosaurus', 'triceratops']);
+
+    expect(cpuMatch.cpuController).not.toBeNull();
+    expect(versusMatch.cpuController).toBeNull();
+
+    fighting(cpuMatch);
+    const startX = cpuMatch.p2.x;
+    advance(cpuMatch, new ScriptInput(), 40);
+
+    // 2P는 사람 입력 없이도 CPU 판단으로 접근한다.
+    expect(cpuMatch.p2.x).not.toBe(startX);
+  });
+
+  it('도움 설정은 1인 대전에서만 적용된다', () => {
+    const cpuMatch = new Match('cpu', ['tyrannosaurus', 'triceratops'], undefined, { assist: true });
+    expect(cpuMatch.assistActive).toBe(true);
+    expect(cpuMatch.p1.maxHealth).toBe(Math.round(cpuMatch.p1.data.baseHealth * 1.5));
+    expect(cpuMatch.p1.health).toBe(cpuMatch.p1.maxHealth);
+
+    const versusMatch = new Match('versus', ['tyrannosaurus', 'triceratops'], undefined, {
+      assist: true,
+    });
+    expect(versusMatch.assistActive).toBe(false);
+    expect(versusMatch.p1.maxHealth).toBe(versusMatch.p1.data.baseHealth);
+  });
+
+  it('도움 설정 기본값은 꺼짐이다', () => {
+    const match = new Match('cpu', ['tyrannosaurus', 'triceratops']);
+    expect(match.assistActive).toBe(false);
+    expect(match.p1.maxHealth).toBe(match.p1.data.baseHealth);
+    expect(match.difficulty).toBe('easy');
+  });
+
+  it('다음 라운드에서도 1P 최대 체력과 시작 체력이 유지된다', () => {
+    const match = new Match('cpu', ['tyrannosaurus', 'triceratops'], undefined, { assist: true });
+    fighting(match);
+    const boosted = match.p1.maxHealth;
+
+    match.p1.health = 0;
+    match.step(new ScriptInput(), FIXED_DT);
+    advance(match, new ScriptInput(), 200);
+
+    expect(match.roundNumber).toBeGreaterThan(1);
+    expect(match.p1.maxHealth).toBe(boosted);
+    expect(match.p1.health).toBe(boosted);
+  });
+
+  it('시간 종료는 도움 설정으로 달라진 최대 체력 비율로 판정한다', () => {
+    const match = new Match('cpu', ['tyrannosaurus', 'triceratops'], undefined, { assist: true });
+    fighting(match);
+
+    // 양쪽 모두 자기 최대 체력의 50% → 무승부. (절대 체력으로 비교하면 1P가 이긴다.)
+    match.p1.health = match.p1.maxHealth * 0.5;
+    match.p2.health = match.p2.maxHealth * 0.5;
+    match.timerFrames = 1;
+    match.step(new ScriptInput(), FIXED_DT);
+
+    expect(match.phase).toBe('roundOver');
+    expect(match.roundWinner).toBeNull();
+  });
+});

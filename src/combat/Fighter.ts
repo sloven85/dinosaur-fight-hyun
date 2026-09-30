@@ -65,6 +65,8 @@ export class Fighter {
   state: FighterState = 'idle';
 
   health: number;
+  /** 이번 경기의 최대 체력. 도움 설정(1P 1.5배)이 걸리면 baseHealth보다 커진다. */
+  maxHealth: number;
   meter = START_METER;
   roundWins = 0;
 
@@ -109,7 +111,8 @@ export class Fighter {
     this.assets = assets;
     this.x = x;
     this.facing = facing;
-    this.health = this.data.baseHealth;
+    this.maxHealth = this.data.baseHealth;
+    this.health = this.maxHealth;
     this.moves = {
       light: getMove(this.data.moves.light),
       heavy: getMove(this.data.moves.heavy),
@@ -200,6 +203,25 @@ export class Fighter {
     return this.meter >= MAX_METER;
   }
 
+  /** 기술별 최대 도달 거리(중심에서 바깥쪽 끝까지, 디자인 px). CPU가 사거리를 판단할 때 쓴다. */
+  reachOf(kind: AttackKind): number {
+    const move = this.moves[kind];
+    let reach = 0;
+    for (const hitbox of move.hitboxes) {
+      reach = Math.max(reach, hitbox.x + hitbox.width);
+    }
+    return reach;
+  }
+
+  /**
+   * 계획서 2절 도움 설정: 최대 체력을 baseHealth의 배수로 다시 잡는다.
+   * 라운드가 시작될 때마다 resetForRound가 이 값을 기준으로 체력을 채운다.
+   */
+  setMaxHealthMultiplier(multiplier: number): void {
+    this.maxHealth = Math.round(this.data.baseHealth * multiplier);
+    this.health = this.maxHealth;
+  }
+
   // --- 진행 ---
 
   step(input: FighterInput, dt: number): void {
@@ -267,7 +289,7 @@ export class Fighter {
     this.onGround = true;
     this.facing = facing;
     this.state = 'idle';
-    this.health = this.data.baseHealth;
+    this.health = this.maxHealth;
     this.meter = START_METER;
     this.attack = null;
     this.hitstunFrames = 0;

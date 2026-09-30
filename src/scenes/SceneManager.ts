@@ -1,5 +1,6 @@
 import type { GameContext } from '../core/GameContext';
 import type { Session } from '../core/session';
+import type { SettingsStore } from '../core/settings';
 import type { InputManager } from '../input/InputManager';
 import type { AssetLoader } from '../rendering/AssetLoader';
 import type { Scene } from './Scene';
@@ -9,11 +10,12 @@ export class SceneManager {
   private current: Scene | null = null;
   readonly context: GameContext;
 
-  constructor(input: InputManager, session: Session, assets: AssetLoader) {
+  constructor(input: InputManager, session: Session, assets: AssetLoader, settings: SettingsStore) {
     this.context = {
       input,
       session,
       assets,
+      settings,
       setScene: (scene) => this.change(scene),
       requestPause: () => input.requestPause('menu'),
     };
