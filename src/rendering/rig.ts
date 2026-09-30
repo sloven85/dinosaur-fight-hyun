@@ -43,3 +43,14 @@ export interface RigData {
 export async function loadRig(loader: AssetLoader, rigPath: string): Promise<RigData | null> {
   return loader.loadJson<RigData>(rigPath);
 }
+
+/**
+ * 원본 아트를 화면에 그릴 때 곱하는 배율.
+ * 계획서 11절대로 아트는 화면에 보일 키의 약 2.7배(슈퍼샘플)로 그려져 있으므로,
+ * 실측 실루엣 높이(box.h)를 캐릭터의 화면 키(displayHeight)로 나눠 축소한다.
+ * box가 없는 예전 1:1 아트는 배율 1로 그린다.
+ */
+export function spriteScale(displayHeight: number, box: BoxData | null | undefined): number {
+  if (!box || box.h <= 0 || displayHeight <= 0) return 1;
+  return displayHeight / box.h;
+}

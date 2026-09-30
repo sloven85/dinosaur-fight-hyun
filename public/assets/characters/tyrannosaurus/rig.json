@@ -4,22 +4,22 @@
     "height": 1536
   },
   "root": {
-    "x": 1024,
-    "y": 1280
+    "x": 1039.5,
+    "y": 1279
   },
   "master": {
     "imagePath": "master_side.png",
     "usable": true,
     "box": {
-      "minX": 817,
-      "minY": 891,
-      "maxX": 1232,
-      "maxY": 1262,
-      "w": 416,
-      "h": 372,
-      "cx": 1024.5,
-      "feet": 1262,
-      "fill": 0.4530474565756824
+      "minX": 113,
+      "minY": 130,
+      "maxX": 1966,
+      "maxY": 1279,
+      "w": 1854,
+      "h": 1150,
+      "cx": 1039.5,
+      "feet": 1279,
+      "fill": 0.2668917973836263
     }
   },
   "portrait": {
@@ -29,87 +29,87 @@
   "poses": {
     "heavy": {
       "imagePath": "poses/heavy.png",
-      "rootX": 1034,
-      "rootY": 1275,
+      "rootX": 1181.5,
+      "rootY": 1279,
       "usable": true,
       "box": {
-        "minX": 828,
-        "minY": 872,
-        "maxX": 1241,
-        "maxY": 1257,
-        "w": 414,
-        "h": 386,
-        "cx": 1034.5,
-        "feet": 1257,
-        "fill": 0.5362506570548923
+        "minX": 316,
+        "minY": 129,
+        "maxX": 2047,
+        "maxY": 1279,
+        "w": 1732,
+        "h": 1151,
+        "cx": 1181.5,
+        "feet": 1279,
+        "fill": 0.2647959391276042
       }
     },
     "special": {
       "imagePath": "poses/special.png",
-      "rootX": 1034,
-      "rootY": 1276,
+      "rootX": 1177.5,
+      "rootY": 1279,
       "usable": true,
       "box": {
-        "minX": 815,
-        "minY": 871,
-        "maxX": 1253,
-        "maxY": 1258,
-        "w": 439,
-        "h": 388,
-        "cx": 1034,
-        "feet": 1258,
-        "fill": 0.49554399643050046
+        "minX": 328,
+        "minY": 11,
+        "maxX": 2027,
+        "maxY": 1279,
+        "w": 1700,
+        "h": 1269,
+        "cx": 1177.5,
+        "feet": 1279,
+        "fill": 0.3286161422729492
       }
     },
     "hit": {
       "imagePath": "poses/hit.png",
-      "rootX": 1013,
-      "rootY": 1276,
+      "rootX": 1089.5,
+      "rootY": 1279,
       "usable": true,
       "box": {
-        "minX": 840,
-        "minY": 871,
-        "maxX": 1187,
-        "maxY": 1258,
-        "w": 348,
-        "h": 388,
-        "cx": 1013.5,
-        "feet": 1258,
-        "fill": 0.5673583955444957
+        "minX": 265,
+        "minY": 1,
+        "maxX": 1914,
+        "maxY": 1279,
+        "w": 1650,
+        "h": 1279,
+        "cx": 1089.5,
+        "feet": 1279,
+        "fill": 0.277676264444987
       }
     },
     "down": {
       "imagePath": "poses/down.png",
-      "rootX": 1010,
-      "rootY": 1270,
+      "rootX": 1027.0,
+      "rootY": 1279,
       "usable": true,
       "box": {
-        "minX": 790,
-        "minY": 877,
-        "maxX": 1230,
-        "maxY": 1252,
-        "w": 441,
-        "h": 376,
-        "cx": 1010,
-        "feet": 1252,
-        "fill": 0.6222680561586337
+        "minX": 30,
+        "minY": 764,
+        "maxX": 2024,
+        "maxY": 1279,
+        "w": 1995,
+        "h": 516,
+        "cx": 1027.0,
+        "feet": 1279,
+        "fill": 0.20530382792154947
       }
     },
     "victory": {
       "imagePath": "poses/victory.png",
-      "rootX": 1014,
-      "rootY": 1278,
+      "rootX": 1020.5,
+      "rootY": 1279,
       "usable": true,
       "box": {
-        "minX": 897,
-        "minY": 870,
-        "maxX": 1131,
-        "maxY": 1260,
-        "w": 235,
-        "h": 391,
-        "cx": 1014,
-        "feet": 1260,
-        "fill": 0.5975621701039343
+        "minX": 196,
+        "minY": 0,
+        "maxX": 1845,
+        "maxY": 1279,
+        "w": 1650,
+        "h": 1280,
+        "cx": 1020.5,
+        "feet": 1279,
+        "fill": 0.2711140314737956
       }
     }
   },

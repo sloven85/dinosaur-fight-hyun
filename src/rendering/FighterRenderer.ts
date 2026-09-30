@@ -1,6 +1,6 @@
 import type { Fighter } from '../combat/Fighter';
 import { attackPhase } from '../combat/types';
-import type { PoseName } from './rig';
+import { spriteScale, type PoseName } from './rig';
 
 const CROUCH_SQUASH = 0.75;
 
@@ -116,6 +116,8 @@ interface SpriteChoice {
   rootY: number;
   /** 전용 포즈 PNG인지(절차적 변형을 덜 준다). */
   isPose: boolean;
+  /** rig의 마스터 배율을 적용할지. 초상 대체일 때는 원본 크기로 그린다. */
+  fromRig: boolean;
 }
 
 /**
@@ -150,6 +152,16 @@ export function renderFighter(
     g.globalAlpha = 0.55;
   }
 
+  // 아트는 화면 키의 약 2.7배로 그려져 있어 실측 높이 기준으로 축소해 그린다.
+  const scale = choice.fromRig
+    ? spriteScale(fighter.data.displayHeight, fighter.assets.rig?.master.box)
+    : 1;
+  const size = spriteSize(choice.image);
+  const destW = (size?.width ?? 0) * scale;
+  const destH = (size?.height ?? 0) * scale;
+  const destX = -choice.rootX * scale;
+  const destY = -choice.rootY * scale;
+
   const altSkin = fighter.useAlternatePalette ? fighter.data.alternatePalette.skin : null;
 
   // 2P 파란 테두리는 스프라이트 뒤에 그린다.
@@ -159,13 +171,13 @@ export function renderFighter(
       g.save();
       g.globalAlpha = 0.85;
       for (const [dx, dy] of OUTLINE_OFFSETS) {
-        g.drawImage(outline, -choice.rootX + dx, -choice.rootY + dy);
+        g.drawImage(outline, destX + dx, destY + dy, destW, destH);
       }
       g.restore();
     }
   }
 
-  g.drawImage(choice.image, -choice.rootX, -choice.rootY);
+  g.drawImage(choice.image, destX, destY, destW, destH);
 
   // 2P 보조색 보정은 피부 픽셀만 원본 위에 옅게 얹는다(눈·이빨은 그대로).
   if (altSkin) {
@@ -173,7 +185,7 @@ export function renderFighter(
     if (tinted) {
       g.save();
       g.globalAlpha = ALT_PALETTE_ALPHA;
-      g.drawImage(tinted, -choice.rootX, -choice.rootY);
+      g.drawImage(tinted, destX, destY, destW, destH);
       g.restore();
     }
   }
@@ -193,11 +205,11 @@ function selectSprite(fighter: Fighter): SpriteChoice | null {
       const entry = rig.poses[poseName];
       const image = poses[poseName];
       if (entry?.usable && image) {
-        return { image, rootX: entry.rootX, rootY: entry.rootY, isPose: true };
+        return { image, rootX: entry.rootX, rootY: entry.rootY, isPose: true, fromRig: true };
       }
     }
     if (rig.master.usable && master) {
-      return { image: master, rootX: rig.root.x, rootY: rig.root.y, isPose: false };
+      return { image: master, rootX: rig.root.x, rootY: rig.root.y, isPose: false, fromRig: true };
     }
   }
 
@@ -208,6 +220,7 @@ function selectSprite(fighter: Fighter): SpriteChoice | null {
       rootX: portrait.width / 2,
       rootY: portrait.height,
       isPose: true,
+      fromRig: false,
     };
   }
 
