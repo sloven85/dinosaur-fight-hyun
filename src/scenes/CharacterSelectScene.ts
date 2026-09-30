@@ -266,15 +266,16 @@ export class CharacterSelectScene extends BaseScene {
       });
     }
 
-    drawText(g, `1P ${lockLabel(this.picks[0])}`, width / 2 - 300, 1020, {
+    // 키보드로 두 사람이 함께 할 때 서로 다른 확인 키를 쓴다(bindings.ts 참고).
+    drawText(g, `1P ${lockLabel(this.picks[0])} · 확인 Enter`, width / 2 - 300, 1020, {
       font: FONTS.small,
       color: COLORS.p1,
     });
-    drawText(g, `2P ${lockLabel(this.picks[1])}`, width / 2 + 300, 1020, {
+    drawText(g, `2P ${lockLabel(this.picks[1])} · 확인 오른쪽 Shift`, width / 2 + 300, 1020, {
       font: FONTS.small,
       color: COLORS.p2,
     });
-    drawText(g, '좌우·상하 이동 · 확인 선택 · 취소 뒤로', width / 2, 1058, {
+    drawText(g, '좌우·상하 이동 · 취소 Esc(1P) / 오른쪽 Ctrl(2P)', width / 2, 1058, {
       font: FONTS.small,
       color: COLORS.textDim,
     });

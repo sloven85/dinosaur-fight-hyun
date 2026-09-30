@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { InputManager } from './InputManager';
+import { KEYBOARD_BINDINGS } from './bindings';
 
 interface KeyLike {
   code: string;
@@ -93,5 +94,37 @@ describe('입력 엣지 처리', () => {
 
     input.update();
     expect(input.isPressed(0, 'confirm')).toBe(false);
+  });
+});
+
+describe('키보드 2인 확인 키 분리', () => {
+  it('1P 확인(Enter)은 2P를 확정하지 않는다', () => {
+    const { win, dispatch } = createFakeWindow();
+    const input = new InputManager(win);
+
+    dispatch('keydown', 'Enter');
+    input.update();
+
+    expect(input.isPressed(0, 'confirm')).toBe(true);
+    expect(input.isPressed(1, 'confirm')).toBe(false);
+  });
+
+  it('2P 확인(오른쪽 Shift)은 1P를 확정하지 않는다', () => {
+    const { win, dispatch } = createFakeWindow();
+    const input = new InputManager(win);
+
+    dispatch('keydown', 'ShiftRight');
+    input.update();
+
+    expect(input.isPressed(1, 'confirm')).toBe(true);
+    expect(input.isPressed(0, 'confirm')).toBe(false);
+  });
+
+  it('확인·취소·일시정지 키는 두 플레이어가 겹치지 않는다', () => {
+    const [p1, p2] = KEYBOARD_BINDINGS;
+    for (const action of ['confirm', 'cancel', 'pause'] as const) {
+      const shared = p1[action].filter((code) => p2[action].includes(code));
+      expect(shared, `${action} 키가 두 플레이어에 겹칩니다`).toEqual([]);
+    }
   });
 });

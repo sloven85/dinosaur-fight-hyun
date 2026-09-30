@@ -7,8 +7,13 @@ export type KeyboardBinding = Record<Action, readonly string[]>;
 /**
  * 계획서 1절 "권장 버튼 배치"의 키보드 열.
  * 1P: A D / W S / F G H / Enter / Esc
- * 2P: ← → / ↑ ↓ / J K L / Enter / Esc
+ * 2P: ← → / ↑ ↓ / J K L / 오른쪽 Shift(또는 NumEnter) / 오른쪽 Ctrl
  * 코드값은 KeyboardEvent.code 기준이다.
+ *
+ * 확인·뒤로 키를 두 플레이어가 나눠 쓴다. 계획서는 양쪽 모두 Enter·Esc로
+ * 적었지만, 키보드 하나로 두 사람이 함께 하면 같은 키를 누르는 순간 두 플레이어가
+ * 한꺼번에 확정되는 문제가 있다(계획서 1절: 버튼 배치는 플레이 결과에 따라 조정).
+ * 2P는 오른쪽 손 위치(방향키·JKL)에서 닿는 오른쪽 Shift·Ctrl을 쓴다.
  */
 export const KEYBOARD_BINDINGS: readonly [KeyboardBinding, KeyboardBinding] = [
   {
@@ -31,9 +36,9 @@ export const KEYBOARD_BINDINGS: readonly [KeyboardBinding, KeyboardBinding] = [
     light: ['KeyJ'],
     heavy: ['KeyK'],
     special: ['KeyL'],
-    confirm: ['Enter'],
-    cancel: ['Escape'],
-    pause: ['Escape'],
+    confirm: ['ShiftRight', 'NumpadEnter'],
+    cancel: ['ControlRight'],
+    pause: ['ControlRight'],
   },
 ];
 
