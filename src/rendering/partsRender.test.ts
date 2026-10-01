@@ -162,3 +162,14 @@ describe('맞는 쪽 자세(마스터 판정: 뒤집기 금지·버둥·다운 �
     expect(rec.drawn).toContainEqual({ pose: 'down' });
   });
 });
+
+describe('두 마디 목 나누기(브라키오)', () => {
+  it('목 회전을 두 마디에 반씩, 마디당 ±8°·머리 ±18°까지', async () => {
+    const { splitNeck, NECK_SEGMENT_LIMIT } = await import('./FighterRenderer');
+    const order = ['torso', 'neck', 'neck2', 'head'];
+    expect(splitNeck(order, { neck: 5, neck2: 5 })).toMatchObject({ neck: 5, neck2: 5 });
+    expect(splitNeck(order, { neck: 40, neck2: 40 })).toMatchObject({ neck: NECK_SEGMENT_LIMIT, neck2: NECK_SEGMENT_LIMIT });
+    expect(splitNeck(order, { neck: -30, neck2: 0 })).toMatchObject({ neck: -NECK_SEGMENT_LIMIT, neck2: -NECK_SEGMENT_LIMIT });
+    expect(splitNeck(['torso', 'neck', 'head'], { neck: 40 })).toMatchObject({ neck: 40 });
+  });
+});

@@ -14,6 +14,7 @@ describe('경기장 배경 시차', () => {
   });
   it('경기장 8곳(기본 4 + 해변·설원·달밤 늪·꽃 초원)과 하늘·중경·바닥 경로', () => {
     expect(STAGES.map((s) => s.id)).toEqual(['jungle', 'volcano', 'desert', 'museum', 'lagoon', 'snow', 'swamp', 'meadow']);
-    for (const s of STAGES) for (const l of ['sky', 'mid', 'ground']) expect(s.layerPaths[l]).toContain(`stages/${s.id}/${l}`);
+    // 초원 바닥은 새 그림이 올 때까지 정글 바닥을 빌려 쓴다.
+    for (const s of STAGES) for (const l of ['sky', 'mid', 'ground']) expect(s.layerPaths[l]).toContain(s.id === 'meadow' && l === 'ground' ? 'stages/jungle/ground' : `stages/${s.id}/${l}`);
   });
 });

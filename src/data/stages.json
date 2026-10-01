@@ -97,7 +97,7 @@
       "groundY": 900,
       "musicId": "bgm_swamp",
       "placeholderColor": "#2b3a3a",
-      "groundBrightness": 1
+      "groundBrightness": 1.1
     },
     {
       "id": "meadow",
@@ -106,7 +106,7 @@
       "layerPaths": {
         "sky": "assets/stages/meadow/sky.jpg",
         "mid": "assets/stages/meadow/mid.jpg",
-        "ground": "assets/stages/meadow/ground.jpg"
+        "ground": "assets/stages/jungle/ground.jpg"
       },
       "groundY": 900,
       "musicId": "bgm_meadow",

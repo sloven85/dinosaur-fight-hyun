@@ -208,6 +208,21 @@ interface BodyView {
   ghostAlpha: number;
 }
 
+/**
+ * 두 마디 목(브라키오): 목 전체 회전(neck+neck2)을 두 마디에 반씩 나누고 마디당 ±8°, 머리 ±18°로 묶는다.
+ * 한 마디가 크게 꺾이면 이음매가 두 겹으로 보이기 때문(마스터 5172399, 아티스트 chainSplit 판 전 임시).
+ */
+export const NECK_SEGMENT_LIMIT = 8;
+/** 목 끝 머리도 너무 꺾이면 이음매가 보여 같이 묶는다. */
+export const NECK_HEAD_LIMIT = 18;
+export function splitNeck(order: readonly string[], angles: Record<string, number>): Record<string, number> {
+  if (!order.includes('neck2')) return angles;
+  const total = (angles.neck ?? 0) + (angles.neck2 ?? 0);
+  const each = Math.max(-NECK_SEGMENT_LIMIT, Math.min(NECK_SEGMENT_LIMIT, total / 2));
+  const head = Math.max(-NECK_HEAD_LIMIT, Math.min(NECK_HEAD_LIMIT, angles.head ?? 0));
+  return { ...angles, neck: each, neck2: each, head };
+}
+
 /** 몸 한 벌을 그린다. 그림이 없어 임시 도형으로 대체했으면 false. */
 function drawBody(
   g: CanvasRenderingContext2D,
@@ -268,7 +283,7 @@ function drawBody(
 
   const altSkin = fighter.useAlternatePalette ? fighter.data.alternatePalette.skin : null;
   const parts = partAngles ? fighter.assets.parts ?? null : null;
-  const placed = parts && partAngles ? partTransforms(parts.rig, partAngles) : null;
+  const placed = parts && partAngles ? partTransforms(parts.rig, splitNeck(parts.rig.drawOrder, partAngles)) : null;
 
   /** 한 번 그리기: 파츠 리그면 파츠마다, 아니면 한 장으로. pick이 그릴 그림을 고른다. */
   const draw = (
