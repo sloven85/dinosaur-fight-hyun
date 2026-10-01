@@ -1,6 +1,7 @@
 import type { Fighter, ScriptVisual } from '../combat/Fighter';
 import { emotionFor, type Emotion } from '../combat/emotion';
 import { spriteScale, type PoseName } from './rig';
+import { fallPose, flailPartAngles } from './fallMotion';
 import { applyMotion, attackMotion, drawAttackTrail, type MotionFrame } from './attackMotion';
 import type { PartsAssets } from './CharacterAssets';
 import {
@@ -163,6 +164,10 @@ export function renderFighter(
 
   const feetY = groundY + fighter.y;
   if (fighter.state === 'stun') drawStunStars(g, fighter, feetY, time);
+  if (fighter.state === 'fallen' && fallPoseOf(fighter).dizzy) {
+    // 누운 몸 위(배 쪽)에 별이 돈다.
+    drawStunStars(g, fighter, feetY + fighter.data.displayHeight * 0.55, time);
+  }
   if (fighter.state === 'down' || fighter.state === 'victory' || fighter.state === 'fallen') return;
   drawNameTag(g, fighter, feetY);
 }
@@ -395,7 +400,8 @@ function applyMasterTransform(g: CanvasRenderingContext2D, fighter: Fighter, tim
       // 공격 동작은 attackMotion이 기술·종별로 따로 건다(예전의 '몸통 밀어 넣기' 폴백 대체).
       break;
     case 'hit':
-      g.rotate(-0.09);
+      if (fighter.airTumble !== 0) applyAirTumble(g, fighter);
+      else g.rotate(-0.09);
       break;
     case 'held':
       // 물려서 들린 채 흔들린다(잡은 쪽 스크립트가 기울기를 정한다).
@@ -407,12 +413,12 @@ function applyMasterTransform(g: CanvasRenderingContext2D, fighter: Fighter, tim
       g.rotate(Math.sin(time * 9) * 0.06);
       break;
     case 'fallen': {
-      // 넘어짐: 만화식으로 배를 위로 뒤집혀 다리를 버둥거린다(같은 폭 안에서 뒤집혀 화면 밖으로 안 나간다).
-      const h = fighter.assets.rig ? fighter.bodyHeight : fighter.data.displayHeight;
-      // 몸 가운데를 축으로 뒤집고(배가 위), 좌우 반전으로 얼굴 방향은 유지한다.
-      g.translate(0, -h * 0.5);
-      g.rotate(Math.PI + Math.sin(time * 14) * 0.04);
-      g.scale(-1, 1);
+      // 쓰러짐 → 쿵·튕김 → 버둥버둥 → 뒤로 굴러 벌떡(fallMotion.ts).
+      const h = fighter.data.displayHeight;
+      const pose = fallPoseOf(fighter);
+      g.translate(0, pose.dy - h * 0.5);
+      g.rotate(pose.rot);
+      g.scale(pose.sx, pose.sy);
       g.translate(0, h * 0.5);
       break;
     }
@@ -427,7 +433,21 @@ function applyMasterTransform(g: CanvasRenderingContext2D, fighter: Fighter, tim
   }
 }
 
+function fallPoseOf(fighter: Fighter) {
+  const elapsed = fighter.fallenTotal - fighter.fallenFrames;
+  return fallPose(elapsed, fighter.fallenTotal, fighter.fallStartAngle, fighter.data.displayHeight);
+}
+
+/** 띄워져 넘어질 예정이면 공중에서 뒤로 돌며 날아간다. */
+function applyAirTumble(g: CanvasRenderingContext2D, fighter: Fighter): void {
+  const h = fighter.data.displayHeight;
+  g.translate(0, -h * 0.5);
+  g.rotate(fighter.airTumble);
+  g.translate(0, h * 0.5);
+}
+
 function applyPoseTransform(g: CanvasRenderingContext2D, fighter: Fighter, time: number): void {
+  if (fighter.state === 'hit' && fighter.airTumble !== 0) applyAirTumble(g, fighter);
   if (fighter.state === 'held') {
     g.translate(0, -fighter.data.displayHeight * 0.4);
     g.rotate(fighter.heldRot);
@@ -528,6 +548,14 @@ function partAnglesFor(fighter: Fighter, time: number): Record<string, number> |
     case 'jump':
     case 'stun':
       return {};
+    case 'fallen': {
+      const pose = fallPoseOf(fighter);
+      return flailPartAngles(parts.rig.drawOrder, fighter.fallenTotal - fighter.fallenFrames, pose.flail);
+    }
+    case 'hit':
+      // 날아가는 동안에도 허우적댄다(파츠 종만). 보통 피격은 전용 포즈.
+      if (fighter.airTumble !== 0) return flailPartAngles(parts.rig.drawOrder, Math.round(-fighter.airTumble * 40), 0.7);
+      return null;
     case 'walk': {
       const walk = motions.walk;
       return walk ? walkPartAngles(walk, time) : {};

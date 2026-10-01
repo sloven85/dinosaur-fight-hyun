@@ -137,6 +137,12 @@ export class Fighter {
   /** 착지하면 넘어질 프레임(띄우기·던지기 후). */
   pendingKnockdown = 0;
   fallenFrames = 0;
+  /** 이번 넘어짐의 전체 프레임(연출 단계 계산용). */
+  fallenTotal = 0;
+  /** 넘어지기 시작할 때의 몸 회전(공중에서 뒤로 돌던 각도, 라디안). 연출 전용. */
+  fallStartAngle = 0;
+  /** 띄워져 날아가는 동안 뒤로 도는 각도(라디안, 음수 = 뒤로). 연출 전용. */
+  airTumble = 0;
   stunFrames = 0;
   /** 스크립트 기술의 보이는 모양. 스크립트 기술이 아니면 null. */
   scriptVisual: ScriptVisual | null = null;
@@ -362,8 +368,9 @@ export class Fighter {
     switch (this.state) {
       case 'hit':
         if (!this.onGround) {
-          // 띄워진 동안은 착지할 때까지 경직이 이어진다.
+          // 띄워진 동안은 착지할 때까지 경직이 이어진다. 넘어질 예정이면 뒤로 돌며 날아간다.
           this.x += this.vx * dt;
+          if (this.pendingKnockdown > 0) this.airTumble = Math.max(-Math.PI * 0.85, this.airTumble - 0.1);
           break;
         }
         this.hitstunFrames -= 1;
@@ -373,6 +380,7 @@ export class Fighter {
         this.fallenFrames -= 1;
         if (this.fallenFrames <= 0) {
           this.state = 'idle';
+          this.landedThisStep = true;
           this.invulnFrames = Math.max(this.invulnFrames, GET_UP_INVULN_FRAMES);
         }
         break;
@@ -467,6 +475,7 @@ export class Fighter {
     this.y = Math.min(this.y, -1);
     this.hitstunFrames = Math.max(this.hitstunFrames, 10);
     this.pendingKnockdown = knockdown;
+    this.airTumble = 0;
   }
 
   knockDown(frames: number): void {
@@ -474,7 +483,11 @@ export class Fighter {
     this.attack = null;
     this.vx = 0;
     this.fallenFrames = frames;
+    this.fallenTotal = frames;
+    this.fallStartAngle = this.airTumble;
+    this.airTumble = 0;
     this.pendingKnockdown = 0;
+    this.landedThisStep = true;
   }
 
   stun(frames: number): void {
@@ -536,6 +549,9 @@ export class Fighter {
     this.vx = 0;
     this.pendingKnockdown = 0;
     this.fallenFrames = 0;
+    this.fallenTotal = 0;
+    this.fallStartAngle = 0;
+    this.airTumble = 0;
     this.stunFrames = 0;
     this.scriptVisual = null;
     this.ghosts = [];
