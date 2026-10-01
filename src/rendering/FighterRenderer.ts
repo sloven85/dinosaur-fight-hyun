@@ -177,6 +177,7 @@ export function renderFighter(
 
   const feetY = groundY + fighter.y;
   if (fighter.state === 'stun') drawStunStars(g, fighter, feetY, time);
+  if (fighter.guardStance) drawGuardShield(g, fighter, feetY, time);
   if (fighter.state === 'fallen' && fallPoseOf(fighter).dizzy) {
     // 털썩 주저앉은 몸의 머리 위에 별이 돈다(주저앉은 높이 ≈ 키의 62%).
     drawStunStars(g, fighter, feetY + fighter.data.displayHeight * 0.32, time, fighter.facing * fighter.bodyFront * 0.55);
@@ -440,7 +441,68 @@ function poseForState(fighter: Fighter): PoseName | null {
   }
 }
 
+/**
+ * 종별 방어 자세(마스터 결정 2026-10-01). 전용 그림이 오기 전까지 몸 낮추기·기울기와 파츠 각도로 표현한다.
+ * tilt: 몸 기울기(라디안, ±15° 안), squash: 세로 눌림, parts: 파츠 각도(아티스트 표기, 도).
+ */
+const GUARD_STANCE: Record<string, { tilt: number; squash: number; parts: Record<string, number> }> = {
+  tyrannosaurus: { tilt: 0.12, squash: 0.9, parts: { head: 16, jaw: -4, neararm: 10, fararm: 8, tailbase: 6 } },
+  triceratops: { tilt: 0.14, squash: 0.88, parts: { head: 14, jaw: -4, nearleg_front: -6 } },
+  velociraptor: { tilt: 0.1, squash: 0.82, parts: { neararm: 30, fararm: 26, head: 12, tailbase: 10, tailtip: 10 } },
+  spinosaurus: { tilt: -0.06, squash: 0.9, parts: { head: 8 } },
+  ankylosaurus: { tilt: 0.04, squash: 0.8, parts: { head: 16, tailbase: 10, tailtip: 14 } },
+  stegosaurus: { tilt: 0.1, squash: 0.86, parts: { head: 16, tailbase: -10, tailtip: -12 } },
+  carnotaurus: { tilt: 0.16, squash: 0.88, parts: { head: 16, neararm: 10, fararm: 8 } },
+  pachycephalosaurus: { tilt: 0.2, squash: 0.86, parts: { head: 18, neararm: 12, fararm: 10 } },
+  therizinosaurus: { tilt: 0.08, squash: 0.9, parts: { neararm: 30, fararm: 30 } },
+  dilophosaurus: { tilt: 0.12, squash: 0.82, parts: { head: 14 } },
+  brachiosaurus: { tilt: 0.06, squash: 0.86, parts: { head: 20 } },
+  pteranodon: { tilt: 0.04, squash: 0.86, parts: {} },
+};
+
+function guardStanceOf(fighter: Fighter) {
+  return GUARD_STANCE[fighter.data.id] ?? { tilt: 0.1, squash: 0.88, parts: {} };
+}
+
+/** 방어 자세: 앞으로 웅크려 버틴다. 막은 직후(guard 상태)에는 살짝 더 눌리며 떨린다. */
+function applyGuardTransform(g: CanvasRenderingContext2D, fighter: Fighter): void {
+  const stance = guardStanceOf(fighter);
+  const shake = fighter.state === 'guard' ? Math.sin(fighter.guardFrames * 2.4) * 0.03 : 0;
+  const squash = stance.squash - (fighter.state === 'guard' ? 0.03 : 0);
+  tiltAboutMiddle(g, fighter, stance.tilt + shake);
+  g.scale(1 + (1 - squash) * 0.4, squash);
+}
+
+/** 방어 중 몸 앞에 뜨는 파란 방패(그림이 오기 전 표시). */
+function drawGuardShield(g: CanvasRenderingContext2D, fighter: Fighter, feetY: number, time: number): void {
+  const h = fighter.data.displayHeight;
+  const x = fighter.x + fighter.facing * (fighter.bodyFront * 0.95);
+  const y = feetY - h * 0.5;
+  const flash = fighter.state === 'guard' ? 1 : 0.55 + Math.sin(time * 8) * 0.1;
+  g.save();
+  g.translate(x, y);
+  g.scale(fighter.facing, 1);
+  g.globalAlpha = 0.35 + 0.45 * flash;
+  const grad = g.createRadialGradient(0, 0, h * 0.05, 0, 0, h * 0.5);
+  grad.addColorStop(0, 'rgba(180, 225, 255, 0.9)');
+  grad.addColorStop(1, 'rgba(60, 140, 255, 0)');
+  g.fillStyle = grad;
+  g.beginPath();
+  g.ellipse(0, 0, h * 0.22, h * 0.5, 0, -Math.PI / 2, Math.PI / 2);
+  g.fill();
+  g.strokeStyle = 'rgba(200, 235, 255, 0.95)';
+  g.lineWidth = fighter.state === 'guard' ? 8 : 5;
+  g.beginPath();
+  g.ellipse(0, 0, h * 0.18, h * 0.44, 0, -Math.PI / 2, Math.PI / 2);
+  g.stroke();
+  g.restore();
+}
+
 function applyMasterTransform(g: CanvasRenderingContext2D, fighter: Fighter, time: number): void {
+  if (fighter.guardStance) {
+    applyGuardTransform(g, fighter);
+    return;
+  }
   switch (fighter.state) {
     case 'idle':
       g.translate(0, Math.sin(time * 2.2) * 5);
@@ -609,6 +671,7 @@ function partAnglesFor(fighter: Fighter, time: number): Record<string, number> |
   const parts = fighter.assets.parts;
   if (!parts) return null;
   const motions = parts.motions.motions;
+  if (fighter.guardStance) return guardStanceOf(fighter).parts;
   switch (fighter.state) {
     case 'idle':
     case 'crouch':

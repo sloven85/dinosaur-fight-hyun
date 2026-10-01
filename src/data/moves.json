@@ -38,6 +38,22 @@
             }
           },
           {
+            "f": 0,
+            "ease": "out",
+            "parts": {
+              "neararm": 0,
+              "fararm": 0
+            }
+          },
+          {
+            "f": 2,
+            "ease": "out",
+            "parts": {
+              "neararm": 14,
+              "fararm": 10
+            }
+          },
+          {
             "f": 4,
             "ease": "out",
             "x": -10,
@@ -45,6 +61,14 @@
             "parts": {
               "head": -12,
               "jaw": 26
+            }
+          },
+          {
+            "f": 6,
+            "ease": "out",
+            "parts": {
+              "neararm": -30,
+              "fararm": -24
             }
           },
           {
@@ -60,6 +84,14 @@
             }
           },
           {
+            "f": 8,
+            "ease": "out",
+            "parts": {
+              "neararm": 14,
+              "fararm": 10
+            }
+          },
+          {
             "f": 10,
             "ease": "out",
             "x": 30,
@@ -67,6 +99,22 @@
             "parts": {
               "head": -12,
               "jaw": 26
+            }
+          },
+          {
+            "f": 11,
+            "ease": "out",
+            "parts": {
+              "neararm": -18.0,
+              "fararm": -14.4
+            }
+          },
+          {
+            "f": 12,
+            "ease": "out",
+            "parts": {
+              "neararm": -30,
+              "fararm": -24
             }
           },
           {
@@ -82,6 +130,14 @@
             }
           },
           {
+            "f": 17,
+            "ease": "out",
+            "parts": {
+              "neararm": -18.0,
+              "fararm": -14.4
+            }
+          },
+          {
             "f": 28,
             "x": 0,
             "rot": 0,
@@ -90,6 +146,14 @@
             "parts": {
               "head": 0,
               "jaw": 0
+            }
+          },
+          {
+            "f": 28,
+            "ease": "out",
+            "parts": {
+              "neararm": 0,
+              "fararm": 0
             }
           }
         ],
@@ -699,12 +763,51 @@
             "sy": 1
           },
           {
+            "f": 0,
+            "ease": "out",
+            "parts": {
+              "head": 0,
+              "jaw": 0,
+              "nearleg_back": 0,
+              "nearleg": 0,
+              "farleg": 0,
+              "neararm": 0,
+              "fararm": 0
+            }
+          },
+          {
+            "f": 4,
+            "ease": "out",
+            "parts": {
+              "head": -22,
+              "jaw": 0,
+              "nearleg_back": -10,
+              "nearleg": -10,
+              "farleg": 8,
+              "neararm": 20,
+              "fararm": 16
+            }
+          },
+          {
             "f": 6,
             "ease": "out",
             "x": -14,
             "rot": -0.072,
             "sx": 0.94,
             "sy": 1.05
+          },
+          {
+            "f": 8,
+            "ease": "out",
+            "parts": {
+              "head": 26,
+              "jaw": -4,
+              "nearleg_back": 18,
+              "nearleg": 18,
+              "farleg": -14,
+              "neararm": -40,
+              "fararm": -32
+            }
           },
           {
             "f": 10,
@@ -716,9 +819,35 @@
             "ghost": 0.5
           },
           {
+            "f": 13,
+            "ease": "out",
+            "parts": {
+              "head": 15.6,
+              "jaw": -2.4,
+              "nearleg_back": 10.8,
+              "nearleg": 10.8,
+              "farleg": -8.4,
+              "neararm": -24.0,
+              "fararm": -19.2
+            }
+          },
+          {
             "f": 16,
             "x": 60,
             "ghost": 0
+          },
+          {
+            "f": 24,
+            "ease": "out",
+            "parts": {
+              "head": 0,
+              "jaw": 0,
+              "nearleg_back": 0,
+              "nearleg": 0,
+              "farleg": 0,
+              "neararm": 0,
+              "fararm": 0
+            }
           },
           {
             "f": 28,
@@ -783,12 +912,51 @@
             "sy": 1
           },
           {
+            "f": 0,
+            "ease": "out",
+            "parts": {
+              "head": 0,
+              "jaw": 0,
+              "nearleg_back": 0,
+              "nearleg": 0,
+              "farleg": 0,
+              "neararm": 0,
+              "fararm": 0
+            }
+          },
+          {
+            "f": 11,
+            "ease": "out",
+            "parts": {
+              "head": -22,
+              "jaw": 0,
+              "nearleg_back": -10,
+              "nearleg": -10,
+              "farleg": 8,
+              "neararm": 20,
+              "fararm": 16
+            }
+          },
+          {
             "f": 12,
             "ease": "out",
             "x": -20,
             "rot": 0.18,
             "sx": 0.94,
             "sy": 0.92
+          },
+          {
+            "f": 15,
+            "ease": "out",
+            "parts": {
+              "head": 26,
+              "jaw": -4,
+              "nearleg_back": 18,
+              "nearleg": 18,
+              "farleg": -14,
+              "neararm": -40,
+              "fararm": -32
+            }
           },
           {
             "f": 17,
@@ -798,6 +966,19 @@
             "sx": 1.1,
             "sy": 0.9,
             "ghost": 0.6
+          },
+          {
+            "f": 20,
+            "ease": "out",
+            "parts": {
+              "head": 15.6,
+              "jaw": -2.4,
+              "nearleg_back": 10.8,
+              "nearleg": 10.8,
+              "farleg": -8.4,
+              "neararm": -24.0,
+              "fararm": -19.2
+            }
           },
           {
             "f": 22,
@@ -811,6 +992,19 @@
               "x": -40,
               "y": -40,
               "rot": 0
+            }
+          },
+          {
+            "f": 31,
+            "ease": "out",
+            "parts": {
+              "head": 0,
+              "jaw": 0,
+              "nearleg_back": 0,
+              "nearleg": 0,
+              "farleg": 0,
+              "neararm": 0,
+              "fararm": 0
             }
           },
           {
@@ -940,6 +1134,19 @@
             "sy": 1
           },
           {
+            "f": 0,
+            "ease": "out",
+            "parts": {
+              "head": 0,
+              "jaw": 0,
+              "nearleg_back": 0,
+              "nearleg": 0,
+              "farleg": 0,
+              "neararm": 0,
+              "fararm": 0
+            }
+          },
+          {
             "f": 6,
             "ease": "linear",
             "x": -20,
@@ -951,6 +1158,19 @@
             "x": -10,
             "rot": 0.12,
             "sy": 0.9
+          },
+          {
+            "f": 12,
+            "ease": "out",
+            "parts": {
+              "head": -22,
+              "jaw": 0,
+              "nearleg_back": -10,
+              "nearleg": -10,
+              "farleg": 8,
+              "neararm": 20,
+              "fararm": 16
+            }
           },
           {
             "f": 14,
@@ -967,6 +1187,45 @@
             "sx": 1.08,
             "sy": 0.9,
             "ghost": 1
+          },
+          {
+            "f": 16,
+            "ease": "out",
+            "parts": {
+              "head": 26,
+              "jaw": -4,
+              "nearleg_back": 18,
+              "nearleg": 18,
+              "farleg": -14,
+              "neararm": -40,
+              "fararm": -32
+            }
+          },
+          {
+            "f": 21,
+            "ease": "out",
+            "parts": {
+              "head": 15.6,
+              "jaw": -2.4,
+              "nearleg_back": 10.8,
+              "nearleg": 10.8,
+              "farleg": -8.4,
+              "neararm": -24.0,
+              "fararm": -19.2
+            }
+          },
+          {
+            "f": 32,
+            "ease": "out",
+            "parts": {
+              "head": 0,
+              "jaw": 0,
+              "nearleg_back": 0,
+              "nearleg": 0,
+              "farleg": 0,
+              "neararm": 0,
+              "fararm": 0
+            }
           },
           {
             "f": 56,
@@ -1146,13 +1405,35 @@
             }
           },
           {
+            "f": 0,
+            "ease": "out",
+            "parts": {
+              "jaw": 0
+            }
+          },
+          {
+            "f": 1,
+            "ease": "out",
+            "parts": {
+              "jaw": 0
+            }
+          },
+          {
             "f": 3,
             "ease": "out",
             "x": 20,
             "rot": -0.06,
             "parts": {
-              "neararm": 16,
-              "fararm": 12
+              "neararm": 42,
+              "fararm": 34,
+              "head": -6
+            }
+          },
+          {
+            "f": 5,
+            "ease": "out",
+            "parts": {
+              "jaw": 18
             }
           },
           {
@@ -1163,8 +1444,16 @@
             "sx": 1.1,
             "sy": 0.94,
             "parts": {
-              "neararm": -38,
-              "fararm": -30
+              "neararm": -88,
+              "fararm": -74,
+              "head": 10
+            }
+          },
+          {
+            "f": 8,
+            "ease": "out",
+            "parts": {
+              "jaw": 0
             }
           },
           {
@@ -1173,8 +1462,23 @@
             "x": 34,
             "rot": -0.06,
             "parts": {
-              "neararm": 16,
-              "fararm": 12
+              "neararm": 42,
+              "fararm": 34,
+              "head": -6
+            }
+          },
+          {
+            "f": 10,
+            "ease": "out",
+            "parts": {
+              "jaw": 10.8
+            }
+          },
+          {
+            "f": 12,
+            "ease": "out",
+            "parts": {
+              "jaw": 18
             }
           },
           {
@@ -1185,8 +1489,16 @@
             "sx": 1.1,
             "sy": 0.94,
             "parts": {
-              "neararm": -38,
-              "fararm": -30
+              "neararm": -88,
+              "fararm": -74,
+              "head": 10
+            }
+          },
+          {
+            "f": 15,
+            "ease": "out",
+            "parts": {
+              "jaw": 0
             }
           },
           {
@@ -1195,8 +1507,23 @@
             "x": 48,
             "rot": -0.06,
             "parts": {
-              "neararm": 16,
-              "fararm": 12
+              "neararm": 42,
+              "fararm": 34,
+              "head": -6
+            }
+          },
+          {
+            "f": 17,
+            "ease": "out",
+            "parts": {
+              "jaw": 10.8
+            }
+          },
+          {
+            "f": 19,
+            "ease": "out",
+            "parts": {
+              "jaw": 18
             }
           },
           {
@@ -1207,8 +1534,23 @@
             "sx": 1.1,
             "sy": 0.94,
             "parts": {
-              "neararm": -38,
-              "fararm": -30
+              "neararm": -88,
+              "fararm": -74,
+              "head": 10
+            }
+          },
+          {
+            "f": 24,
+            "ease": "out",
+            "parts": {
+              "jaw": 10.8
+            }
+          },
+          {
+            "f": 35,
+            "ease": "out",
+            "parts": {
+              "jaw": 0
             }
           },
           {
@@ -1814,12 +2156,42 @@
             "sy": 1
           },
           {
+            "f": 0,
+            "ease": "out",
+            "parts": {
+              "neararm": 0,
+              "fararm": 0,
+              "head": 0,
+              "jaw": 0
+            }
+          },
+          {
+            "f": 4,
+            "ease": "out",
+            "parts": {
+              "neararm": 42,
+              "fararm": 34,
+              "head": -8,
+              "jaw": 0
+            }
+          },
+          {
             "f": 6,
             "ease": "out",
             "x": -14,
             "rot": -0.06,
             "sx": 0.94,
             "sy": 1.05
+          },
+          {
+            "f": 8,
+            "ease": "out",
+            "parts": {
+              "neararm": -88,
+              "fararm": -74,
+              "head": 12,
+              "jaw": 18
+            }
           },
           {
             "f": 10,
@@ -1831,9 +2203,29 @@
             "ghost": 0.5
           },
           {
+            "f": 13,
+            "ease": "out",
+            "parts": {
+              "neararm": -52.8,
+              "fararm": -44.4,
+              "head": 7.2,
+              "jaw": 10.8
+            }
+          },
+          {
             "f": 16,
             "x": 55,
             "ghost": 0
+          },
+          {
+            "f": 24,
+            "ease": "out",
+            "parts": {
+              "neararm": 0,
+              "fararm": 0,
+              "head": 0,
+              "jaw": 0
+            }
           },
           {
             "f": 28,
@@ -1907,6 +2299,15 @@
             "sy": 1
           },
           {
+            "f": 0,
+            "ease": "out",
+            "parts": {
+              "tailbase": 0,
+              "tailtip": 0,
+              "head": 0
+            }
+          },
+          {
             "f": 8,
             "ease": "out",
             "x": -10,
@@ -1914,11 +2315,29 @@
             "sx": 0.92
           },
           {
+            "f": 8,
+            "ease": "out",
+            "parts": {
+              "tailbase": 14,
+              "tailtip": 12,
+              "head": -6
+            }
+          },
+          {
             "f": 9,
             "ease": "step",
             "sx": -0.9,
             "sy": 1.02,
             "rot": 0.04
+          },
+          {
+            "f": 12,
+            "ease": "out",
+            "parts": {
+              "tailbase": -28,
+              "tailtip": -30,
+              "head": 6
+            }
           },
           {
             "f": 16,
@@ -1930,8 +2349,26 @@
             "ghost": 0.7
           },
           {
+            "f": 17,
+            "ease": "out",
+            "parts": {
+              "tailbase": -16.8,
+              "tailtip": -18.0,
+              "head": 3.6
+            }
+          },
+          {
             "f": 22,
             "ghost": 0
+          },
+          {
+            "f": 28,
+            "ease": "out",
+            "parts": {
+              "tailbase": 0,
+              "tailtip": 0,
+              "head": 0
+            }
           },
           {
             "f": 30,
@@ -2224,6 +2661,28 @@
             }
           },
           {
+            "f": 0,
+            "ease": "out",
+            "parts": {
+              "jaw": 0,
+              "nearleg": 0,
+              "farleg": 0,
+              "neararm": 0,
+              "fararm": 0
+            }
+          },
+          {
+            "f": 5,
+            "ease": "out",
+            "parts": {
+              "jaw": 0,
+              "nearleg": -10,
+              "farleg": 8,
+              "neararm": 20,
+              "fararm": 16
+            }
+          },
+          {
             "f": 7,
             "ease": "out",
             "x": -24,
@@ -2233,6 +2692,17 @@
             "parts": {
               "head": -6,
               "nearleg_back": -8
+            }
+          },
+          {
+            "f": 9,
+            "ease": "out",
+            "parts": {
+              "jaw": -4,
+              "nearleg": 18,
+              "farleg": -14,
+              "neararm": -40,
+              "fararm": -32
             }
           },
           {
@@ -2251,6 +2721,28 @@
           {
             "f": 14,
             "ghost": 0
+          },
+          {
+            "f": 14,
+            "ease": "out",
+            "parts": {
+              "jaw": -2.4,
+              "nearleg": 10.8,
+              "farleg": -8.4,
+              "neararm": -24.0,
+              "fararm": -19.2
+            }
+          },
+          {
+            "f": 25,
+            "ease": "out",
+            "parts": {
+              "jaw": 0,
+              "nearleg": 0,
+              "farleg": 0,
+              "neararm": 0,
+              "fararm": 0
+            }
           },
           {
             "f": 28,
@@ -2749,12 +3241,33 @@
             }
           },
           {
+            "f": 0,
+            "ease": "out",
+            "parts": {
+              "head": 0
+            }
+          },
+          {
+            "f": 4,
+            "ease": "out",
+            "parts": {
+              "head": -6
+            }
+          },
+          {
             "f": 5,
             "ease": "step",
             "sx": -0.94,
             "parts": {
               "tailbase": 12,
               "tailtip": 10
+            }
+          },
+          {
+            "f": 8,
+            "ease": "out",
+            "parts": {
+              "head": 6
             }
           },
           {
@@ -2767,6 +3280,13 @@
             "parts": {
               "tailbase": -18,
               "tailtip": -16
+            }
+          },
+          {
+            "f": 13,
+            "ease": "out",
+            "parts": {
+              "head": 3.6
             }
           },
           {
@@ -2788,6 +3308,13 @@
             "f": 21,
             "ease": "step",
             "sx": 1
+          },
+          {
+            "f": 24,
+            "ease": "out",
+            "parts": {
+              "head": 0
+            }
           },
           {
             "f": 30,
@@ -3285,12 +3812,51 @@
             "sy": 1
           },
           {
+            "f": 0,
+            "ease": "out",
+            "parts": {
+              "head": 0,
+              "jaw": 0,
+              "nearleg_back": 0,
+              "nearleg": 0,
+              "farleg": 0,
+              "neararm": 0,
+              "fararm": 0
+            }
+          },
+          {
+            "f": 4,
+            "ease": "out",
+            "parts": {
+              "head": -22,
+              "jaw": 0,
+              "nearleg_back": -10,
+              "nearleg": -10,
+              "farleg": 8,
+              "neararm": 20,
+              "fararm": 16
+            }
+          },
+          {
             "f": 6,
             "ease": "out",
             "x": -14,
             "rot": -0.084,
             "sx": 0.94,
             "sy": 1.05
+          },
+          {
+            "f": 8,
+            "ease": "out",
+            "parts": {
+              "head": 26,
+              "jaw": -4,
+              "nearleg_back": 18,
+              "nearleg": 18,
+              "farleg": -14,
+              "neararm": -40,
+              "fararm": -32
+            }
           },
           {
             "f": 10,
@@ -3302,9 +3868,35 @@
             "ghost": 0.5
           },
           {
+            "f": 13,
+            "ease": "out",
+            "parts": {
+              "head": 15.6,
+              "jaw": -2.4,
+              "nearleg_back": 10.8,
+              "nearleg": 10.8,
+              "farleg": -8.4,
+              "neararm": -24.0,
+              "fararm": -19.2
+            }
+          },
+          {
             "f": 16,
             "x": 55,
             "ghost": 0
+          },
+          {
+            "f": 24,
+            "ease": "out",
+            "parts": {
+              "head": 0,
+              "jaw": 0,
+              "nearleg_back": 0,
+              "nearleg": 0,
+              "farleg": 0,
+              "neararm": 0,
+              "fararm": 0
+            }
           },
           {
             "f": 28,
@@ -3369,12 +3961,51 @@
             "sy": 1
           },
           {
+            "f": 0,
+            "ease": "out",
+            "parts": {
+              "head": 0,
+              "jaw": 0,
+              "nearleg_back": 0,
+              "nearleg": 0,
+              "farleg": 0,
+              "neararm": 0,
+              "fararm": 0
+            }
+          },
+          {
+            "f": 6,
+            "ease": "out",
+            "parts": {
+              "head": -22,
+              "jaw": 0,
+              "nearleg_back": -10,
+              "nearleg": -10,
+              "farleg": 8,
+              "neararm": 20,
+              "fararm": 16
+            }
+          },
+          {
             "f": 8,
             "ease": "out",
             "x": -30,
             "rot": 0.16,
             "sx": 0.9,
             "sy": 0.92
+          },
+          {
+            "f": 10,
+            "ease": "out",
+            "parts": {
+              "head": 26,
+              "jaw": -4,
+              "nearleg_back": 18,
+              "nearleg": 18,
+              "farleg": -14,
+              "neararm": -40,
+              "fararm": -32
+            }
           },
           {
             "f": 12,
@@ -3387,11 +4018,37 @@
             "ghost": 1
           },
           {
+            "f": 15,
+            "ease": "out",
+            "parts": {
+              "head": 15.6,
+              "jaw": -2.4,
+              "nearleg_back": 10.8,
+              "nearleg": 10.8,
+              "farleg": -8.4,
+              "neararm": -24.0,
+              "fararm": -19.2
+            }
+          },
+          {
             "f": 16,
             "xo": 0.62,
             "ghost": 0.2,
             "sx": 0.92,
             "sy": 1.06
+          },
+          {
+            "f": 26,
+            "ease": "out",
+            "parts": {
+              "head": 0,
+              "jaw": 0,
+              "nearleg_back": 0,
+              "nearleg": 0,
+              "farleg": 0,
+              "neararm": 0,
+              "fararm": 0
+            }
           },
           {
             "f": 42,
@@ -3476,6 +4133,19 @@
             "xr": 0
           },
           {
+            "f": 0,
+            "ease": "out",
+            "parts": {
+              "head": 0,
+              "jaw": 0,
+              "nearleg_back": 0,
+              "nearleg": 0,
+              "farleg": 0,
+              "neararm": 0,
+              "fararm": 0
+            }
+          },
+          {
             "f": 4,
             "ease": "out",
             "rot": 0.12,
@@ -3515,12 +4185,64 @@
             "x": -6
           },
           {
+            "f": 27,
+            "ease": "out",
+            "parts": {
+              "head": -22,
+              "jaw": 0,
+              "nearleg_back": -10,
+              "nearleg": -10,
+              "farleg": 8,
+              "neararm": 20,
+              "fararm": 16
+            }
+          },
+          {
             "f": 29,
             "ease": "step",
             "rot": 0.18,
             "sx": 1.2,
             "sy": 0.88,
             "ghost": 1
+          },
+          {
+            "f": 31,
+            "ease": "out",
+            "parts": {
+              "head": 26,
+              "jaw": -4,
+              "nearleg_back": 18,
+              "nearleg": 18,
+              "farleg": -14,
+              "neararm": -40,
+              "fararm": -32
+            }
+          },
+          {
+            "f": 36,
+            "ease": "out",
+            "parts": {
+              "head": 15.6,
+              "jaw": -2.4,
+              "nearleg_back": 10.8,
+              "nearleg": 10.8,
+              "farleg": -8.4,
+              "neararm": -24.0,
+              "fararm": -19.2
+            }
+          },
+          {
+            "f": 41,
+            "ease": "out",
+            "parts": {
+              "head": -22,
+              "jaw": 0,
+              "nearleg_back": -10,
+              "nearleg": -10,
+              "farleg": 8,
+              "neararm": 20,
+              "fararm": 16
+            }
           },
           {
             "f": 42,
@@ -3541,6 +4263,45 @@
             "ghost": 1
           },
           {
+            "f": 45,
+            "ease": "out",
+            "parts": {
+              "head": 26,
+              "jaw": -4,
+              "nearleg_back": 18,
+              "nearleg": 18,
+              "farleg": -14,
+              "neararm": -40,
+              "fararm": -32
+            }
+          },
+          {
+            "f": 50,
+            "ease": "out",
+            "parts": {
+              "head": 15.6,
+              "jaw": -2.4,
+              "nearleg_back": 10.8,
+              "nearleg": 10.8,
+              "farleg": -8.4,
+              "neararm": -24.0,
+              "fararm": -19.2
+            }
+          },
+          {
+            "f": 55,
+            "ease": "out",
+            "parts": {
+              "head": -22,
+              "jaw": 0,
+              "nearleg_back": -10,
+              "nearleg": -10,
+              "farleg": 8,
+              "neararm": 20,
+              "fararm": 16
+            }
+          },
+          {
             "f": 56,
             "ease": "in",
             "xr": 0,
@@ -3559,6 +4320,32 @@
             "ghost": 1
           },
           {
+            "f": 59,
+            "ease": "out",
+            "parts": {
+              "head": 26,
+              "jaw": -4,
+              "nearleg_back": 18,
+              "nearleg": 18,
+              "farleg": -14,
+              "neararm": -40,
+              "fararm": -32
+            }
+          },
+          {
+            "f": 64,
+            "ease": "out",
+            "parts": {
+              "head": 15.6,
+              "jaw": -2.4,
+              "nearleg_back": 10.8,
+              "nearleg": 10.8,
+              "farleg": -8.4,
+              "neararm": -24.0,
+              "fararm": -19.2
+            }
+          },
+          {
             "f": 70,
             "ease": "in",
             "xr": 1,
@@ -3575,6 +4362,19 @@
             "sx": 0.92,
             "sy": 1.08,
             "ghost": 0.2
+          },
+          {
+            "f": 75,
+            "ease": "out",
+            "parts": {
+              "head": 0,
+              "jaw": 0,
+              "nearleg_back": 0,
+              "nearleg": 0,
+              "farleg": 0,
+              "neararm": 0,
+              "fararm": 0
+            }
           },
           {
             "f": 86,
@@ -3732,12 +4532,51 @@
             "sy": 1
           },
           {
+            "f": 0,
+            "ease": "out",
+            "parts": {
+              "head": 0,
+              "jaw": 0,
+              "nearleg_back": 0,
+              "nearleg": 0,
+              "farleg": 0,
+              "neararm": 0,
+              "fararm": 0
+            }
+          },
+          {
+            "f": 4,
+            "ease": "out",
+            "parts": {
+              "head": -22,
+              "jaw": 0,
+              "nearleg_back": -10,
+              "nearleg": -10,
+              "farleg": 8,
+              "neararm": 20,
+              "fararm": 16
+            }
+          },
+          {
             "f": 6,
             "ease": "out",
             "x": -14,
             "rot": -0.156,
             "sx": 0.94,
             "sy": 1.05
+          },
+          {
+            "f": 8,
+            "ease": "out",
+            "parts": {
+              "head": 26,
+              "jaw": -4,
+              "nearleg_back": 18,
+              "nearleg": 18,
+              "farleg": -14,
+              "neararm": -40,
+              "fararm": -32
+            }
           },
           {
             "f": 10,
@@ -3749,9 +4588,35 @@
             "ghost": 0.5
           },
           {
+            "f": 13,
+            "ease": "out",
+            "parts": {
+              "head": 15.6,
+              "jaw": -2.4,
+              "nearleg_back": 10.8,
+              "nearleg": 10.8,
+              "farleg": -8.4,
+              "neararm": -24.0,
+              "fararm": -19.2
+            }
+          },
+          {
             "f": 16,
             "x": 55,
             "ghost": 0
+          },
+          {
+            "f": 24,
+            "ease": "out",
+            "parts": {
+              "head": 0,
+              "jaw": 0,
+              "nearleg_back": 0,
+              "nearleg": 0,
+              "farleg": 0,
+              "neararm": 0,
+              "fararm": 0
+            }
           },
           {
             "f": 28,
@@ -3818,10 +4683,36 @@
             "y": 0
           },
           {
+            "f": 0,
+            "ease": "out",
+            "parts": {
+              "head": 0,
+              "jaw": 0,
+              "nearleg_back": 0,
+              "nearleg": 0,
+              "farleg": 0,
+              "neararm": 0,
+              "fararm": 0
+            }
+          },
+          {
             "f": 6,
             "ease": "out",
             "sy": 0.82,
             "sx": 1.1
+          },
+          {
+            "f": 15,
+            "ease": "out",
+            "parts": {
+              "head": -22,
+              "jaw": 0,
+              "nearleg_back": -10,
+              "nearleg": -10,
+              "farleg": 8,
+              "neararm": 20,
+              "fararm": 16
+            }
           },
           {
             "f": 16,
@@ -3831,6 +4722,32 @@
             "rot": -0.2,
             "sy": 1.1,
             "sx": 0.94
+          },
+          {
+            "f": 19,
+            "ease": "out",
+            "parts": {
+              "head": 26,
+              "jaw": -4,
+              "nearleg_back": 18,
+              "nearleg": 18,
+              "farleg": -14,
+              "neararm": -40,
+              "fararm": -32
+            }
+          },
+          {
+            "f": 24,
+            "ease": "out",
+            "parts": {
+              "head": 15.6,
+              "jaw": -2.4,
+              "nearleg_back": 10.8,
+              "nearleg": 10.8,
+              "farleg": -8.4,
+              "neararm": -24.0,
+              "fararm": -19.2
+            }
           },
           {
             "f": 26,
@@ -3848,6 +4765,19 @@
             "sy": 0.86,
             "sx": 1.12,
             "ghost": 0
+          },
+          {
+            "f": 35,
+            "ease": "out",
+            "parts": {
+              "head": 0,
+              "jaw": 0,
+              "nearleg_back": 0,
+              "nearleg": 0,
+              "farleg": 0,
+              "neararm": 0,
+              "fararm": 0
+            }
           },
           {
             "f": 50,
@@ -3931,6 +4861,19 @@
             "y": 0
           },
           {
+            "f": 0,
+            "ease": "out",
+            "parts": {
+              "head": 0,
+              "jaw": 0,
+              "nearleg_back": 0,
+              "nearleg": 0,
+              "farleg": 0,
+              "neararm": 0,
+              "fararm": 0
+            }
+          },
+          {
             "f": 10,
             "ease": "out",
             "sy": 0.75,
@@ -3960,6 +4903,32 @@
             "ghost": 0.3
           },
           {
+            "f": 38,
+            "ease": "out",
+            "parts": {
+              "head": -22,
+              "jaw": 0,
+              "nearleg_back": -10,
+              "nearleg": -10,
+              "farleg": 8,
+              "neararm": 20,
+              "fararm": 16
+            }
+          },
+          {
+            "f": 42,
+            "ease": "out",
+            "parts": {
+              "head": 26,
+              "jaw": -4,
+              "nearleg_back": 18,
+              "nearleg": 18,
+              "farleg": -14,
+              "neararm": -40,
+              "fararm": -32
+            }
+          },
+          {
             "f": 46,
             "ease": "in",
             "xo": 0.98,
@@ -3968,6 +4937,19 @@
             "sy": 1.3,
             "sx": 0.82,
             "ghost": 1
+          },
+          {
+            "f": 47,
+            "ease": "out",
+            "parts": {
+              "head": 15.6,
+              "jaw": -2.4,
+              "nearleg_back": 10.8,
+              "nearleg": 10.8,
+              "farleg": -8.4,
+              "neararm": -24.0,
+              "fararm": -19.2
+            }
           },
           {
             "f": 50,
@@ -3987,6 +4969,19 @@
             "rot": 0,
             "sy": 0.88,
             "sx": 1.1
+          },
+          {
+            "f": 58,
+            "ease": "out",
+            "parts": {
+              "head": 0,
+              "jaw": 0,
+              "nearleg_back": 0,
+              "nearleg": 0,
+              "farleg": 0,
+              "neararm": 0,
+              "fararm": 0
+            }
           },
           {
             "f": 68,
@@ -4075,12 +5070,42 @@
             "sy": 1
           },
           {
+            "f": 0,
+            "ease": "out",
+            "parts": {
+              "neararm": 0,
+              "fararm": 0,
+              "head": 0,
+              "jaw": 0
+            }
+          },
+          {
+            "f": 5,
+            "ease": "out",
+            "parts": {
+              "neararm": 42,
+              "fararm": 34,
+              "head": -8,
+              "jaw": 0
+            }
+          },
+          {
             "f": 7,
             "ease": "out",
             "x": -14,
             "rot": -0.036,
             "sx": 0.94,
             "sy": 1.05
+          },
+          {
+            "f": 9,
+            "ease": "out",
+            "parts": {
+              "neararm": -88,
+              "fararm": -74,
+              "head": 12,
+              "jaw": 18
+            }
           },
           {
             "f": 11,
@@ -4092,9 +5117,29 @@
             "ghost": 0.5
           },
           {
+            "f": 14,
+            "ease": "out",
+            "parts": {
+              "neararm": -52.8,
+              "fararm": -44.4,
+              "head": 7.2,
+              "jaw": 10.8
+            }
+          },
+          {
             "f": 17,
             "x": 50,
             "ghost": 0
+          },
+          {
+            "f": 25,
+            "ease": "out",
+            "parts": {
+              "neararm": 0,
+              "fararm": 0,
+              "head": 0,
+              "jaw": 0
+            }
           },
           {
             "f": 29,
@@ -4168,11 +5213,41 @@
             "sy": 1
           },
           {
+            "f": 0,
+            "ease": "out",
+            "parts": {
+              "neararm": 0,
+              "fararm": 0,
+              "head": 0,
+              "jaw": 0
+            }
+          },
+          {
+            "f": 7,
+            "ease": "out",
+            "parts": {
+              "neararm": 42,
+              "fararm": 34,
+              "head": -8,
+              "jaw": 0
+            }
+          },
+          {
             "f": 8,
             "ease": "out",
             "x": -16,
             "rot": -0.18,
             "sy": 1.06
+          },
+          {
+            "f": 11,
+            "ease": "out",
+            "parts": {
+              "neararm": -88,
+              "fararm": -74,
+              "head": 12,
+              "jaw": 18
+            }
           },
           {
             "f": 12,
@@ -4184,12 +5259,42 @@
             "ghost": 0.6
           },
           {
+            "f": 16,
+            "ease": "out",
+            "parts": {
+              "neararm": -52.8,
+              "fararm": -44.4,
+              "head": 7.2,
+              "jaw": 10.8
+            }
+          },
+          {
+            "f": 17,
+            "ease": "out",
+            "parts": {
+              "neararm": 42,
+              "fararm": 34,
+              "head": -8,
+              "jaw": 0
+            }
+          },
+          {
             "f": 18,
             "ease": "out",
             "x": 30,
             "rot": -0.2,
             "sx": 1,
             "sy": 1.06
+          },
+          {
+            "f": 21,
+            "ease": "out",
+            "parts": {
+              "neararm": -88,
+              "fararm": -74,
+              "head": 12,
+              "jaw": 18
+            }
           },
           {
             "f": 22,
@@ -4203,6 +5308,26 @@
           {
             "f": 26,
             "ghost": 0
+          },
+          {
+            "f": 26,
+            "ease": "out",
+            "parts": {
+              "neararm": -52.8,
+              "fararm": -44.4,
+              "head": 7.2,
+              "jaw": 10.8
+            }
+          },
+          {
+            "f": 37,
+            "ease": "out",
+            "parts": {
+              "neararm": 0,
+              "fararm": 0,
+              "head": 0,
+              "jaw": 0
+            }
           },
           {
             "f": 44,
@@ -4303,11 +5428,31 @@
             "xr": 0
           },
           {
+            "f": 0,
+            "ease": "out",
+            "parts": {
+              "neararm": 0,
+              "fararm": 0,
+              "head": 0,
+              "jaw": 0
+            }
+          },
+          {
             "f": 10,
             "ease": "out",
             "sx": 1.1,
             "sy": 0.9,
             "rot": -0.1
+          },
+          {
+            "f": 10,
+            "ease": "out",
+            "parts": {
+              "neararm": 42,
+              "fararm": 34,
+              "head": -8,
+              "jaw": 0
+            }
           },
           {
             "f": 12,
@@ -4321,48 +5466,218 @@
             "rot": 0
           },
           {
+            "f": 14,
+            "ease": "out",
+            "parts": {
+              "neararm": -88,
+              "fararm": -74,
+              "head": 12,
+              "jaw": 18
+            }
+          },
+          {
             "f": 16,
             "face": 1
+          },
+          {
+            "f": 18,
+            "ease": "out",
+            "parts": {
+              "neararm": 42,
+              "fararm": 34,
+              "head": -8,
+              "jaw": 0
+            }
+          },
+          {
+            "f": 19,
+            "ease": "out",
+            "parts": {
+              "neararm": -52.8,
+              "fararm": -44.4,
+              "head": 7.2,
+              "jaw": 10.8
+            }
           },
           {
             "f": 20,
             "face": -1
           },
           {
+            "f": 22,
+            "ease": "out",
+            "parts": {
+              "neararm": -88,
+              "fararm": -74,
+              "head": 12,
+              "jaw": 18
+            }
+          },
+          {
             "f": 24,
             "face": 1
+          },
+          {
+            "f": 26,
+            "ease": "out",
+            "parts": {
+              "neararm": 42,
+              "fararm": 34,
+              "head": -8,
+              "jaw": 0
+            }
+          },
+          {
+            "f": 27,
+            "ease": "out",
+            "parts": {
+              "neararm": -52.8,
+              "fararm": -44.4,
+              "head": 7.2,
+              "jaw": 10.8
+            }
           },
           {
             "f": 28,
             "face": -1
           },
           {
+            "f": 30,
+            "ease": "out",
+            "parts": {
+              "neararm": -88,
+              "fararm": -74,
+              "head": 12,
+              "jaw": 18
+            }
+          },
+          {
             "f": 32,
             "face": 1
+          },
+          {
+            "f": 34,
+            "ease": "out",
+            "parts": {
+              "neararm": 42,
+              "fararm": 34,
+              "head": -8,
+              "jaw": 0
+            }
+          },
+          {
+            "f": 35,
+            "ease": "out",
+            "parts": {
+              "neararm": -52.8,
+              "fararm": -44.4,
+              "head": 7.2,
+              "jaw": 10.8
+            }
           },
           {
             "f": 36,
             "face": -1
           },
           {
+            "f": 38,
+            "ease": "out",
+            "parts": {
+              "neararm": -88,
+              "fararm": -74,
+              "head": 12,
+              "jaw": 18
+            }
+          },
+          {
             "f": 40,
             "face": 1
+          },
+          {
+            "f": 42,
+            "ease": "out",
+            "parts": {
+              "neararm": 42,
+              "fararm": 34,
+              "head": -8,
+              "jaw": 0
+            }
+          },
+          {
+            "f": 43,
+            "ease": "out",
+            "parts": {
+              "neararm": -52.8,
+              "fararm": -44.4,
+              "head": 7.2,
+              "jaw": 10.8
+            }
           },
           {
             "f": 44,
             "face": -1
           },
           {
+            "f": 46,
+            "ease": "out",
+            "parts": {
+              "neararm": -88,
+              "fararm": -74,
+              "head": 12,
+              "jaw": 18
+            }
+          },
+          {
             "f": 48,
             "face": 1
+          },
+          {
+            "f": 50,
+            "ease": "out",
+            "parts": {
+              "neararm": 42,
+              "fararm": 34,
+              "head": -8,
+              "jaw": 0
+            }
+          },
+          {
+            "f": 51,
+            "ease": "out",
+            "parts": {
+              "neararm": -52.8,
+              "fararm": -44.4,
+              "head": 7.2,
+              "jaw": 10.8
+            }
           },
           {
             "f": 52,
             "face": -1
           },
           {
+            "f": 54,
+            "ease": "out",
+            "parts": {
+              "neararm": -88,
+              "fararm": -74,
+              "head": 12,
+              "jaw": 18
+            }
+          },
+          {
             "f": 56,
             "face": 1
+          },
+          {
+            "f": 59,
+            "ease": "out",
+            "parts": {
+              "neararm": -52.8,
+              "fararm": -44.4,
+              "head": 7.2,
+              "jaw": 10.8
+            }
           },
           {
             "f": 60,
@@ -4381,6 +5696,16 @@
           {
             "f": 64,
             "ghost": 0
+          },
+          {
+            "f": 70,
+            "ease": "out",
+            "parts": {
+              "neararm": 0,
+              "fararm": 0,
+              "head": 0,
+              "jaw": 0
+            }
           },
           {
             "f": 78,
@@ -4583,12 +5908,36 @@
             "sy": 1
           },
           {
+            "f": 0,
+            "ease": "out",
+            "parts": {
+              "head": 0,
+              "jaw": 0
+            }
+          },
+          {
+            "f": 2,
+            "ease": "out",
+            "parts": {
+              "head": -26,
+              "jaw": 24
+            }
+          },
+          {
             "f": 4,
             "ease": "out",
             "x": -14,
             "rot": -0.096,
             "sx": 0.94,
             "sy": 1.05
+          },
+          {
+            "f": 6,
+            "ease": "out",
+            "parts": {
+              "head": 28,
+              "jaw": -4
+            }
           },
           {
             "f": 8,
@@ -4600,9 +5949,25 @@
             "ghost": 0.5
           },
           {
+            "f": 11,
+            "ease": "out",
+            "parts": {
+              "head": 16.8,
+              "jaw": -2.4
+            }
+          },
+          {
             "f": 14,
             "x": 55,
             "ghost": 0
+          },
+          {
+            "f": 22,
+            "ease": "out",
+            "parts": {
+              "head": 0,
+              "jaw": 0
+            }
           },
           {
             "f": 26,
@@ -4667,6 +6032,14 @@
             "sy": 1
           },
           {
+            "f": 0,
+            "ease": "out",
+            "parts": {
+              "head": 0,
+              "jaw": 0
+            }
+          },
+          {
             "f": 10,
             "ease": "out",
             "rot": -0.16,
@@ -4674,11 +6047,43 @@
             "sx": 0.94
           },
           {
+            "f": 10,
+            "ease": "out",
+            "parts": {
+              "head": -26,
+              "jaw": 24
+            }
+          },
+          {
             "f": 14,
             "ease": "out",
             "rot": 0.04,
             "sy": 0.96,
             "sx": 1.06
+          },
+          {
+            "f": 14,
+            "ease": "out",
+            "parts": {
+              "head": 28,
+              "jaw": -4
+            }
+          },
+          {
+            "f": 19,
+            "ease": "out",
+            "parts": {
+              "head": 16.8,
+              "jaw": -2.4
+            }
+          },
+          {
+            "f": 30,
+            "ease": "out",
+            "parts": {
+              "head": 0,
+              "jaw": 0
+            }
           },
           {
             "f": 34,
@@ -4781,6 +6186,16 @@
             "intang": 0
           },
           {
+            "f": 0,
+            "ease": "out",
+            "parts": {
+              "head": 0,
+              "jaw": 0,
+              "neararm": 0,
+              "fararm": 0
+            }
+          },
+          {
             "f": 6,
             "ease": "out",
             "sy": 0.86,
@@ -4820,11 +6235,31 @@
             "intang": 0
           },
           {
+            "f": 16,
+            "ease": "out",
+            "parts": {
+              "head": -24,
+              "jaw": 34,
+              "neararm": 14,
+              "fararm": 10
+            }
+          },
+          {
             "f": 18,
             "ease": "out",
             "rot": -0.12,
             "sy": 1.1,
             "ghost": 0.3
+          },
+          {
+            "f": 20,
+            "ease": "out",
+            "parts": {
+              "head": 22,
+              "jaw": -6,
+              "neararm": -30,
+              "fararm": -24
+            }
           },
           {
             "f": 22,
@@ -4836,8 +6271,28 @@
             "ghost": 0.6
           },
           {
+            "f": 25,
+            "ease": "out",
+            "parts": {
+              "head": 13.2,
+              "jaw": -3.6,
+              "neararm": -18.0,
+              "fararm": -14.4
+            }
+          },
+          {
             "f": 28,
             "ghost": 0
+          },
+          {
+            "f": 36,
+            "ease": "out",
+            "parts": {
+              "head": 0,
+              "jaw": 0,
+              "neararm": 0,
+              "fararm": 0
+            }
           },
           {
             "f": 58,
@@ -4918,11 +6373,35 @@
             "sy": 1
           },
           {
+            "f": 0,
+            "ease": "out",
+            "parts": {
+              "head": 0,
+              "jaw": 0
+            }
+          },
+          {
             "f": 8,
             "ease": "out",
             "x": -14,
             "rot": -0.12,
             "sx": 0.94
+          },
+          {
+            "f": 8,
+            "ease": "out",
+            "parts": {
+              "head": -26,
+              "jaw": 24
+            }
+          },
+          {
+            "f": 12,
+            "ease": "out",
+            "parts": {
+              "head": 28,
+              "jaw": -4
+            }
           },
           {
             "f": 13,
@@ -4934,9 +6413,25 @@
             "ghost": 0.7
           },
           {
+            "f": 17,
+            "ease": "out",
+            "parts": {
+              "head": 16.8,
+              "jaw": -2.4
+            }
+          },
+          {
             "f": 19,
             "x": 50,
             "ghost": 0
+          },
+          {
+            "f": 28,
+            "ease": "out",
+            "parts": {
+              "head": 0,
+              "jaw": 0
+            }
           },
           {
             "f": 34,
@@ -5010,11 +6505,41 @@
             "sy": 1
           },
           {
+            "f": 0,
+            "ease": "out",
+            "parts": {
+              "nearleg_front": 0,
+              "farleg_front": 0,
+              "head": 0,
+              "neararm": 0
+            }
+          },
+          {
             "f": 18,
             "ease": "out",
             "x": -20,
             "rot": -0.32,
             "sy": 1.06
+          },
+          {
+            "f": 19,
+            "ease": "out",
+            "parts": {
+              "nearleg_front": -30,
+              "farleg_front": -24,
+              "head": -10,
+              "neararm": -30
+            }
+          },
+          {
+            "f": 23,
+            "ease": "out",
+            "parts": {
+              "nearleg_front": 10,
+              "farleg_front": 8,
+              "head": 6,
+              "neararm": 10
+            }
           },
           {
             "f": 24,
@@ -5025,10 +6550,30 @@
             "sx": 1.08
           },
           {
+            "f": 28,
+            "ease": "out",
+            "parts": {
+              "nearleg_front": 6.0,
+              "farleg_front": 4.8,
+              "head": 3.6,
+              "neararm": 6.0
+            }
+          },
+          {
             "f": 30,
             "rot": 0,
             "sy": 1,
             "sx": 1
+          },
+          {
+            "f": 39,
+            "ease": "out",
+            "parts": {
+              "nearleg_front": 0,
+              "farleg_front": 0,
+              "head": 0,
+              "neararm": 0
+            }
           },
           {
             "f": 56,
@@ -5129,6 +6674,16 @@
             "y": 0
           },
           {
+            "f": 0,
+            "ease": "out",
+            "parts": {
+              "nearleg_front": 0,
+              "farleg_front": 0,
+              "head": 0,
+              "neararm": 0
+            }
+          },
+          {
             "f": 30,
             "ease": "out",
             "x": -40,
@@ -5142,6 +6697,16 @@
             "y": -40
           },
           {
+            "f": 42,
+            "ease": "out",
+            "parts": {
+              "nearleg_front": -30,
+              "farleg_front": -24,
+              "head": -10,
+              "neararm": -30
+            }
+          },
+          {
             "f": 46,
             "ease": "in",
             "x": 20,
@@ -5151,10 +6716,40 @@
             "y": 0
           },
           {
+            "f": 46,
+            "ease": "out",
+            "parts": {
+              "nearleg_front": 10,
+              "farleg_front": 8,
+              "head": 6,
+              "neararm": 10
+            }
+          },
+          {
+            "f": 51,
+            "ease": "out",
+            "parts": {
+              "nearleg_front": 6.0,
+              "farleg_front": 4.8,
+              "head": 3.6,
+              "neararm": 6.0
+            }
+          },
+          {
             "f": 54,
             "rot": 0,
             "sy": 1,
             "sx": 1
+          },
+          {
+            "f": 62,
+            "ease": "out",
+            "parts": {
+              "nearleg_front": 0,
+              "farleg_front": 0,
+              "head": 0,
+              "neararm": 0
+            }
           },
           {
             "f": 90,
@@ -5259,12 +6854,36 @@
             "sy": 1
           },
           {
+            "f": 0,
+            "ease": "out",
+            "parts": {
+              "head": 0,
+              "jaw": 0
+            }
+          },
+          {
+            "f": 2,
+            "ease": "out",
+            "parts": {
+              "head": -26,
+              "jaw": 24
+            }
+          },
+          {
             "f": 4,
             "ease": "out",
             "x": -14,
             "rot": -0.132,
             "sx": 0.94,
             "sy": 1.05
+          },
+          {
+            "f": 6,
+            "ease": "out",
+            "parts": {
+              "head": 28,
+              "jaw": -4
+            }
           },
           {
             "f": 8,
@@ -5276,9 +6895,25 @@
             "ghost": 0.5
           },
           {
+            "f": 11,
+            "ease": "out",
+            "parts": {
+              "head": 16.8,
+              "jaw": -2.4
+            }
+          },
+          {
             "f": 14,
             "x": 55,
             "ghost": 0
+          },
+          {
+            "f": 22,
+            "ease": "out",
+            "parts": {
+              "head": 0,
+              "jaw": 0
+            }
           },
           {
             "f": 26,
@@ -5345,6 +6980,14 @@
             "y": 0
           },
           {
+            "f": 0,
+            "ease": "out",
+            "parts": {
+              "head": 0,
+              "jaw": 0
+            }
+          },
+          {
             "f": 4,
             "ease": "out",
             "sy": 0.86
@@ -5363,6 +7006,30 @@
             "rot": 0.45
           },
           {
+            "f": 20,
+            "ease": "out",
+            "parts": {
+              "head": -26,
+              "jaw": 24
+            }
+          },
+          {
+            "f": 24,
+            "ease": "out",
+            "parts": {
+              "head": 28,
+              "jaw": -4
+            }
+          },
+          {
+            "f": 29,
+            "ease": "out",
+            "parts": {
+              "head": 16.8,
+              "jaw": -2.4
+            }
+          },
+          {
             "f": 32,
             "ease": "in",
             "xo": 0.85,
@@ -5378,6 +7045,14 @@
             "ghost": 0,
             "sy": 0.9,
             "sx": 1.1
+          },
+          {
+            "f": 40,
+            "ease": "out",
+            "parts": {
+              "head": 0,
+              "jaw": 0
+            }
           },
           {
             "f": 56,
@@ -5470,9 +7145,29 @@
             "y": 0
           },
           {
+            "f": 0,
+            "ease": "out",
+            "parts": {
+              "neararm": 0,
+              "fararm": 0,
+              "head": 0,
+              "jaw": 0
+            }
+          },
+          {
             "f": 4,
             "ease": "out",
             "sy": 0.86
+          },
+          {
+            "f": 16,
+            "ease": "out",
+            "parts": {
+              "neararm": 42,
+              "fararm": 34,
+              "head": -8,
+              "jaw": 0
+            }
           },
           {
             "f": 18,
@@ -5480,6 +7175,26 @@
             "xo": 0.7,
             "y": -260,
             "rot": 0.2
+          },
+          {
+            "f": 20,
+            "ease": "out",
+            "parts": {
+              "neararm": -88,
+              "fararm": -74,
+              "head": 12,
+              "jaw": 18
+            }
+          },
+          {
+            "f": 25,
+            "ease": "out",
+            "parts": {
+              "neararm": -52.8,
+              "fararm": -44.4,
+              "head": 7.2,
+              "jaw": 10.8
+            }
           },
           {
             "f": 26,
@@ -5491,6 +7206,16 @@
             "f": 34,
             "xo": 0.95,
             "y": -200
+          },
+          {
+            "f": 36,
+            "ease": "out",
+            "parts": {
+              "neararm": 0,
+              "fararm": 0,
+              "head": 0,
+              "jaw": 0
+            }
           },
           {
             "f": 40,

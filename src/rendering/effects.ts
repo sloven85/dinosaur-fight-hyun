@@ -59,7 +59,9 @@ export class EffectSystem {
     const kind = options.kind ?? 'light';
 
     if (options.guarded) {
-      this.spawnSparks(x, y, 4, GUARD_COLOR, direction);
+      // 파란 방패 불꽃: 막은 쪽 앞에서 튀는 불꽃 + 고리('팅').
+      this.spawnSparks(x, y, 9, GUARD_COLOR, direction);
+      this.push({ kind: 'shockwave', x, y, vx: 0, vy: 0, gravity: 0, life: 0.2, maxLife: 0.2, size: 18, rotation: 0, spin: 0, color: GUARD_COLOR });
       this.spawnDust(x, y, 2, 0.5);
       return;
     }

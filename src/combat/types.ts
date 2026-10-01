@@ -19,7 +19,9 @@ export type FighterState =
   /** 넘어져 누워 있음(KO 아님). 일어나면 잠깐 무적. */
   | 'fallen'
   /** 짧은 기절(머리 위 별). */
-  | 'stun';
+  | 'stun'
+  /** 막은 직후 반동(방패 불꽃). 짧게 뒤로 밀리고 움직일 수 없다. */
+  | 'guard';
 
 export interface Rect {
   left: number;

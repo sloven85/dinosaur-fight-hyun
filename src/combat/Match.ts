@@ -28,6 +28,9 @@ import type { PlayerIndex } from '../input/InputManager';
 import { emptyAssets, type CharacterAssets } from '../rendering/CharacterAssets';
 import { Fighter, NULL_INPUT, type FighterInput } from './Fighter';
 import { rectsOverlap, type AttackKind, type MoveData, type Rect } from './types';
+
+/** 막았을 때 반동 프레임(파란 방패 불꽃 + '팅'). */
+const GUARD_RECOIL_FRAMES = 10;
 import type { HitParams, ProjectileSpec, ScriptBox } from './moveScript';
 
 /** 날아가는 그림(골판·물결·충격파). 판정은 Match가, 그림은 BattleScene이 맡는다. */
@@ -396,6 +399,7 @@ export class Match {
       defender.health = Math.max(GUARD_MIN_HEALTH, defender.health - damage);
       defender.kbPerFrame = (direction * move.knockback * GUARD_KNOCKBACK_RATIO) / KNOCKBACK_FRAMES;
       defender.kbFrames = KNOCKBACK_FRAMES;
+      defender.guardRecoil(GUARD_RECOIL_FRAMES);
     } else {
       defender.health = Math.max(0, defender.health - damage);
       defender.releaseHold();
@@ -694,8 +698,9 @@ export class Match {
     }
     if (guarded) {
       defender.health = Math.max(GUARD_MIN_HEALTH, defender.health - damage);
-      defender.kbPerFrame = (direction * hit.knockback * GUARD_KNOCKBACK_RATIO) / KNOCKBACK_FRAMES;
+      defender.kbPerFrame = (direction * Math.max(hit.knockback, 60) * GUARD_KNOCKBACK_RATIO) / KNOCKBACK_FRAMES;
       defender.kbFrames = KNOCKBACK_FRAMES;
+      defender.guardRecoil(GUARD_RECOIL_FRAMES);
     } else {
       defender.health = Math.max(0, defender.health - damage);
       attacker.meter = Math.min(MAX_METER, attacker.meter + METER_ON_HIT);

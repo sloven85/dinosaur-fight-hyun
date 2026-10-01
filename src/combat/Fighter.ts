@@ -148,6 +148,8 @@ export class Fighter {
   /** 띄워져 날아가는 동안의 경과 프레임(0 = 날아가는 중 아님). 연출 전용. */
   airTumble = 0;
   stunFrames = 0;
+  /** 막은 직후 반동 남은 프레임. */
+  guardFrames = 0;
   /** 스크립트 기술의 보이는 모양. 스크립트 기술이 아니면 null. */
   scriptVisual: ScriptVisual | null = null;
   /** 잔상(오래된 것부터). */
@@ -283,16 +285,33 @@ export class Fighter {
 
   canAct(): boolean {
     return (
-      this.state === 'idle' || this.state === 'walk' || this.state === 'crouch' || this.state === 'jump'
+      this.state === 'idle' ||
+      this.state === 'walk' ||
+      this.state === 'crouch' ||
+      this.state === 'jump' ||
+      this.state === 'guard'
     );
   }
 
-  /** 계획서 2절: 지상 대기·이동에서만, 상대 반대 방향 입력 시 자동 가드. */
+  /**
+   * 방어(마스터 결정 2026-10-01, jk 요청): 땅에서 뒤 또는 아래를 누르고 있으면 막는다.
+   * 4세도 쓰도록 버튼을 늘리지 않는다. 잡기는 Match에서 방어를 무시한다.
+   */
   isGuarding(opponent: Fighter): boolean {
     if (!this.onGround) return false;
-    if (this.state !== 'idle' && this.state !== 'walk') return false;
+    if (this.state !== 'idle' && this.state !== 'walk' && this.state !== 'crouch' && this.state !== 'guard') return false;
+    // 막는 반동 중에는 계속 막는다(상대가 몸을 통과해 왕복해도 방어가 풀리지 않게).
+    if (this.state === 'guard') return true;
     const awayIsLeft = this.x <= opponent.x;
-    return awayIsLeft ? this.inputLeft : this.inputRight;
+    return this.inputDown || (awayIsLeft ? this.inputLeft : this.inputRight);
+  }
+
+  /** 지금 방어 자세를 보여 줄지(뒤·아래를 누르고 서 있음). 연출용. */
+  get guardStance(): boolean {
+    if (!this.onGround || !this.opponent) return false;
+    if (this.state === 'guard') return true;
+    if (this.state !== 'idle' && this.state !== 'walk' && this.state !== 'crouch') return false;
+    return this.isGuarding(this.opponent);
   }
 
   isMeterFull(): boolean {
@@ -392,6 +411,10 @@ export class Fighter {
       case 'stun':
         this.stunFrames -= 1;
         if (this.stunFrames <= 0) this.state = 'idle';
+        break;
+      case 'guard':
+        this.guardFrames -= 1;
+        if (this.guardFrames <= 0) this.state = 'idle';
         break;
       case 'attack':
         this.advanceAttack();
@@ -522,6 +545,14 @@ export class Fighter {
     this.landedThisStep = true;
   }
 
+  /** 막았을 때: 짧은 반동(움직일 수 없음). 반동 중에도 계속 막는다. */
+  guardRecoil(frames: number): void {
+    this.state = 'guard';
+    this.attack = null;
+    this.scriptVisual = null;
+    this.guardFrames = Math.max(this.guardFrames, frames);
+  }
+
   stun(frames: number): void {
     this.state = 'stun';
     this.attack = null;
@@ -585,6 +616,7 @@ export class Fighter {
     this.fallStartAngle = 0;
     this.airTumble = 0;
     this.stunFrames = 0;
+    this.guardFrames = 0;
     this.scriptVisual = null;
     this.ghosts = [];
   }
