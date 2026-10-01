@@ -2,6 +2,7 @@ import charactersJson from './characters.json';
 import stagesJson from './stages.json';
 import movesJson from './moves.json';
 import type { MoveData } from '../combat/types';
+import type { AttackStyle } from '../rendering/attackMotion';
 
 export interface MoveSet {
   light: string;
@@ -52,6 +53,8 @@ export interface CharacterData {
   alternatePalette: { skin: string };
   /** CPU가 이 캐릭터를 조종할 때의 행동 성향(계획서 19절 C1). */
   cpuStyle: CpuStyle;
+  /** 공격 동작 모티프(꼬리·뿔머리·발톱 등). 전용 포즈가 없을 때의 궤적·잔상을 정한다. */
+  attackStyle: AttackStyle;
   /**
    * 계획서 16절 프롬프트 4의 캐릭터별 이동 특성.
    * 6개 아키타입 공통 코드는 그대로 두고, 이 플래그로만 개성을 준다.

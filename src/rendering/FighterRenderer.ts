@@ -1,7 +1,7 @@
 import type { Fighter } from '../combat/Fighter';
 import { emotionFor, type Emotion } from '../combat/emotion';
-import { attackPhase } from '../combat/types';
 import { spriteScale, type PoseName } from './rig';
+import { applyMotion, attackMotion, drawAttackTrail, type MotionFrame } from './attackMotion';
 
 const CROUCH_SQUASH = 0.75;
 
@@ -144,8 +144,12 @@ export function renderFighter(
   g.translate(fighter.x, feetY);
   if (fighter.facing === -1) g.scale(-1, 1);
 
+  // 기술별·종별 공격 동작(포즈가 없으면 궤적 전체, 전용 포즈면 약하게 더한다).
+  const motion = attackMotionFor(fighter);
+  g.save();
   if (choice.isPose) applyPoseTransform(g, fighter, time);
   else applyMasterTransform(g, fighter, time);
+  if (motion) applyMotion(g, motion, choice.isPose ? 0.35 : 1);
   // 감정 3단계(프롬프트 6): 체력이 낮을수록 어깨가 처지고, 높으면 가볍게 들썩인다.
   applyEmotionTransform(g, emotionFor(fighter.health / fighter.maxHealth), time);
 
@@ -191,6 +195,18 @@ export function renderFighter(
       g.drawImage(tinted, destX, destY, destW, destH);
       g.restore();
     }
+  }
+  g.restore();
+
+  if (motion && fighter.attack) {
+    drawAttackTrail(
+      g,
+      fighter.data.attackStyle,
+      fighter.attack.move.kind,
+      motion,
+      { front: fighter.bodyFront, height: fighter.data.displayHeight },
+      fighter.data.accentColor,
+    );
   }
 
   g.restore();
@@ -264,13 +280,9 @@ function applyMasterTransform(g: CanvasRenderingContext2D, fighter: Fighter, tim
     case 'jump':
       g.rotate(Math.max(-0.22, Math.min(0.22, fighter.vy / 4000)));
       break;
-    case 'attack': {
-      const phase = fighter.attack ? attackPhase(fighter.attack.move, fighter.attack.frame) : 'startup';
-      const lean = phase === 'startup' ? -14 : phase === 'active' ? 34 : 10;
-      g.translate(lean, phase === 'active' ? -6 : 0);
-      g.rotate(phase === 'active' ? 0.06 : 0);
+    case 'attack':
+      // 공격 동작은 attackMotion이 기술·종별로 따로 건다(예전의 '몸통 밀어 넣기' 폴백 대체).
       break;
-    }
     case 'hit':
       g.rotate(-0.09);
       break;
@@ -358,4 +370,14 @@ function drawNameTag(g: CanvasRenderingContext2D, fighter: Fighter, feetY: numbe
     g.fillStyle = TWO_P_OUTLINE;
     g.fillText('2P', fighter.x, feetY - 34);
   }
+}
+
+/** 공격 중이면 지금 프레임의 몸 변형을 돌려준다. */
+function attackMotionFor(fighter: Fighter): MotionFrame | null {
+  if (fighter.state !== 'attack' || !fighter.attack) return null;
+  const { move, frame } = fighter.attack;
+  return attackMotion(fighter.data.attackStyle, move.kind, move, frame, {
+    front: fighter.bodyFront,
+    height: fighter.data.displayHeight,
+  });
 }
