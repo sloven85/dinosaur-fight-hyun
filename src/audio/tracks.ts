@@ -19,6 +19,11 @@ export const AUDIO_TRACKS: readonly AudioTrack[] = [
   { id: 'bgm_volcano', path: 'assets/audio/bgm/volcano.mp3', kind: 'bgm' },
   { id: 'bgm_desert', path: 'assets/audio/bgm/desert.mp3', kind: 'bgm' },
   { id: 'bgm_museum', path: 'assets/audio/bgm/museum.mp3', kind: 'bgm' },
+  // 새 경기장 4곳은 전용 곡이 오기 전까지 분위기가 가까운 곡을 같이 쓴다.
+  { id: 'bgm_lagoon', path: 'assets/audio/bgm/jungle.mp3', kind: 'bgm' },
+  { id: 'bgm_snow', path: 'assets/audio/bgm/museum.mp3', kind: 'bgm' },
+  { id: 'bgm_swamp', path: 'assets/audio/bgm/volcano.mp3', kind: 'bgm' },
+  { id: 'bgm_meadow', path: 'assets/audio/bgm/desert.mp3', kind: 'bgm' },
   { id: 'battle', path: 'assets/audio/bgm/jungle.mp3', kind: 'bgm' },
   { id: 'victory', path: 'assets/audio/bgm/victory.mp3', kind: 'bgm' },
   // 예전 이름(화면 코드에서 쓰는 id) → 새 음원.

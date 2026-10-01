@@ -56,6 +56,62 @@
       "musicId": "bgm_museum",
       "placeholderColor": "#3d4658",
       "groundBrightness": 1
+    },
+    {
+      "id": "lagoon",
+      "name": "해변 석호",
+      "thumbnailPath": "assets/stages/lagoon/thumbnail.jpg",
+      "layerPaths": {
+        "sky": "assets/stages/lagoon/sky.jpg",
+        "mid": "assets/stages/lagoon/mid.jpg",
+        "ground": "assets/stages/lagoon/ground.jpg"
+      },
+      "groundY": 900,
+      "musicId": "bgm_lagoon",
+      "placeholderColor": "#2c6f7a",
+      "groundBrightness": 1
+    },
+    {
+      "id": "snow",
+      "name": "설원 숲",
+      "thumbnailPath": "assets/stages/snow/thumbnail.jpg",
+      "layerPaths": {
+        "sky": "assets/stages/snow/sky.jpg",
+        "mid": "assets/stages/snow/mid.jpg",
+        "ground": "assets/stages/snow/ground.jpg"
+      },
+      "groundY": 900,
+      "musicId": "bgm_snow",
+      "placeholderColor": "#5f7484",
+      "groundBrightness": 1
+    },
+    {
+      "id": "swamp",
+      "name": "달밤 늪",
+      "thumbnailPath": "assets/stages/swamp/thumbnail.jpg",
+      "layerPaths": {
+        "sky": "assets/stages/swamp/sky.jpg",
+        "mid": "assets/stages/swamp/mid.jpg",
+        "ground": "assets/stages/swamp/ground.jpg"
+      },
+      "groundY": 900,
+      "musicId": "bgm_swamp",
+      "placeholderColor": "#2b3a3a",
+      "groundBrightness": 1
+    },
+    {
+      "id": "meadow",
+      "name": "꽃 피는 초원",
+      "thumbnailPath": "assets/stages/meadow/thumbnail.jpg",
+      "layerPaths": {
+        "sky": "assets/stages/meadow/sky.jpg",
+        "mid": "assets/stages/meadow/mid.jpg",
+        "ground": "assets/stages/meadow/ground.jpg"
+      },
+      "groundY": 900,
+      "musicId": "bgm_meadow",
+      "placeholderColor": "#5f8a4a",
+      "groundBrightness": 1
     }
   ]
 }

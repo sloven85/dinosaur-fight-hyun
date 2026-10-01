@@ -12,8 +12,8 @@ describe('경기장 배경 시차', () => {
     expect(mid).toBeLessThan(ground);
     expect(PARALLAX.ground).toBeLessThan(1);
   });
-  it('계획서 경기장 4종(정글·화산·사막 화석지·박물관)과 하늘·중경·바닥 경로', () => {
-    expect(STAGES.map((s) => s.id)).toEqual(['jungle', 'volcano', 'desert', 'museum']);
+  it('경기장 8곳(기본 4 + 해변·설원·달밤 늪·꽃 초원)과 하늘·중경·바닥 경로', () => {
+    expect(STAGES.map((s) => s.id)).toEqual(['jungle', 'volcano', 'desert', 'museum', 'lagoon', 'snow', 'swamp', 'meadow']);
     for (const s of STAGES) for (const l of ['sky', 'mid', 'ground']) expect(s.layerPaths[l]).toContain(`stages/${s.id}/${l}`);
   });
 });

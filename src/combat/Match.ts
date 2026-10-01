@@ -29,6 +29,11 @@ import { emptyAssets, type CharacterAssets } from '../rendering/CharacterAssets'
 import { Fighter, NULL_INPUT, type FighterInput } from './Fighter';
 import { rectsOverlap, type AttackKind, type MoveData, type Rect } from './types';
 
+/** 맞을 때 최소로 밀려나는 거리(px). 넉백이 0인 다단히트(벨로키 왕복 등)도 조금씩 밀린다. */
+const MIN_PUSH: Record<string, number> = { light: 40, heavy: 70, special: 100 };
+/** 때린 쪽이 따라 들어가는 비율. */
+const FOLLOW_RATIO = 0.33;
+
 /** 막았을 때 반동 프레임(파란 방패 불꽃 + '팅'). */
 const GUARD_RECOIL_FRAMES = 10;
 import type { HitParams, ProjectileSpec, ScriptBox } from './moveScript';
@@ -749,8 +754,20 @@ export class Match {
           defender.state = 'hit';
           defender.hitstunFrames = hit.hitstun;
         }
-        defender.kbPerFrame = (direction * hit.knockback) / KNOCKBACK_FRAMES;
+        // '벽에 대고 치는 느낌' 없애기(jk 2026-10-02): 맞으면 최소한 이만큼은 밀려나고,
+        // 때린 쪽은 그 1/3만큼 따라 들어간다(맞는 순간 몸이 서로 붙어 있는 것처럼 보이지 않게).
+        const push = Math.max(hit.knockback, MIN_PUSH[hit.fx ?? moveKind] ?? 40);
+        defender.kbPerFrame = (direction * push) / KNOCKBACK_FRAMES;
         defender.kbFrames = hit.launch ? 0 : KNOCKBACK_FRAMES;
+        if (!hit.launch && !attacker.holding && attacker.onGround) {
+          const follow = direction * push * FOLLOW_RATIO;
+          // 스크립트 기술은 위치를 시작점 기준으로 다시 계산하므로 시작점을 옮겨 따라 들어가게 한다.
+          if (attacker.attack?.script) attacker.attack.script.startX += follow;
+          else if (attacker.kbFrames <= 0) {
+            attacker.kbPerFrame = follow / KNOCKBACK_FRAMES;
+            attacker.kbFrames = KNOCKBACK_FRAMES;
+          }
+        }
       }
       // 다단히트 기술은 한 기술을 '연속 피격 1회'로 센다(왕복 5연타가 보호 무적에 끊기지 않게).
       const attackId = sourceAttackId ?? attacker.attack?.attackId ?? -1;
