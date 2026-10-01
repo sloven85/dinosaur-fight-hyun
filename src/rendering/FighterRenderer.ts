@@ -420,6 +420,7 @@ function isAirborneHit(fighter: Fighter): boolean {
 }
 
 function poseForState(fighter: Fighter): PoseName | null {
+  if (fighter.guardStance && hasPose(fighter, 'guard')) return 'guard';
   if (isAirborneHit(fighter)) return hasPose(fighter, 'airborne') ? 'airborne' : 'hit';
   switch (fighter.state) {
     case 'hit':
@@ -574,6 +575,14 @@ function applyAirTumble(g: CanvasRenderingContext2D, fighter: Fighter): void {
 }
 
 function applyPoseTransform(g: CanvasRenderingContext2D, fighter: Fighter, time: number): void {
+  if (fighter.guardStance) {
+    // 전용 방어 그림: 막은 순간만 살짝 눌리며 떨린다(그림 자체가 웅크린 자세).
+    if (fighter.state === 'guard') {
+      tiltAboutMiddle(g, fighter, Math.sin(fighter.guardFrames * 2.4) * 0.03);
+      g.scale(1.02, 0.97);
+    }
+    return;
+  }
   if (fighter.state === 'hit' && fighter.airTumble > 0) applyAirTumble(g, fighter);
   if (fighter.state === 'held') tiltAboutMiddle(g, fighter, fighter.heldRot);
   if (fighter.state === 'fallen') {
@@ -671,7 +680,8 @@ function partAnglesFor(fighter: Fighter, time: number): Record<string, number> |
   const parts = fighter.assets.parts;
   if (!parts) return null;
   const motions = parts.motions.motions;
-  if (fighter.guardStance) return guardStanceOf(fighter).parts;
+  // 방어 전용 그림이 있으면 파츠 대신 그 그림(한눈에 '막는다'로 읽히게).
+  if (fighter.guardStance) return hasPose(fighter, 'guard') ? null : guardStanceOf(fighter).parts;
   switch (fighter.state) {
     case 'idle':
     case 'crouch':

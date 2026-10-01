@@ -1,7 +1,7 @@
 import { MAX_METER, ROUNDS_TO_WIN } from '../core/constants';
 import type { GameContext } from '../core/GameContext';
 import { getStage } from '../data';
-import { Match, type Projectile } from '../combat/Match';
+import { Match, SPECIAL_CUTIN_FRAMES, type Projectile } from '../combat/Match';
 import type { Fighter } from '../combat/Fighter';
 import { EMOTION_COLORS, EMOTION_LABELS, emotionFor } from '../combat/emotion';
 import type { Rect } from '../combat/types';
@@ -22,6 +22,10 @@ const HUD_BAR_H = 42;
 const SHAKE_HEAVY = 9;
 const SHAKE_SPECIAL = 14;
 const SHAKE_FRAMES = 10;
+/** 마무리 타격: 멈춤 9프레임(0.15초) 뒤 확대가 24프레임에 걸쳐 풀린다. */
+const FINISH_FREEZE_FRAMES = 9;
+const FINISH_ZOOM_FRAMES = 24;
+const FINISH_ZOOM = 1.12;
 
 /** 계획서 16절 프롬프트 6: 대전 화면. 전투 규칙은 Match, 보이는 모양은 FighterRenderer·EffectSystem이 맡는다. */
 export class BattleScene extends BaseScene {
@@ -35,6 +39,13 @@ export class BattleScene extends BaseScene {
   private shakeStrength = 0;
   private flashFrames = 0;
   private prevPhase = '';
+  /** 특수기 컷인 연출(경기 정지는 Match가 맡는다). */
+  private cutinTotal = 0;
+  private cutinPlayer = 0;
+  /** 마무리 확대·멈춤: 남은 프레임과 확대 중심. */
+  private finishFrames = 0;
+  private finishX = 960;
+  private finishY = 600;
 
   constructor(private readonly characterAssets: [CharacterAssets, CharacterAssets] | null = null) {
     super();
@@ -48,8 +59,9 @@ export class BattleScene extends BaseScene {
     this.shakeFrames = 0;
     this.flashFrames = 0;
     this.prevPhase = '';
+    this.finishFrames = 0;
     // 다시 하기를 눌러 새 경기를 시작할 때도 저장된 난이도·도움 설정을 그대로 다시 읽는다.
-    const options = { difficulty: settings.difficulty, assist: settings.assist };
+    const options = { difficulty: settings.difficulty, assist: settings.assist, specialCutin: true };
     this.match = this.characterAssets
       ? new Match(session.mode, session.characters, this.characterAssets, options)
       : new Match(session.mode, session.characters, undefined, options);
@@ -69,6 +81,13 @@ export class BattleScene extends BaseScene {
     this.elapsed += dt;
 
     if (input.consumeDebugToggle()) this.debugBoxes = !this.debugBoxes;
+
+    // 마무리 한 방: 0.15초 멈추고 화면을 살짝 확대한다(그동안 경기는 멈춘다).
+    if (this.finishFrames > FINISH_ZOOM_FRAMES) {
+      this.finishFrames -= 1;
+      return;
+    }
+    if (this.finishFrames > 0) this.finishFrames -= 1;
 
     this.match.step(input, dt);
     this.consumeMatchEvents(stage.groundY, settings.screenShake, settings.vibration);
@@ -120,9 +139,19 @@ export class BattleScene extends BaseScene {
         continue;
       }
       if (event.type === 'ko') {
+        this.finishFrames = FINISH_FREEZE_FRAMES + FINISH_ZOOM_FRAMES;
+        this.finishX = event.x;
+        this.finishY = y;
         this.effects.spawnStars(event.x, y, 7);
         this.context.audio.playSfx('ko');
         if (vibration) this.context.input.rumble(event.player, 0.9, 260);
+        continue;
+      }
+
+      if (event.type === 'special') {
+        this.cutinTotal = SPECIAL_CUTIN_FRAMES;
+        this.cutinPlayer = event.player;
+        this.context.audio.playSfx('roar');
         continue;
       }
 
@@ -130,6 +159,7 @@ export class BattleScene extends BaseScene {
         kind: event.kind,
         guarded: event.type === 'guard',
         direction: event.direction,
+        attackerId: event.attackerId,
       });
       this.context.audio.playSfx(sfxIdForEvent(event));
 
@@ -150,6 +180,62 @@ export class BattleScene extends BaseScene {
       fighter.landedThisStep = false;
       this.effects.spawnDust(fighter.x, groundY, 5, 0.8);
     }
+  }
+
+  /**
+   * 특수기 컷인(0.6초): 화면이 어두워지고 그 종 초상이 종 대표색 띠와 함께 옆으로 쓱 지나간다.
+   * 1P는 왼쪽에서, 2P는 오른쪽에서 들어온다.
+   */
+  private renderCutin(g: CanvasRenderingContext2D, width: number, height: number): void {
+    const left = this.match.cutinFrames;
+    if (left <= 0 || this.cutinTotal <= 0) return;
+    const t = 1 - left / this.cutinTotal; // 0 → 1
+    const fighter = this.match.fighters[this.cutinPlayer as 0 | 1];
+    const fromLeft = this.cutinPlayer === 0;
+    const fade = Math.min(1, t * 5, (1 - t) * 5);
+    g.save();
+    g.fillStyle = `rgba(0, 0, 0, ${0.55 * fade})`;
+    g.fillRect(0, 0, width, height);
+    // 띠: 비스듬한 종 대표색 띠.
+    const bandH = 300;
+    const cy = height * 0.5;
+    g.translate(width / 2, cy);
+    g.rotate(fromLeft ? -0.08 : 0.08);
+    g.globalAlpha = fade;
+    g.fillStyle = fighter.data.color;
+    g.fillRect(-width, -bandH / 2, width * 2, bandH);
+    g.fillStyle = 'rgba(255, 255, 255, 0.85)';
+    g.fillRect(-width, -bandH / 2 - 8, width * 2, 8);
+    g.fillRect(-width, bandH / 2, width * 2, 8);
+    // 속도선.
+    g.strokeStyle = 'rgba(255, 255, 255, 0.35)';
+    g.lineWidth = 6;
+    for (let i = 0; i < 9; i++) {
+      const yy = -bandH / 2 + 20 + i * 32;
+      const off = ((t * 2600 + i * 210) % (width * 1.6)) - width * 0.8;
+      const sx = fromLeft ? off : -off;
+      g.beginPath();
+      g.moveTo(sx, yy);
+      g.lineTo(sx + (fromLeft ? -220 : 220), yy);
+      g.stroke();
+    }
+    // 초상: 빠르게 들어와 가운데서 천천히, 다시 빠르게 나간다.
+    const ease = t < 0.25 ? 1 - Math.pow(1 - t / 0.25, 3) : t > 0.8 ? 1 + Math.pow((t - 0.8) / 0.2, 2) : 1 + (t - 0.25) * 0.15;
+    const px = (fromLeft ? -1 : 1) * (width * 0.9) * (1 - ease);
+    const portrait = fighter.assets.portrait;
+    const size = 420;
+    if (portrait) {
+      g.save();
+      if (!fromLeft) g.scale(-1, 1);
+      g.drawImage(portrait, (fromLeft ? px : -px) - size / 2 - 260, -size / 2, size, size);
+      g.restore();
+    }
+    g.rotate(fromLeft ? 0.08 : -0.08);
+    drawText(g, fighter.attack?.move.name ?? '', px + (fromLeft ? 220 : -220), 0, {
+      font: FONTS.heading,
+      color: '#ffffff',
+    });
+    g.restore();
   }
 
   private onRoundFinished(groundY: number): void {
@@ -183,6 +269,14 @@ export class BattleScene extends BaseScene {
     // 흔들림은 무대·캐릭터·이펙트에만 적용하고 HUD는 고정한다.
     g.save();
     g.translate(shake.x, shake.y);
+    if (this.finishFrames > 0) {
+      // 마무리 확대: 멈춤 동안 최대, 이후 서서히 풀린다. 맞은 지점을 중심으로.
+      const t = Math.min(1, this.finishFrames / FINISH_ZOOM_FRAMES);
+      const z = 1 + (FINISH_ZOOM - 1) * t;
+      g.translate(this.finishX, this.finishY);
+      g.scale(z, z);
+      g.translate(-this.finishX, -this.finishY);
+    }
 
     const focusX = (this.match.p1.x + this.match.p2.x) / 2;
     renderStage(g, stage, width, height, this.elapsed, focusX);
@@ -210,6 +304,7 @@ export class BattleScene extends BaseScene {
     }
 
     this.renderHud(g, width);
+    this.renderCutin(g, width, height);
     this.renderRoundText(g, width, height);
 
     if (this.debugBoxes) {

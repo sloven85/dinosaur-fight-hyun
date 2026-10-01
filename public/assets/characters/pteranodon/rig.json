@@ -61,6 +61,21 @@
       "rootY": 1280,
       "usable": false,
       "box": null
+    },
+    "guard": {
+      "imagePath": "poses/guard.png",
+      "rootX": 1023.0,
+      "rootY": 1279,
+      "usable": true,
+      "box": {
+        "minX": 696,
+        "minY": 329,
+        "maxX": 1350,
+        "maxY": 1279,
+        "w": 655,
+        "h": 951
+      },
+      "sameScaleAsMaster": true
     }
   },
   "parts": {

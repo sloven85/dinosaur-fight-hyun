@@ -6,7 +6,7 @@ import type { AssetLoader } from './AssetLoader';
  * - down    : 넘어짐·KO 때의 '다운' 자세(옆으로 쓰러져 누움)
  * 슬롯에 그림이 없으면 렌더러가 마스터·파츠를 ±15° 안에서 기울여 대신한다(거꾸로 뒤집기 금지).
  */
-export const POSE_NAMES = ['heavy', 'special', 'hit', 'airborne', 'down', 'victory'] as const;
+export const POSE_NAMES = ['heavy', 'special', 'hit', 'airborne', 'down', 'victory', 'guard'] as const;
 export type PoseName = (typeof POSE_NAMES)[number];
 
 /** 실측한 스프라이트 경계(원본 캔버스 픽셀 좌표). */

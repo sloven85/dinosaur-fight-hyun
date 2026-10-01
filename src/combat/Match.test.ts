@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { FIXED_DT, ROUND_INTRO_FRAMES, ROUND_SECONDS, SIMULATION_HZ } from '../core/constants';
-import { Match, type MatchEvent } from './Match';
+import { SPECIAL_CUTIN_FRAMES, Match, type MatchEvent } from './Match';
 import { ScriptInput } from './ScriptInput';
 
 /** 인트로를 건너뛰고 대전이 시작된 상태로 만든다. */
@@ -216,7 +216,8 @@ function attackUntilEvent(match: Match, input: ScriptInput, frames: number): Mat
     match.step(input, FIXED_DT);
     input.clearPressed();
     events.push(...match.consumeEvents());
-    if (events.length > 0) break;
+    // 특수기 발동 알림(컷인용)은 타격 사건이 아니라서 건너뛴다.
+    if (events.some((event) => event.type !== 'special')) break;
   }
   return events;
 }
@@ -266,6 +267,36 @@ describe('연출 이벤트 (프롬프트 6)', () => {
 
     const hit = events.find((event) => event.type === 'hit');
     expect(hit?.kind).toBe('special');
+  });
+
+  it('특수기 발동 순간 special 이벤트(때린 종 id), 컷인을 켜면 0.6초 경기가 멈춘다', () => {
+    const match = new Match('versus', ['tyrannosaurus', 'triceratops'], undefined, { specialCutin: true });
+    fighting(match);
+    match.consumeEvents();
+    placeClose(match);
+    match.p1.meter = 100;
+    const input = new ScriptInput();
+    input.press(0, 'special');
+    match.step(input, FIXED_DT);
+    const start = match.consumeEvents().find((event) => event.type === 'special');
+    expect(start?.attackerId).toBe('tyrannosaurus');
+    expect(match.cutinFrames).toBe(SPECIAL_CUTIN_FRAMES);
+    const frame = match.p1.attack?.frame;
+    for (let i = 0; i < SPECIAL_CUTIN_FRAMES; i++) match.step(new ScriptInput(), FIXED_DT);
+    expect(match.p1.attack?.frame).toBe(frame);
+    match.step(new ScriptInput(), FIXED_DT);
+    expect(match.p1.attack?.frame).toBe((frame ?? 0) + 1);
+  });
+
+  it('맞으면 hit 이벤트에 때린 종 id가 담긴다(종별 불꽃 색)', () => {
+    const match = new Match('versus', ['velociraptor', 'triceratops']);
+    fighting(match);
+    match.consumeEvents();
+    placeClose(match);
+    const input = new ScriptInput();
+    input.press(0, 'light');
+    const hit = attackUntilEvent(match, input, 60).find((event) => event.type === 'hit');
+    expect(hit?.attackerId).toBe('velociraptor');
   });
 
   it('KO되면 별 연출용 ko 이벤트를 남긴다', () => {

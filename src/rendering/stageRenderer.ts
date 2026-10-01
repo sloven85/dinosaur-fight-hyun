@@ -33,12 +33,60 @@ function layerImage(path: string | undefined): HTMLImageElement | null {
   return null;
 }
 
-/** 그림 한 겹: 화면보다 넓게(시차 여유) 바닥을 맞춰 그린다. */
-function drawImageLayer(g: CanvasRenderingContext2D, img: HTMLImageElement, dx: number, w: number, h: number): void {
-  const scale = Math.max((w * 1.12) / img.width, h / img.height);
+/**
+ * 아티스트 배경은 겹마다 전면(16:9) 그림이다(레이어 케이크). 화면에 맞추는 방법:
+ * - 하늘: 화면 전체를 덮는다(가장 느리게).
+ * - 중경: 아랫단을 바닥선 조금 아래에 맞추고 위쪽 35%는 투명하게 녹여 하늘이 비치게 한다.
+ * - 바닥: 그림 아래 62%를 바닥선부터 화면 끝까지 눌러 담고, 윗단을 녹여 중경과 이어 준다.
+ * 녹인 그림은 처음 한 번만 만들어 둔다.
+ */
+const faded = new Map<string, HTMLCanvasElement>();
+
+function fadedLayer(img: HTMLImageElement, key: string, cropTop: number, fade: number, brightness: number): HTMLCanvasElement | HTMLImageElement {
+  const cached = faded.get(key);
+  if (cached) return cached;
+  if (typeof document === 'undefined') return img;
+  const sy = Math.round(img.height * cropTop);
+  const h = img.height - sy;
+  const c = document.createElement('canvas');
+  c.width = img.width;
+  c.height = h;
+  const g = c.getContext('2d');
+  if (!g) return img;
+  if (brightness !== 1) g.filter = `brightness(${brightness})`;
+  g.drawImage(img, 0, sy, img.width, h, 0, 0, img.width, h);
+  g.filter = 'none';
+  g.globalCompositeOperation = 'destination-in';
+  // destination-in은 그린 곳 밖을 지우므로 한 번에 전체 높이를 덮는 그라디언트로 녹인다.
+  const grad = g.createLinearGradient(0, 0, 0, h);
+  grad.addColorStop(0, 'rgba(0,0,0,0)');
+  grad.addColorStop(fade, 'rgba(0,0,0,1)');
+  grad.addColorStop(1, 'rgba(0,0,0,1)');
+  g.fillStyle = grad;
+  g.fillRect(0, 0, img.width, h);
+  faded.set(key, c);
+  return c;
+}
+
+function drawSky(g: CanvasRenderingContext2D, img: HTMLImageElement, dx: number, w: number, h: number): void {
+  const scale = Math.max((w * 1.1) / img.width, h / img.height);
   const iw = img.width * scale;
-  const ih = img.height * scale;
-  g.drawImage(img, (w - iw) / 2 + dx, h - ih, iw, ih);
+  g.drawImage(img, (w - iw) / 2 + dx, h - img.height * scale, iw, img.height * scale);
+}
+
+function drawMid(g: CanvasRenderingContext2D, img: HTMLImageElement, key: string, dx: number, w: number, groundY: number): void {
+  const layer = fadedLayer(img, key, 0, 0.35, 1);
+  const scale = (w * 1.2) / layer.width;
+  const iw = layer.width * scale;
+  const ih = layer.height * scale;
+  g.drawImage(layer, (w - iw) / 2 + dx, groundY + 50 - ih, iw, ih);
+}
+
+function drawFloor(g: CanvasRenderingContext2D, img: HTMLImageElement, key: string, dx: number, w: number, h: number, groundY: number, brightness: number): void {
+  const layer = fadedLayer(img, key, 0.38, 0.12, brightness);
+  const iw = w * 1.35;
+  const top = groundY - 30;
+  g.drawImage(layer, (w - iw) / 2 + dx, top, iw, h - top + 20);
 }
 
 type Painter = (g: CanvasRenderingContext2D, w: number, h: number, groundY: number, time: number, focusX: number) => void;
@@ -256,9 +304,9 @@ export function renderStage(
   const mid = layerImage(paths.mid);
   const ground = layerImage(paths.ground);
   if (sky && mid && ground) {
-    drawImageLayer(g, sky, parallaxOffset('sky', focusX, w), w, h);
-    drawImageLayer(g, mid, parallaxOffset('mid', focusX, w), w, h);
-    drawImageLayer(g, ground, parallaxOffset('ground', focusX, w), w, h);
+    drawSky(g, sky, parallaxOffset('sky', focusX, w), w, h);
+    drawMid(g, mid, `${stage.id}:mid`, parallaxOffset('mid', focusX, w), w, stage.groundY);
+    drawFloor(g, ground, `${stage.id}:ground`, parallaxOffset('ground', focusX, w), w, h, stage.groundY, stage.groundBrightness ?? 1);
   } else {
     const paint = PAINTERS[stage.id];
     if (paint) paint(g, w, h, stage.groundY, time, focusX);

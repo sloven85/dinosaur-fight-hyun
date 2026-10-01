@@ -31,7 +31,25 @@ export interface HitEffectOptions {
   guarded?: boolean;
   /** 맞은 쪽이 밀려나는 방향. */
   direction?: 1 | -1;
+  /** 때린 쪽 종 id: 종별 타격 불꽃 색(맞는 순간만 봐도 누가 때렸는지). */
+  attackerId?: string;
 }
+
+/** 종별 타격 불꽃 색(마스터 결정 2026-10-01). 없으면 기본 흰노랑. */
+export const SPECIES_SPARK_COLOR: Record<string, string> = {
+  tyrannosaurus: '#7dff8a',
+  triceratops: '#ffa63d',
+  velociraptor: '#ffe94a',
+  spinosaurus: '#7fd8ff',
+  ankylosaurus: '#d9a46a',
+  stegosaurus: '#ff6b6b',
+  carnotaurus: '#ff4d3d',
+  pachycephalosaurus: '#f2ead8',
+  therizinosaurus: '#c99bff',
+  dilophosaurus: '#d4ff4a',
+  brachiosaurus: '#9fd0ff',
+  pteranodon: '#ff9be0',
+};
 
 const MAX_PARTICLES = 420;
 
@@ -66,16 +84,18 @@ export class EffectSystem {
       return;
     }
 
+    const color = (options.attackerId && SPECIES_SPARK_COLOR[options.attackerId]) || SPARK_COLOR;
     if (kind === 'special') {
       this.spawnShockwave(x, y, direction);
       this.spawnDust(x, y, 10, 1.3);
-      this.spawnSparks(x, y, 6, SPARK_COLOR, direction);
+      this.spawnSparks(x, y, 10, color, direction);
+      this.spawnSparks(x, y, 4, SPARK_COLOR, direction);
     } else if (kind === 'heavy') {
       this.spawnDust(x, y, 7, 1);
-      this.spawnSparks(x, y, 4, SPARK_COLOR, direction);
+      this.spawnSparks(x, y, 7, color, direction);
     } else {
       this.spawnDust(x, y, 3, 0.6);
-      this.spawnSparks(x, y, 3, SPARK_COLOR, direction);
+      this.spawnSparks(x, y, 5, color, direction);
     }
   }
 

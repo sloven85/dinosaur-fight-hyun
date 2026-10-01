@@ -64,7 +64,7 @@ export type RoundPhase = 'intro' | 'fight' | 'roundOver' | 'matchOver';
  */
 export interface MatchEvent {
   /** fx = 기술 스크립트가 낸 화면 연출(흔들림·먼지·충격파·물보라·번쩍). stun = 기절 시작. */
-  type: 'hit' | 'guard' | 'ko' | 'fx' | 'stun';
+  type: 'hit' | 'guard' | 'ko' | 'fx' | 'stun' | 'special';
   fx?: 'shake' | 'dust' | 'shockwave' | 'splash' | 'flash' | 'slash' | 'feathers';
   strength?: number;
   /** 사건이 일어난 위치(화면 x, 지면 기준 y). */
@@ -73,13 +73,20 @@ export interface MatchEvent {
   direction: 1 | -1;
   kind: AttackKind;
   player: PlayerIndex;
+  /** 때린 쪽 종 id(종별 타격 불꽃 색, 특수기 컷인). */
+  attackerId?: string;
 }
+
+/** 특수기 컷인 동안 경기를 멈추는 프레임(0.6초). */
+export const SPECIAL_CUTIN_FRAMES = 36;
 
 /** 계획서 16절 프롬프트 5: 난이도·도움 설정·테스트용 난수원. */
 export interface MatchOptions {
   difficulty?: CpuDifficulty;
   assist?: boolean;
   random?: () => number;
+  /** 특수기 컷인 동안 경기를 멈출지(화면에서만 켠다. 규칙 테스트는 끈 채로 프레임을 센다). */
+  specialCutin?: boolean;
 }
 
 interface HitEvent {
@@ -114,6 +121,10 @@ export class Match {
   private readonly cpu: AIController | null;
   /** 아직 화면이 소비하지 않은 연출 이벤트. */
   private events: MatchEvent[] = [];
+  /** 남은 특수기 컷인 프레임(0이면 없음)과 발동한 쪽. */
+  cutinFrames = 0;
+  cutinPlayer: PlayerIndex = 0;
+  private readonly specialCutin: boolean;
   /** 지금 날아가는 투사체. */
   projectiles: Projectile[] = [];
 
@@ -128,6 +139,7 @@ export class Match {
   ) {
     this.mirrorMatch = characterIds[0] === characterIds[1];
     this.difficulty = options.difficulty ?? 'easy';
+    this.specialCutin = options.specialCutin === true;
     // 계획서 2절: 도움 설정은 1P 체력 1.5배 + CPU 공격 빈도 감소. 기본값은 꺼짐.
     this.assistActive = this.mode === 'cpu' && options.assist === true;
 
@@ -202,10 +214,21 @@ export class Match {
         break;
 
       case 'fight':
+        // 특수기 컷인: 화면이 어두워지고 초상이 지나가는 동안 경기를 멈춘다.
+        if (this.cutinFrames > 0) {
+          this.cutinFrames -= 1;
+          break;
+        }
         // CPU는 이번 틱의 공개 상태를 보고 Action을 정한 뒤, 사람과 같은 경로로 step한다.
         this.cpu?.update(this.p2, this.p1, dt);
         for (const fighter of this.fighters) {
+          const wasAttacking = fighter.attack?.attackId;
           fighter.step(this.inputFor(fighter.player, input), dt);
+          if (fighter.attack && fighter.attack.attackId !== wasAttacking && fighter.attack.move.kind === 'special') {
+            if (this.specialCutin) this.cutinFrames = SPECIAL_CUTIN_FRAMES;
+            this.cutinPlayer = fighter.player;
+            this.events.push({ type: 'special', x: fighter.x, y: 0, direction: fighter.facing, kind: 'special', player: fighter.player, attackerId: fighter.data.id });
+          }
         }
         this.updateHeld();
         this.updateFacing();
@@ -241,6 +264,7 @@ export class Match {
     this.p2.resetForRound(START_X_P2, -1);
     this.p2.useAlternatePalette = this.mirrorMatch;
     this.projectiles = [];
+    this.cutinFrames = 0;
     // 라운드가 바뀌면 CPU 판단·휴식·특수기 쿨다운도 정확히 초기화한다.
     this.cpu?.reset();
   }
@@ -756,6 +780,7 @@ export class Match {
       direction,
       kind,
       player: defender.player,
+      attackerId: attacker.data.id,
     });
   }
 

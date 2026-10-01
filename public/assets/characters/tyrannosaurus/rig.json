@@ -111,6 +111,21 @@
         "feet": 1279,
         "fill": 0.2711140314737956
       }
+    },
+    "guard": {
+      "imagePath": "poses/guard.png",
+      "rootX": 1039.5,
+      "rootY": 1279,
+      "usable": true,
+      "box": {
+        "minX": 89,
+        "minY": 324,
+        "maxX": 1959,
+        "maxY": 1279,
+        "w": 1871,
+        "h": 956
+      },
+      "sameScaleAsMaster": true
     }
   },
   "parts": {

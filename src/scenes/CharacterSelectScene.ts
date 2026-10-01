@@ -204,32 +204,27 @@ export class CharacterSelectScene extends BaseScene {
   private renderCard(g: CanvasRenderingContext2D, x: number, y: number, character: CharacterData): void {
     fillRoundRect(g, x, y, CELL_W, CELL_H, 18, character.color, COLORS.panelBorder, 3);
 
+    // 정식 초상(둥근 종 대표색 카드, 2026-10-01): 카드 위쪽을 넓게 채워 얼굴이 작은 화면에서도 보이게 한다.
     const portrait = this.portraits.get(character.id);
+    const size = 124;
     if (portrait) {
-      const size = 92;
-      g.drawImage(portrait, x + (CELL_W - size) / 2, y + 8, size, size);
+      g.drawImage(portrait, x + (CELL_W - size) / 2, y + 4, size, size);
     } else {
-      // 초상을 아직 못 받았을 때는 보조색 원으로 자리를 잡아 둔다.
       g.beginPath();
-      g.arc(x + CELL_W / 2, y + 52, 38, 0, Math.PI * 2);
+      g.arc(x + CELL_W / 2, y + 64, 52, 0, Math.PI * 2);
       g.fillStyle = character.accentColor;
       g.globalAlpha = 0.9;
       g.fill();
       g.globalAlpha = 1;
     }
 
-    drawText(g, character.name, x + CELL_W / 2, y + 112, { font: FONTS.small, color: '#ffffff' });
-    drawText(g, character.archetypeLabel, x + CELL_W / 2, y + 142, {
+    // 이름 띠: 초상 아래 반투명 띠 위에 이름·유형.
+    fillRoundRect(g, x + 6, y + 126, CELL_W - 12, 48, 12, 'rgba(0, 0, 0, 0.35)', null, 0);
+    drawText(g, character.name, x + CELL_W / 2, y + 143, { font: FONTS.tiny, color: '#ffffff' });
+    drawText(g, character.cardNote ? `${character.archetypeLabel} · ${character.cardNote}` : character.archetypeLabel, x + CELL_W / 2, y + 163, {
       font: FONTS.tiny,
-      color: 'rgba(255, 255, 255, 0.75)',
+      color: character.cardNote ? COLORS.accent : 'rgba(255, 255, 255, 0.75)',
     });
-    if (character.cardNote) {
-      drawText(g, character.cardNote, x + CELL_W / 2, y + 164, {
-        font: FONTS.tiny,
-        color: COLORS.accent,
-      });
-    }
-
   }
 
   private renderStatus(g: CanvasRenderingContext2D, width: number): void {

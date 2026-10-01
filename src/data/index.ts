@@ -76,6 +76,8 @@ export interface StageData {
   musicId: string;
   /** 에셋 준비 전 임시 배경색. */
   placeholderColor: string;
+  /** 바닥 겹 밝기(1 = 그대로). 화산 바닥은 0.85(주황 공룡이 묻히지 않게, 마스터 판정 2026-10-01). */
+  groundBrightness?: number;
 }
 
 export const CHARACTERS = charactersJson.characters as CharacterData[];

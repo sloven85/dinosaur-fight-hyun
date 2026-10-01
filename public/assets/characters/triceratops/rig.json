@@ -1,72 +1,87 @@
 {
- "canvas": {
-  "width": 2048,
-  "height": 1536
- },
- "root": {
-  "x": 1023.5,
-  "y": 1279
- },
- "master": {
-  "imagePath": "master_side.png",
-  "usable": true,
-  "box": {
-   "minX": 75,
-   "minY": 316,
-   "maxX": 1972,
-   "maxY": 1279,
-   "w": 1898,
-   "h": 964,
-   "cx": 1023.5,
-   "feet": 1279,
-   "fill": 0.29517968495686847
+  "canvas": {
+    "width": 2048,
+    "height": 1536
+  },
+  "root": {
+    "x": 1023.5,
+    "y": 1279
+  },
+  "master": {
+    "imagePath": "master_side.png",
+    "usable": true,
+    "box": {
+      "minX": 75,
+      "minY": 316,
+      "maxX": 1972,
+      "maxY": 1279,
+      "w": 1898,
+      "h": 964,
+      "cx": 1023.5,
+      "feet": 1279,
+      "fill": 0.29517968495686847
+    }
+  },
+  "portrait": {
+    "imagePath": "portrait.png",
+    "usable": true
+  },
+  "poses": {
+    "heavy": {
+      "imagePath": "poses/heavy.png",
+      "rootX": 1024,
+      "rootY": 1280,
+      "usable": false,
+      "box": null
+    },
+    "special": {
+      "imagePath": "poses/special.png",
+      "rootX": 1024,
+      "rootY": 1280,
+      "usable": false,
+      "box": null
+    },
+    "hit": {
+      "imagePath": "poses/hit.png",
+      "rootX": 1024,
+      "rootY": 1280,
+      "usable": false,
+      "box": null
+    },
+    "down": {
+      "imagePath": "poses/down.png",
+      "rootX": 1024,
+      "rootY": 1280,
+      "usable": false,
+      "box": null
+    },
+    "victory": {
+      "imagePath": "poses/victory.png",
+      "rootX": 1024,
+      "rootY": 1280,
+      "usable": false,
+      "box": null
+    },
+    "guard": {
+      "imagePath": "poses/guard.png",
+      "rootX": 1023.5,
+      "rootY": 1279,
+      "usable": true,
+      "box": {
+        "minX": 70,
+        "minY": 311,
+        "maxX": 1977,
+        "maxY": 1279,
+        "w": 1908,
+        "h": 969
+      },
+      "sameScaleAsMaster": true
+    }
+  },
+  "parts": {
+    "sheet": "parts/parts_sheet.png",
+    "extractedDir": "parts/extracted",
+    "manualRiggingRequired": true,
+    "productionReady": false
   }
- },
- "portrait": {
-  "imagePath": "portrait.png",
-  "usable": true
- },
- "poses": {
-  "heavy": {
-   "imagePath": "poses/heavy.png",
-   "rootX": 1024,
-   "rootY": 1280,
-   "usable": false,
-   "box": null
-  },
-  "special": {
-   "imagePath": "poses/special.png",
-   "rootX": 1024,
-   "rootY": 1280,
-   "usable": false,
-   "box": null
-  },
-  "hit": {
-   "imagePath": "poses/hit.png",
-   "rootX": 1024,
-   "rootY": 1280,
-   "usable": false,
-   "box": null
-  },
-  "down": {
-   "imagePath": "poses/down.png",
-   "rootX": 1024,
-   "rootY": 1280,
-   "usable": false,
-   "box": null
-  },
-  "victory": {
-   "imagePath": "poses/victory.png",
-   "rootX": 1024,
-   "rootY": 1280,
-   "usable": false,
-   "box": null
-  }
- },
- "parts": {
-  "sheet": "parts/parts_sheet.png",
-  "extractedDir": "parts/extracted",
-  "manualRiggingRequired": true,
-  "productionReady": false
- }
 }
