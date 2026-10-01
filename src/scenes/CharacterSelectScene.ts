@@ -60,10 +60,8 @@ export class CharacterSelectScene extends BaseScene {
     const session = this.context.session;
     const anyLocked = this.picks[0].locked || this.picks[1].locked;
 
-    // 계획서 2절 어른용 설정. 선택 화면에서만 쓰는 약·강공격 버튼으로 난이도·도움 설정을 바꾼다.
-    // (확인·취소와 겹치지 않게 light·heavy를 쓰고, 2인 대전에서도 값을 저장해 둔다.)
-    if (input.anyPressed('heavy')) this.context.settings.cycleDifficulty();
-    if (input.anyPressed('light')) this.context.settings.toggleAssist();
+    // 난이도·도움 설정은 이 화면에서 보여만 주고, 바꾸기는 제목 화면의 '어른 설정'에서 한다.
+    // (확인·취소가 F·G로 바뀌어 예전의 약·강공격 버튼 단축키와 겹치기 때문.)
 
     if (input.anyPressed('cancel')) {
       if (anyLocked) {
@@ -167,14 +165,14 @@ export class CharacterSelectScene extends BaseScene {
 
     drawText(
       g,
-      `난이도 · ${settings.cpuDifficulty === 'easy' ? '쉬움' : '보통'} (강공격 버튼으로 변경)`,
+      `난이도 · ${settings.cpuDifficulty === 'easy' ? '쉬움' : '보통'}`,
       x + 24,
       y + 78,
       { font: FONTS.tiny, color: COLORS.text, align: 'left' },
     );
     drawText(
       g,
-      `도움 설정 · ${settings.assist ? '켜짐' : '꺼짐'} (약공격 버튼으로 변경)`,
+      `도움 설정 · ${settings.assist ? '켜짐' : '꺼짐'}`,
       x + 24,
       y + 114,
       {
@@ -200,7 +198,7 @@ export class CharacterSelectScene extends BaseScene {
 
   /** 음량·흔들림·진동·키 재지정은 제목 화면의 어른 설정에서 바꾼다(프롬프트 6). */
   private renderSettingsHint(g: CanvasRenderingContext2D, width: number): void {
-    drawText(g, '음량·화면 흔들림·진동·키 재지정은 제목 화면의 "어른 설정"에서 바꿉니다', width / 2, 60, {
+    drawText(g, '난이도·도움 설정·음량·흔들림·진동·키 재지정은 제목 화면의 "어른 설정"에서 바꿉니다', width / 2, 60, {
       font: FONTS.tiny,
       color: COLORS.textDim,
     });
@@ -276,15 +274,15 @@ export class CharacterSelectScene extends BaseScene {
     }
 
     // 키보드로 두 사람이 함께 할 때 서로 다른 확인 키를 쓴다(bindings.ts 참고).
-    drawText(g, `1P ${lockLabel(this.picks[0])} · 확인 Enter`, width / 2 - 300, 1020, {
+    drawText(g, `1P ${lockLabel(this.picks[0])} · 확인 F`, width / 2 - 300, 1020, {
       font: FONTS.small,
       color: COLORS.p1,
     });
-    drawText(g, `2P ${lockLabel(this.picks[1])} · 확인 오른쪽 Shift`, width / 2 + 300, 1020, {
+    drawText(g, `2P ${lockLabel(this.picks[1])} · 확인 J`, width / 2 + 300, 1020, {
       font: FONTS.small,
       color: COLORS.p2,
     });
-    drawText(g, '좌우·상하 이동 · 취소 Esc(1P) / 오른쪽 Ctrl(2P)', width / 2, 1058, {
+    drawText(g, '좌우·상하 이동 · 취소 G(1P) / K(2P) · 패드는 아래쪽 버튼 확인', width / 2, 1058, {
       font: FONTS.small,
       color: COLORS.textDim,
     });

@@ -2,11 +2,14 @@ import { DESIGN_HEIGHT, DESIGN_WIDTH, FIXED_DT, MAX_FRAME_DELTA } from './consta
 import { createSession } from './session';
 import { createSettings, type SettingsStore } from './settings';
 import { AudioManager } from '../audio/AudioManager';
+import { AUDIO_FILES } from 'virtual:asset-version';
 import { InputManager } from '../input/InputManager';
 import { AssetLoader } from '../rendering/AssetLoader';
 import { SceneManager } from '../scenes/SceneManager';
 import { TitleScene } from '../scenes/TitleScene';
-import { renderPauseOverlay } from '../ui/PauseOverlay';
+import { renderPauseMenu, renderPauseOverlay } from '../ui/PauseOverlay';
+import { PauseMenu } from '../ui/pauseMenu';
+import { CharacterSelectScene } from '../scenes/CharacterSelectScene';
 
 /**
  * 게임 루프를 소유한다. 시뮬레이션은 FIXED_DT(60Hz)로 고정하고
@@ -20,6 +23,7 @@ export class Game {
   private readonly audio: AudioManager;
   private readonly settings: SettingsStore;
   private readonly scenes: SceneManager;
+  private readonly pauseMenu = new PauseMenu();
   private running = false;
   private accumulator = 0;
   private lastTime = 0;
@@ -38,7 +42,7 @@ export class Game {
     this.settings = createSettings();
     this.input = new InputManager(window, this.settings.value.keyMapping);
     this.assets = new AssetLoader();
-    this.audio = new AudioManager(this.assets.resolve(''));
+    this.audio = new AudioManager(this.assets.resolve(''), undefined, new Set(AUDIO_FILES));
     this.audio.setVolume(this.settings.value.volume);
     this.audio.preload();
     this.installAudioUnlock();
@@ -81,7 +85,11 @@ export class Game {
 
     this.scenes.render(this.ctx, DESIGN_WIDTH, DESIGN_HEIGHT);
     if (this.input.isPaused) {
-      renderPauseOverlay(this.ctx, DESIGN_WIDTH, DESIGN_HEIGHT, this.input.pauseReason);
+      if (this.scenes.pausable) {
+        renderPauseMenu(this.ctx, DESIGN_WIDTH, DESIGN_HEIGHT, this.input.pauseReason, this.pauseMenu);
+      } else {
+        renderPauseOverlay(this.ctx, DESIGN_WIDTH, DESIGN_HEIGHT, this.input.pauseReason);
+      }
     }
 
     requestAnimationFrame(this.frame);
@@ -91,18 +99,38 @@ export class Game {
     this.input.update();
 
     if (this.input.isPaused) {
-      // 연결 해제·포커스 이탈·메뉴 일시정지 모두 확인 버튼으로 재개한다(계획서 1절).
-      if (this.input.anyPressed('confirm') || this.input.anyPressed('pause')) {
+      if (this.scenes.pausable) {
+        // 대전 중: 계속하기 / 캐릭터 다시 고르기 / 메인 화면으로(나가기는 한 번 더 확인).
+        this.handlePauseMenu();
+      } else if (this.input.anyPressed('confirm') || this.input.anyPressed('pause')) {
+        // 메뉴 화면: 연결 해제·포커스 이탈은 확인 버튼으로 재개한다(계획서 1절).
         this.input.resume();
       }
       return;
     }
 
     if (this.scenes.pausable && this.input.anyPressed('pause')) {
+      this.pauseMenu.reset();
       this.input.requestPause('menu');
       return;
     }
 
     this.scenes.update(dt);
+  }
+
+  private handlePauseMenu(): void {
+    const input = this.input;
+    const choice = this.pauseMenu.update({
+      up: input.anyPressed('up'),
+      down: input.anyPressed('down'),
+      confirm: input.anyPressed('confirm'),
+      cancel: input.anyPressed('cancel'),
+      pause: input.anyPressed('pause'),
+    });
+    if (!choice) return;
+    if (choice === 'characterSelect') this.scenes.change(new CharacterSelectScene());
+    else if (choice === 'title') this.scenes.change(new TitleScene());
+    this.pauseMenu.reset();
+    this.input.resume();
   }
 }

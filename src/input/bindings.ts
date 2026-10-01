@@ -14,15 +14,16 @@ export function bindingKeyFor(player: PlayerIndex, action: Action): string {
 }
 
 /**
- * 계획서 1절 "권장 버튼 배치"의 키보드 열.
- * 1P: A D / W S / F G H / Enter / Esc
- * 2P: ← → / ↑ ↓ / J K L / 오른쪽 Shift(또는 NumEnter) / 오른쪽 Ctrl
- * 코드값은 KeyboardEvent.code 기준이다.
+ * 키보드 배치(jk 요청·디렉터 확정 A안, 2026-10-01).
+ * 두 사람이 키보드 하나를 나눠 쓸 때 각자 손이 놓인 쪽에서 모든 버튼을 누를 수 있게 한다.
  *
- * 확인·뒤로 키를 두 플레이어가 나눠 쓴다. 계획서는 양쪽 모두 Enter·Esc로
- * 적었지만, 키보드 하나로 두 사람이 함께 하면 같은 키를 누르는 순간 두 플레이어가
- * 한꺼번에 확정되는 문제가 있다(계획서 1절: 버튼 배치는 플레이 결과에 따라 조정).
- * 2P는 오른쪽 손 위치(방향키·JKL)에서 닿는 오른쪽 Shift·Ctrl을 쓴다.
+ * 1P(왼쪽): 이동 A D W S · 약/강/특수 F G H · 확인 F · 취소 G · 일시정지 1 / 2
+ * 2P(오른쪽): 이동 ← → ↑ ↓ · 약/강/특수 J K L · 확인 J · 취소 K · 일시정지 9 / 0
+ * Esc: 누구나 쓰는 공용 일시정지.
+ *
+ * 확인·취소가 약·강공격과 같은 키지만 메뉴 화면과 전투 화면이 나뉘어 있어 충돌하지 않는다.
+ * 대신 화면이 바뀐 직후에는 SceneManager가 입력을 잠깐 막아, 전투 끝에 연타하던 키가
+ * 다음 화면의 '확인'으로 먹히지 않게 한다. 코드값은 KeyboardEvent.code 기준이다.
  */
 export const KEYBOARD_BINDINGS: readonly [KeyboardBinding, KeyboardBinding] = [
   {
@@ -33,9 +34,9 @@ export const KEYBOARD_BINDINGS: readonly [KeyboardBinding, KeyboardBinding] = [
     light: ['KeyF'],
     heavy: ['KeyG'],
     special: ['KeyH'],
-    confirm: ['Enter'],
-    cancel: ['Escape'],
-    pause: ['Escape'],
+    confirm: ['KeyF'],
+    cancel: ['KeyG'],
+    pause: ['Digit1', 'Digit2', 'Escape'],
   },
   {
     left: ['ArrowLeft'],
@@ -45,9 +46,9 @@ export const KEYBOARD_BINDINGS: readonly [KeyboardBinding, KeyboardBinding] = [
     light: ['KeyJ'],
     heavy: ['KeyK'],
     special: ['KeyL'],
-    confirm: ['ShiftRight', 'NumpadEnter'],
-    cancel: ['ControlRight'],
-    pause: ['ControlRight'],
+    confirm: ['KeyJ'],
+    cancel: ['KeyK'],
+    pause: ['Digit9', 'Digit0'],
   },
 ];
 

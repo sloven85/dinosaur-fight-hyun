@@ -75,6 +75,8 @@ export class InputManager {
   private keyMapping: KeyMapping;
   /** 키 재지정 화면에서 다음 키 입력을 가로챌 때 쓴다. */
   private keyCapture: ((code: string) => void) | null = null;
+  /** 화면 전환 직후 새 누름을 무시할 남은 틱 수. */
+  private blockFrames = 0;
 
   constructor(
     private readonly win: Window = window,
@@ -122,6 +124,26 @@ export class InputManager {
       }
       this.commit(slot, next);
     }
+
+    if (this.blockFrames > 0) {
+      // 막는 동안 들어온 새 누름은 버린다. held는 남겨 두어, 막기가 끝난 뒤에도
+      // 계속 누르고 있던 키는 '새 누름'이 되지 않는다(다시 눌러야 한다).
+      this.blockFrames -= 1;
+      this.clearEdges();
+    }
+  }
+
+  /**
+   * 화면 전환 직후 frames 틱 동안 새 누름을 받지 않는다(디렉터 결정 2026-10-01: 약 0.3초).
+   * 전투 끝에 연타하던 약공격(F)이 결과·선택 화면의 '확인'으로 바로 먹히지 않게 한다.
+   */
+  blockInput(frames: number): void {
+    this.blockFrames = Math.max(this.blockFrames, frames);
+    this.clearEdges();
+  }
+
+  get isInputBlocked(): boolean {
+    return this.blockFrames > 0;
   }
 
   // --- 조회 ---

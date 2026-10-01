@@ -56,8 +56,8 @@ describe('입력 엣지 처리', () => {
     const { win, dispatch } = createFakeWindow();
     const input = new InputManager(win);
 
-    dispatch('keydown', 'Enter');
-    dispatch('keyup', 'Enter');
+    dispatch('keydown', 'KeyF');
+    dispatch('keyup', 'KeyF');
 
     input.update();
     expect(input.isPressed(0, 'confirm')).toBe(true);
@@ -88,8 +88,8 @@ describe('입력 엣지 처리', () => {
     const { win, dispatch } = createFakeWindow();
     const input = new InputManager(win);
 
-    dispatch('keydown', 'Enter');
-    dispatch('keyup', 'Enter');
+    dispatch('keydown', 'KeyF');
+    dispatch('keyup', 'KeyF');
     input.resetEdges();
 
     input.update();
@@ -98,22 +98,22 @@ describe('입력 엣지 처리', () => {
 });
 
 describe('키보드 2인 확인 키 분리', () => {
-  it('1P 확인(Enter)은 2P를 확정하지 않는다', () => {
+  it('1P 확인(F)은 2P를 확정하지 않는다', () => {
     const { win, dispatch } = createFakeWindow();
     const input = new InputManager(win);
 
-    dispatch('keydown', 'Enter');
+    dispatch('keydown', 'KeyF');
     input.update();
 
     expect(input.isPressed(0, 'confirm')).toBe(true);
     expect(input.isPressed(1, 'confirm')).toBe(false);
   });
 
-  it('2P 확인(오른쪽 Shift)은 1P를 확정하지 않는다', () => {
+  it('2P 확인(J)은 1P를 확정하지 않는다', () => {
     const { win, dispatch } = createFakeWindow();
     const input = new InputManager(win);
 
-    dispatch('keydown', 'ShiftRight');
+    dispatch('keydown', 'KeyJ');
     input.update();
 
     expect(input.isPressed(1, 'confirm')).toBe(true);
@@ -180,5 +180,52 @@ describe('키 재지정 실제 반영 (프롬프트 6)', () => {
     const { win } = createFakeWindow();
     const input = new InputManager(win);
     expect(() => input.rumbleAll()).not.toThrow();
+  });
+});
+
+describe('조작 A안 (디렉터 확정 2026-10-01)', () => {
+  it('확인·취소·일시정지가 각자 손 쪽 키에 몰려 있다', () => {
+    const [p1, p2] = KEYBOARD_BINDINGS;
+    expect(p1.confirm).toEqual(['KeyF']);
+    expect(p1.cancel).toEqual(['KeyG']);
+    expect(p1.pause).toEqual(expect.arrayContaining(['Digit1', 'Digit2', 'Escape']));
+    expect(p2.confirm).toEqual(['KeyJ']);
+    expect(p2.cancel).toEqual(['KeyK']);
+    expect(p2.pause).toEqual(expect.arrayContaining(['Digit9', 'Digit0']));
+  });
+
+  it('화면 전환 직후 막는 동안의 새 누름은 무시하고, 꾹 누른 키는 다시 눌러야 받는다', () => {
+    const { win, dispatch } = createFakeWindow();
+    const input = new InputManager(win);
+
+    // 전투 끝에 F를 연타하던 중 화면이 바뀐다.
+    dispatch('keydown', 'KeyF');
+    input.blockInput(3);
+    for (let i = 0; i < 3; i++) {
+      input.update();
+      expect(input.isPressed(0, 'confirm')).toBe(false);
+    }
+    // 막기가 끝나도 계속 누르고 있던 F는 새 누름이 아니다.
+    input.update();
+    expect(input.isPressed(0, 'confirm')).toBe(false);
+
+    // 떼었다가 다시 누르면 확인으로 받는다.
+    dispatch('keyup', 'KeyF');
+    input.update();
+    dispatch('keydown', 'KeyF');
+    input.update();
+    expect(input.isPressed(0, 'confirm')).toBe(true);
+  });
+
+  it('막는 중 눌렀다 뗀 짧은 탭도 버린다', () => {
+    const { win, dispatch } = createFakeWindow();
+    const input = new InputManager(win);
+    input.blockInput(2);
+    dispatch('keydown', 'KeyJ');
+    dispatch('keyup', 'KeyJ');
+    input.update();
+    input.update();
+    input.update();
+    expect(input.isPressed(1, 'confirm')).toBe(false);
   });
 });

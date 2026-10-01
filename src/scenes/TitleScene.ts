@@ -82,7 +82,7 @@ export class TitleScene extends BaseScene {
     });
 
     const sound = this.soundLabel();
-    drawText(g, `위아래 이동 · 확인 선택 · Esc 일시정지 · ${sound}`, width / 2, 1000, {
+    drawText(g, `위아래 이동 · 확인 F(1P)/J(2P) · 일시정지 1·2(1P)/9·0(2P)/Esc · ${sound}`, width / 2, 1000, {
       font: FONTS.small,
       color: COLORS.textDim,
     });

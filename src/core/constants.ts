@@ -73,3 +73,6 @@ export const ROUND_OVER_FRAMES = 120;
  * moves.json의 가로 값은 상자 모양(폭·여러 상자 간 간격)만 쓰고, 위치는 이 기준으로 다시 잡는다.
  */
 export const HITBOX_OVERSHOOT = { light: 45, heavy: 100, special: 160 } as const;
+
+/** 화면 전환 직후 입력을 막는 틱 수(60Hz에서 18틱 = 0.3초). */
+export const SCENE_INPUT_BLOCK_FRAMES = 18;
