@@ -200,6 +200,7 @@ function drawBody(
   }
 
   g.save();
+  const groundLine = canvasYOf(g, groundY);
   g.translate(view.x, feetY);
   if (view.facing === -1) g.scale(-1, 1);
 
@@ -214,6 +215,9 @@ function drawBody(
   if (motion) applyMotion(g, motion, choice.isPose ? 0.35 : 1);
   // 감정 3단계(프롬프트 6): 체력이 낮을수록 어깨가 처지고, 높으면 가볍게 들썩인다.
   applyEmotionTransform(g, emotionFor(fighter.health / fighter.maxHealth), time);
+  // 눕기·구르기·기울기로 몸이 돌면 실루엣 아래쪽이 바닥선 밑으로 파고든다(jk: "지면 아래로 떨어짐").
+  // 모든 변환을 건 뒤 실루엣의 가장 낮은 점이 바닥선을 넘으면 그만큼 위로 올린다. 판정과 무관한 그림 보정이다.
+  if (groundLine !== null) keepAboveGround(g, fighter, groundLine);
 
   if (ghost) {
     // 잔상은 아래 draw에서 보조색 실루엣으로만 그린다.
@@ -602,4 +606,52 @@ function drawParts(
     g.drawImage(source, 0, 0);
     g.restore();
   }
+}
+
+/** 현재 변환에서 디자인 y(변환 전 좌표계) 한 줄이 캔버스의 어느 y인지. 변환을 못 읽으면 null. */
+function canvasYOf(g: CanvasRenderingContext2D, y: number): number | null {
+  const m = typeof g.getTransform === 'function' ? g.getTransform() : null;
+  if (!m || typeof m.d !== 'number') return null;
+  return m.d * y + m.f;
+}
+
+/**
+ * 몸 실루엣(리그 실측 상자를 화면 크기로 환산)의 네 모서리를 현재 변환으로 옮겨,
+ * 가장 낮은 점이 바닥선(groundLine, 캔버스 y)보다 아래면 그 차이만큼 캔버스 기준으로 위로 민다.
+ */
+export function keepAboveGround(g: CanvasRenderingContext2D, fighter: Fighter, groundLine: number): void {
+  const m = g.getTransform();
+  const corners = silhouetteCorners(fighter);
+  let lowest = -Infinity;
+  for (const [x, y] of corners) lowest = Math.max(lowest, m.b * x + m.d * y + m.f);
+  const sink = lowest - groundLine;
+  if (sink <= 0.5) return;
+  g.setTransform(m.a, m.b, m.c, m.d, m.e, m.f - sink);
+}
+
+/** 발 기준(0,0) 좌표계의 몸 실루엣 모서리. 리그가 없으면 표시 높이 기반 임시 상자. */
+export function silhouetteCorners(fighter: Fighter): Array<[number, number]> {
+  const box = fighter.assets.rig?.master.box;
+  const root = fighter.assets.rig?.root;
+  if (box && root) {
+    const s = spriteScale(fighter.data.displayHeight, box);
+    const left = (box.minX - root.x) * s;
+    const right = (box.maxX - root.x) * s;
+    const top = (box.minY - root.y) * s;
+    const bottom = (box.maxY - root.y) * s;
+    return [
+      [left, top],
+      [right, top],
+      [left, bottom],
+      [right, bottom],
+    ];
+  }
+  const h = fighter.data.displayHeight;
+  const half = h * 0.31;
+  return [
+    [-half, -h],
+    [half, -h],
+    [-half, 0],
+    [half, 0],
+  ];
 }
