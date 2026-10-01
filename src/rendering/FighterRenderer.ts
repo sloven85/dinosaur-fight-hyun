@@ -2,6 +2,14 @@ import type { Fighter } from '../combat/Fighter';
 import { emotionFor, type Emotion } from '../combat/emotion';
 import { spriteScale, type PoseName } from './rig';
 import { applyMotion, attackMotion, drawAttackTrail, type MotionFrame } from './attackMotion';
+import type { PartsAssets } from './CharacterAssets';
+import {
+  attackPartAngles,
+  motionNameFor,
+  partTransforms,
+  walkPartAngles,
+  type Affine,
+} from './partRig';
 
 const CROUCH_SQUASH = 0.75;
 
@@ -134,7 +142,8 @@ export function renderFighter(
   const feetY = groundY + fighter.y;
   renderShadow(g, fighter, groundY);
 
-  const choice = selectSprite(fighter);
+  const partAngles = partAnglesFor(fighter, time);
+  const choice = partAngles ? partsChoice(fighter) : selectSprite(fighter);
   if (!choice) {
     renderPlaceholder(g, fighter, feetY);
     return;
@@ -145,6 +154,8 @@ export function renderFighter(
   if (fighter.facing === -1) g.scale(-1, 1);
 
   // 기술별·종별 공격 동작(포즈가 없으면 궤적 전체, 전용 포즈면 약하게 더한다).
+  // 파츠 리그가 있는 종도 몸 전체 이동·기울기는 여기서 한 번만 건다. 파츠는 부위 회전만 맡는다
+  // (아티스트 JSON의 root는 쓰지 않는다 — 디렉터 통합 규칙: 몸 변환 중복 금지).
   const motion = attackMotionFor(fighter);
   g.save();
   if (choice.isPose) applyPoseTransform(g, fighter, time);
@@ -170,31 +181,41 @@ export function renderFighter(
   const destY = -choice.rootY * scale;
 
   const altSkin = fighter.useAlternatePalette ? fighter.data.alternatePalette.skin : null;
+  const parts = partAngles ? fighter.assets.parts ?? null : null;
+  const placed = parts && partAngles ? partTransforms(parts.rig, partAngles) : null;
+
+  /** 한 번 그리기: 파츠 리그면 파츠마다, 아니면 한 장으로. pick이 그릴 그림을 고른다. */
+  const draw = (
+    pick: (image: HTMLImageElement) => CanvasImageSource | null,
+    dx = 0,
+    dy = 0,
+  ): void => {
+    if (parts && placed) {
+      drawParts(g, parts, placed, scale, choice.rootX, choice.rootY, pick, dx, dy);
+      return;
+    }
+    const source = pick(choice.image);
+    if (source) g.drawImage(source, destX + dx, destY + dy, destW, destH);
+  };
 
   // 2P 파란 테두리는 스프라이트 뒤에 그린다.
   if (altSkin) {
-    const outline = solidTintedSprite(choice.image, TWO_P_OUTLINE);
-    if (outline) {
-      g.save();
-      g.globalAlpha = 0.85;
-      for (const [dx, dy] of OUTLINE_OFFSETS) {
-        g.drawImage(outline, destX + dx, destY + dy, destW, destH);
-      }
-      g.restore();
+    g.save();
+    g.globalAlpha = 0.85;
+    for (const [dx, dy] of OUTLINE_OFFSETS) {
+      draw((image) => solidTintedSprite(image, TWO_P_OUTLINE), dx, dy);
     }
+    g.restore();
   }
 
-  g.drawImage(choice.image, destX, destY, destW, destH);
+  draw((image) => image);
 
   // 2P 보조색 보정은 피부 픽셀만 원본 위에 옅게 얹는다(눈·이빨은 그대로).
   if (altSkin) {
-    const tinted = skinTintedSprite(choice.image, fighter.data.color, altSkin);
-    if (tinted) {
-      g.save();
-      g.globalAlpha = ALT_PALETTE_ALPHA;
-      g.drawImage(tinted, destX, destY, destW, destH);
-      g.restore();
-    }
+    g.save();
+    g.globalAlpha = ALT_PALETTE_ALPHA;
+    draw((image) => skinTintedSprite(image, fighter.data.color, altSkin));
+    g.restore();
   }
   g.restore();
 
@@ -380,4 +401,62 @@ function attackMotionFor(fighter: Fighter): MotionFrame | null {
     front: fighter.bodyFront,
     height: fighter.data.displayHeight,
   });
+}
+
+/** 파츠 리그로 그릴 상태면 부위 각도를, 아니면 null(기존 그림 경로). 피격·다운·승리는 전용 포즈 PNG를 쓴다. */
+function partAnglesFor(fighter: Fighter, time: number): Record<string, number> | null {
+  const parts = fighter.assets.parts;
+  if (!parts) return null;
+  const motions = parts.motions.motions;
+  switch (fighter.state) {
+    case 'idle':
+    case 'crouch':
+    case 'jump':
+      return {};
+    case 'walk': {
+      const walk = motions.walk;
+      return walk ? walkPartAngles(walk, time) : {};
+    }
+    case 'attack': {
+      if (!fighter.attack) return {};
+      const profile = motions[motionNameFor(fighter.attack.move.kind)];
+      return profile ? attackPartAngles(profile, fighter.attack.move, fighter.attack.frame) : {};
+    }
+    default:
+      return null;
+  }
+}
+
+/** 파츠는 마스터와 같은 2048 캔버스 좌표라 마스터의 root·배율을 그대로 쓴다(판정 위치와 일치). */
+function partsChoice(fighter: Fighter): SpriteChoice | null {
+  const { rig, master } = fighter.assets;
+  if (!rig || !master) return selectSprite(fighter);
+  return { image: master, rootX: rig.root.x, rootY: rig.root.y, isPose: false, fromRig: true };
+}
+
+function drawParts(
+  g: CanvasRenderingContext2D,
+  parts: PartsAssets,
+  placed: Record<string, Affine>,
+  scale: number,
+  rootX: number,
+  rootY: number,
+  pick: (image: HTMLImageElement) => CanvasImageSource | null,
+  dx: number,
+  dy: number,
+): void {
+  for (const name of parts.rig.drawOrder) {
+    const image = parts.images[name];
+    const m = placed[name];
+    if (!image || !m) continue;
+    const source = pick(image);
+    if (!source) continue;
+    g.save();
+    g.translate(dx, dy);
+    g.scale(scale, scale);
+    g.translate(-rootX, -rootY);
+    g.transform(m[0], m[1], m[2], m[3], m[4], m[5]);
+    g.drawImage(source, 0, 0);
+    g.restore();
+  }
 }

@@ -1,6 +1,7 @@
 import { getCharacter } from '../data';
 import type { AssetLoader } from './AssetLoader';
 import { POSE_NAMES, loadRig, type PoseName, type RigData } from './rig';
+import type { PartMotionsData, PartRigData } from './partRig';
 
 export interface CharacterAssets {
   id: string;
@@ -8,6 +9,14 @@ export interface CharacterAssets {
   master: HTMLImageElement | null;
   portrait: HTMLImageElement | null;
   poses: Partial<Record<PoseName, HTMLImageElement | null>>;
+  /** 컷아웃 파츠 리그(있는 종만). 있으면 대기·걷기·공격 몸 동작을 파츠가 맡는다. */
+  parts?: PartsAssets | null;
+}
+
+export interface PartsAssets {
+  rig: PartRigData;
+  motions: PartMotionsData;
+  images: Record<string, HTMLImageElement>;
 }
 
 const EMPTY: CharacterAssets = { id: '', rig: null, master: null, portrait: null, poses: {} };
@@ -42,7 +51,22 @@ export async function loadCharacterAssets(loader: AssetLoader, id: string): Prom
     }),
   );
 
-  return { id, rig, master, portrait, poses };
+  const parts = character.partsPath ? await loadParts(loader, character.partsPath) : null;
+  return { id, rig, master, portrait, poses, parts };
+}
+
+/** 파츠 9장·rig.json·attack_motions.json을 모두 불러온다. 하나라도 빠지면 null(기존 그림으로 폴백). */
+async function loadParts(loader: AssetLoader, dir: string): Promise<PartsAssets | null> {
+  const [rig, motions] = await Promise.all([
+    loader.loadJson<PartRigData>(`${dir}/rig.json`),
+    loader.loadJson<PartMotionsData>(`${dir}/attack_motions.json`),
+  ]);
+  if (!rig || !motions) return null;
+  const entries = await Promise.all(
+    rig.drawOrder.map(async (name) => [name, await loader.loadImage(`${dir}/${name}.png`)] as const),
+  );
+  if (entries.some(([, image]) => !image)) return null;
+  return { rig, motions, images: Object.fromEntries(entries) as Record<string, HTMLImageElement> };
 }
 
 /** 포즈·마스터를 쓸 수 없을 때 임시 도형으로 대체할지 판단한다. */

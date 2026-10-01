@@ -49,6 +49,8 @@ export interface CharacterData {
   accentColor: string;
   rigPath: string;
   portraitPath: string;
+  /** 컷아웃 파츠 리그 폴더(rig.json·attack_motions.json·파츠 PNG). 있는 종만. */
+  partsPath?: string;
   moves: MoveSet;
   alternatePalette: { skin: string };
   /** CPU가 이 캐릭터를 조종할 때의 행동 성향(계획서 19절 C1). */

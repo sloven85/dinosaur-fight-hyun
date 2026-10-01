@@ -15,6 +15,7 @@
       "accentColor": "#D9C48A",
       "rigPath": "assets/characters/tyrannosaurus/rig.json",
       "portraitPath": "assets/characters/tyrannosaurus/portrait.png",
+      "partsPath": "assets/characters/tyrannosaurus/parts/rig",
       "moves": {
         "light": "tyrannosaurus_light",
         "heavy": "tyrannosaurus_heavy",
