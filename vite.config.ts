@@ -43,7 +43,7 @@ function computeAssetVersion(): string {
  * 에셋 버전을 코드에 넘기는 가상 모듈. Vite의 `define`은 개발 서버에서
  * 적용되지 않으므로, dev·build 양쪽에서 동작하는 가상 모듈로 주입한다.
  */
-function assetVersionPlugin(version: string): Plugin {
+function assetVersionPlugin(version: string, audioFiles: readonly string[]): Plugin {
   const virtualId = 'virtual:asset-version';
   const resolvedId = `\0${virtualId}`;
   return {
@@ -52,9 +52,34 @@ function assetVersionPlugin(version: string): Plugin {
       return id === virtualId ? resolvedId : null;
     },
     load(id) {
-      return id === resolvedId ? `export const ASSET_VERSION = ${JSON.stringify(version)};` : null;
+      return id === resolvedId
+        ? `export const ASSET_VERSION = ${JSON.stringify(version)};\nexport const AUDIO_FILES = ${JSON.stringify(audioFiles)};`
+        : null;
     },
   };
+}
+
+/**
+ * public/assets/audio 아래 실제로 있는 음원 파일 목록(public 기준 경로, 예: assets/audio/sfx/ko.mp3).
+ * AudioManager가 이 목록에 있는 파일만 요청해, 음원이 없을 때 콘솔에 404가 쌓이지 않게 한다.
+ */
+function listAudioFiles(): string[] {
+  const publicRoot = join(process.cwd(), 'public');
+  const files: string[] = [];
+  const walk = (dir: string): void => {
+    for (const name of readdirSync(dir).sort()) {
+      if (name.startsWith('.')) continue;
+      const full = join(dir, name);
+      if (statSync(full).isDirectory()) walk(full);
+      else files.push(relative(publicRoot, full).split('\\').join('/'));
+    }
+  };
+  try {
+    walk(join(publicRoot, 'assets', 'audio'));
+  } catch {
+    // 음원 폴더가 없으면 빈 목록(전부 무음).
+  }
+  return files;
 }
 
 const assetVersion = computeAssetVersion();
@@ -63,7 +88,7 @@ const assetVersion = computeAssetVersion();
 // dev server and from a GitHub Pages project sub-path (e.g., /dinosaur-fight-hyun/).
 export default defineConfig({
   base: './',
-  plugins: [assetVersionPlugin(assetVersion)],
+  plugins: [assetVersionPlugin(assetVersion, listAudioFiles())],
   server: {
     host: true,
     allowedHosts,

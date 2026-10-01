@@ -122,4 +122,26 @@ describe('사운드 매니저 (프롬프트 6)', () => {
     expect(battle.playCalls).toBe(1);
     expect(battle.loop).toBe(true);
   });
+  it('실제로 있는 음원 목록이 주어지면 목록 밖 트랙은 요청하지 않는다(404 방지)', () => {
+    const { created, factory } = collectFactory();
+    const audio = new AudioManager('./', factory, new Set(['assets/audio/sfx/ko.mp3']));
+    audio.preload();
+
+    expect(created).toHaveLength(1);
+    expect(created[0].src).toBe('./assets/audio/sfx/ko.mp3');
+    audio.unlock();
+    expect(audio.status).toBe('silent');
+    expect(() => audio.playSfx('light')).not.toThrow();
+    expect(() => audio.playBgm('battle')).not.toThrow();
+  });
+
+  it('빈 음원 목록이면 아무것도 요청하지 않고 무음으로 진행한다', () => {
+    const { created, factory } = collectFactory();
+    const audio = new AudioManager('./', factory, new Set());
+    audio.preload();
+
+    expect(created).toHaveLength(0);
+    audio.unlock();
+    expect(audio.status).toBe('silent');
+  });
 });

@@ -46,12 +46,15 @@ export class AudioManager {
   constructor(
     private readonly baseUrl: string = './',
     private readonly factory: AudioFactory = defaultFactory,
+    /** 실제로 있는 음원 경로 목록. 주어지면 목록에 없는 트랙은 요청하지 않고 무음으로 둔다(404 방지). */
+    private readonly availablePaths: ReadonlySet<string> | null = null,
   ) {}
 
   /** 음원 목록을 미리 만들어 둔다(실패한 항목은 무음으로 남는다). */
   preload(): void {
     for (const track of AUDIO_TRACKS) {
       if (this.elements.has(track.id)) continue;
+      if (this.availablePaths && !this.availablePaths.has(track.path)) continue;
       const element = this.factory(this.resolve(track.path));
       if (!element) continue;
       element.preload = 'auto';

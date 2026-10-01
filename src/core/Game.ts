@@ -2,6 +2,7 @@ import { DESIGN_HEIGHT, DESIGN_WIDTH, FIXED_DT, MAX_FRAME_DELTA } from './consta
 import { createSession } from './session';
 import { createSettings, type SettingsStore } from './settings';
 import { AudioManager } from '../audio/AudioManager';
+import { AUDIO_FILES } from 'virtual:asset-version';
 import { InputManager } from '../input/InputManager';
 import { AssetLoader } from '../rendering/AssetLoader';
 import { SceneManager } from '../scenes/SceneManager';
@@ -41,7 +42,7 @@ export class Game {
     this.settings = createSettings();
     this.input = new InputManager(window, this.settings.value.keyMapping);
     this.assets = new AssetLoader();
-    this.audio = new AudioManager(this.assets.resolve(''));
+    this.audio = new AudioManager(this.assets.resolve(''), undefined, new Set(AUDIO_FILES));
     this.audio.setVolume(this.settings.value.volume);
     this.audio.preload();
     this.installAudioUnlock();

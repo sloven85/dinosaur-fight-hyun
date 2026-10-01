@@ -6,4 +6,6 @@
  */
 declare module 'virtual:asset-version' {
   export const ASSET_VERSION: string;
+  /** public/assets/audio 아래 실제 음원 파일(public 기준 경로). */
+  export const AUDIO_FILES: readonly string[];
 }
