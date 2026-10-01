@@ -279,7 +279,7 @@
             "sx": 1,
             "sy": 1,
             "parts": {
-              "head": -10,
+              "head": -12,
               "jaw": -6,
               "tailbase": 0,
               "tailtip": 0,
@@ -287,194 +287,194 @@
               "fararm": 4
             },
             "hold": {
-              "x": 120,
-              "y": -60,
+              "x": 170,
+              "y": -120,
               "rot": 0
             }
           },
           {
-            "f": 34,
+            "f": 35,
             "ease": "out",
-            "x": 30,
-            "rot": -0.08,
+            "x": 20,
+            "rot": -0.1,
             "parts": {
-              "head": -18,
+              "head": -25,
               "jaw": -6,
-              "tailbase": 6,
-              "tailtip": 6
+              "tailbase": 8,
+              "tailtip": 8
             },
             "hold": {
-              "x": 110,
-              "y": -120,
-              "rot": -0.1
+              "x": 250,
+              "y": -190,
+              "rot": -0.15
             }
           },
           {
-            "f": 38,
+            "f": 41,
             "ease": "inout",
-            "x": 60,
-            "rot": 0.1,
-            "sx": 1.04,
-            "sy": 0.97,
+            "x": 100,
+            "rot": 0.12,
+            "sx": 1.05,
+            "sy": 0.96,
             "parts": {
-              "head": 8,
+              "head": -25,
               "jaw": -6,
-              "tailbase": -12,
-              "tailtip": -16,
-              "neararm": -14,
-              "fararm": 6
+              "tailbase": 14,
+              "tailtip": 20,
+              "neararm": -16,
+              "fararm": 8
+            },
+            "hold": {
+              "x": 310,
+              "y": -190,
+              "rot": 0.32
+            }
+          },
+          {
+            "f": 49,
+            "ease": "inout",
+            "x": -20,
+            "rot": -0.12,
+            "sx": 1.05,
+            "sy": 0.96,
+            "parts": {
+              "head": 25,
+              "jaw": -6,
+              "tailbase": -14,
+              "tailtip": -20,
+              "neararm": -16,
+              "fararm": 8
             },
             "hold": {
               "x": 190,
-              "y": -105,
-              "rot": 0.26
+              "y": -150,
+              "rot": -0.32
             }
           },
           {
-            "f": 46,
+            "f": 57,
             "ease": "inout",
-            "x": 0,
-            "rot": -0.1,
-            "sx": 1.04,
-            "sy": 0.97,
+            "x": 100,
+            "rot": 0.12,
+            "sx": 1.05,
+            "sy": 0.96,
             "parts": {
-              "head": -20,
+              "head": -25,
               "jaw": -6,
-              "tailbase": 12,
-              "tailtip": 16,
-              "neararm": -14,
-              "fararm": 6
+              "tailbase": 14,
+              "tailtip": 20,
+              "neararm": -16,
+              "fararm": 8
             },
             "hold": {
-              "x": 30,
-              "y": -105,
-              "rot": -0.26
+              "x": 310,
+              "y": -190,
+              "rot": 0.32
             }
           },
           {
-            "f": 54,
+            "f": 65,
             "ease": "inout",
-            "x": 60,
-            "rot": 0.1,
-            "sx": 1.04,
-            "sy": 0.97,
+            "x": -20,
+            "rot": -0.12,
+            "sx": 1.05,
+            "sy": 0.96,
             "parts": {
-              "head": 8,
+              "head": 25,
               "jaw": -6,
-              "tailbase": -12,
-              "tailtip": -16,
-              "neararm": -14,
-              "fararm": 6
-            },
-            "hold": {
-              "x": 190,
-              "y": -105,
-              "rot": 0.26
-            }
-          },
-          {
-            "f": 62,
-            "ease": "inout",
-            "x": 0,
-            "rot": -0.1,
-            "sx": 1.04,
-            "sy": 0.97,
-            "parts": {
-              "head": -20,
-              "jaw": -6,
-              "tailbase": 12,
-              "tailtip": 16,
-              "neararm": -14,
-              "fararm": 6
-            },
-            "hold": {
-              "x": 30,
-              "y": -105,
-              "rot": -0.26
-            }
-          },
-          {
-            "f": 70,
-            "ease": "inout",
-            "x": 60,
-            "rot": 0.1,
-            "sx": 1.04,
-            "sy": 0.97,
-            "parts": {
-              "head": 8,
-              "jaw": -6,
-              "tailbase": -12,
-              "tailtip": -16,
-              "neararm": -14,
-              "fararm": 6
+              "tailbase": -14,
+              "tailtip": -20,
+              "neararm": -16,
+              "fararm": 8
             },
             "hold": {
               "x": 190,
-              "y": -105,
-              "rot": 0.26
+              "y": -150,
+              "rot": -0.32
             }
           },
           {
-            "f": 78,
+            "f": 73,
             "ease": "inout",
-            "x": 0,
-            "rot": -0.1,
-            "sx": 1.04,
-            "sy": 0.97,
+            "x": 100,
+            "rot": 0.12,
+            "sx": 1.05,
+            "sy": 0.96,
             "parts": {
-              "head": -20,
+              "head": -25,
               "jaw": -6,
-              "tailbase": 12,
-              "tailtip": 16,
-              "neararm": -14,
-              "fararm": 6
+              "tailbase": 14,
+              "tailtip": 20,
+              "neararm": -16,
+              "fararm": 8
             },
             "hold": {
-              "x": 30,
-              "y": -105,
-              "rot": -0.26
+              "x": 310,
+              "y": -190,
+              "rot": 0.32
             }
           },
           {
-            "f": 86,
+            "f": 81,
+            "ease": "inout",
+            "x": -20,
+            "rot": -0.12,
+            "sx": 1.05,
+            "sy": 0.96,
+            "parts": {
+              "head": 25,
+              "jaw": -6,
+              "tailbase": -14,
+              "tailtip": -20,
+              "neararm": -16,
+              "fararm": 8
+            },
+            "hold": {
+              "x": 190,
+              "y": -150,
+              "rot": -0.32
+            }
+          },
+          {
+            "f": 88,
             "ease": "in",
-            "x": 0,
-            "rot": -0.16,
-            "sx": 0.96,
-            "sy": 1.05,
+            "x": -10,
+            "rot": -0.18,
+            "sx": 0.95,
+            "sy": 1.06,
             "parts": {
               "head": -30,
               "jaw": -6,
-              "tailbase": 10,
-              "tailtip": 12
+              "tailbase": 12,
+              "tailtip": 14
             },
             "hold": {
-              "x": 20,
-              "y": -220,
-              "rot": -0.3
+              "x": 60,
+              "y": -230,
+              "rot": -0.35
             }
           },
           {
-            "f": 92,
+            "f": 94,
             "ease": "out",
             "x": 70,
             "rot": 0.14,
             "sx": 1.1,
             "sy": 0.93,
             "parts": {
-              "head": 16,
+              "head": 18,
               "jaw": 26,
-              "tailbase": -10,
-              "tailtip": -12
+              "tailbase": -12,
+              "tailtip": -14
             },
             "hold": {
-              "x": 220,
-              "y": -140,
+              "x": 260,
+              "y": -160,
               "rot": 0.4
             }
           },
           {
-            "f": 96,
+            "f": 98,
             "x": 70
           },
           {
@@ -532,120 +532,168 @@
         },
         "hits": [
           {
-            "from": 46,
-            "to": 46,
+            "from": 41,
+            "to": 41,
             "target": "held",
-            "damage": 4,
+            "damage": 2,
             "knockback": 0,
             "hitstun": 0,
-            "hitstop": 4,
+            "hitstop": 3,
             "fx": "light"
           },
           {
-            "from": 62,
-            "to": 62,
+            "from": 49,
+            "to": 49,
             "target": "held",
-            "damage": 4,
+            "damage": 2,
             "knockback": 0,
             "hitstun": 0,
-            "hitstop": 4,
+            "hitstop": 3,
             "fx": "light"
           },
           {
-            "from": 78,
-            "to": 78,
+            "from": 57,
+            "to": 57,
+            "target": "held",
+            "damage": 2,
+            "knockback": 0,
+            "hitstun": 0,
+            "hitstop": 3,
+            "fx": "light"
+          },
+          {
+            "from": 65,
+            "to": 65,
+            "target": "held",
+            "damage": 2,
+            "knockback": 0,
+            "hitstun": 0,
+            "hitstop": 3,
+            "fx": "light"
+          },
+          {
+            "from": 73,
+            "to": 73,
+            "target": "held",
+            "damage": 2,
+            "knockback": 0,
+            "hitstun": 0,
+            "hitstop": 3,
+            "fx": "light"
+          },
+          {
+            "from": 81,
+            "to": 81,
             "target": "held",
             "damage": 4,
             "knockback": 0,
             "hitstun": 0,
-            "hitstop": 5,
+            "hitstop": 3,
             "fx": "heavy"
           }
         ],
         "events": [
           {
-            "f": 92,
-            "type": "throw",
-            "vx": 620,
-            "vy": -760,
-            "damage": 8,
-            "knockdown": 45
-          },
-          {
-            "f": 92,
-            "type": "fx",
-            "fx": "shake",
-            "strength": 1.2
-          },
-          {
             "f": 110,
             "type": "end"
           },
           {
-            "f": 38,
+            "f": 41,
             "type": "fx",
             "fx": "dust",
-            "strength": 0.5,
-            "x": 536,
-            "y": -40
+            "strength": 0.6,
+            "x": 656,
+            "y": 0
           },
           {
-            "f": 46,
-            "type": "fx",
-            "fx": "dust",
-            "strength": 0.5,
-            "x": 376,
-            "y": -40
-          },
-          {
-            "f": 54,
-            "type": "fx",
-            "fx": "dust",
-            "strength": 0.5,
-            "x": 536,
-            "y": -40
-          },
-          {
-            "f": 62,
-            "type": "fx",
-            "fx": "dust",
-            "strength": 0.5,
-            "x": 376,
-            "y": -40
-          },
-          {
-            "f": 70,
-            "type": "fx",
-            "fx": "dust",
-            "strength": 0.5,
-            "x": 536,
-            "y": -40
-          },
-          {
-            "f": 78,
-            "type": "fx",
-            "fx": "dust",
-            "strength": 0.5,
-            "x": 376,
-            "y": -40
-          },
-          {
-            "f": 46,
+            "f": 41,
             "type": "fx",
             "fx": "shake",
-            "strength": 0.4
+            "strength": 0.35
           },
           {
-            "f": 62,
+            "f": 49,
             "type": "fx",
-            "fx": "shake",
-            "strength": 0.4
+            "fx": "dust",
+            "strength": 0.6,
+            "x": 536,
+            "y": 0
           },
           {
-            "f": 78,
+            "f": 49,
             "type": "fx",
             "fx": "shake",
-            "strength": 0.6
+            "strength": 0.35
+          },
+          {
+            "f": 57,
+            "type": "fx",
+            "fx": "dust",
+            "strength": 0.6,
+            "x": 656,
+            "y": 0
+          },
+          {
+            "f": 57,
+            "type": "fx",
+            "fx": "shake",
+            "strength": 0.35
+          },
+          {
+            "f": 65,
+            "type": "fx",
+            "fx": "dust",
+            "strength": 0.6,
+            "x": 536,
+            "y": 0
+          },
+          {
+            "f": 65,
+            "type": "fx",
+            "fx": "shake",
+            "strength": 0.35
+          },
+          {
+            "f": 73,
+            "type": "fx",
+            "fx": "dust",
+            "strength": 0.6,
+            "x": 656,
+            "y": 0
+          },
+          {
+            "f": 73,
+            "type": "fx",
+            "fx": "shake",
+            "strength": 0.35
+          },
+          {
+            "f": 81,
+            "type": "fx",
+            "fx": "dust",
+            "strength": 0.6,
+            "x": 536,
+            "y": 0
+          },
+          {
+            "f": 81,
+            "type": "fx",
+            "fx": "shake",
+            "strength": 0.35
+          },
+          {
+            "f": 94,
+            "type": "throw",
+            "vx": 520,
+            "vy": -620,
+            "damage": 6,
+            "knockdown": 50
+          },
+          {
+            "f": 94,
+            "type": "fx",
+            "fx": "shake",
+            "strength": 1.2
           }
         ]
       }
@@ -1844,7 +1892,8 @@
             "hitstun": 22,
             "hitstop": 7,
             "knockdown": 40,
-            "fx": "heavy"
+            "fx": "heavy",
+            "level": "high"
           }
         ],
         "events": [
@@ -2483,7 +2532,8 @@
             "knockback": 60,
             "hitstun": 14,
             "hitstop": 3,
-            "fx": "light"
+            "fx": "light",
+            "level": "low"
           }
         ],
         "events": [
@@ -2503,7 +2553,8 @@
             "knockback": 160,
             "hitstun": 22,
             "hitstop": 5,
-            "fx": "heavy"
+            "fx": "heavy",
+            "level": "low"
           },
           {
             "f": 15,
@@ -4832,7 +4883,8 @@
             "knockback": 200,
             "hitstun": 24,
             "hitstop": 7,
-            "fx": "heavy"
+            "fx": "heavy",
+            "level": "high"
           }
         ],
         "events": [
@@ -6679,7 +6731,8 @@
             "knockback": 120,
             "hitstun": 18,
             "hitstop": 6,
-            "fx": "heavy"
+            "fx": "heavy",
+            "level": "low"
           }
         ],
         "events": [
@@ -6701,7 +6754,8 @@
             "hitstun": 20,
             "hitstop": 5,
             "knockdown": 40,
-            "fx": "heavy"
+            "fx": "heavy",
+            "level": "low"
           },
           {
             "f": 24,
@@ -7205,7 +7259,8 @@
             "hitstun": 22,
             "hitstop": 7,
             "knockdown": 36,
-            "fx": "heavy"
+            "fx": "heavy",
+            "level": "high"
           }
         ],
         "events": [

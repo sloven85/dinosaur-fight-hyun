@@ -70,6 +70,11 @@ export interface HitParams {
   stun?: number;
   /** 가드 불가(잡기 계열). */
   unguardable?: boolean;
+  /**
+   * 판정 높이(A단계 상단·하단): high=위에서 내려찍기(서서 막기만), low=발밑 쓸기(앉아 막기만),
+   * mid(기본)=어느 쪽 방어로도 막힌다.
+   */
+  level?: 'high' | 'mid' | 'low';
   /** 화면 연출 크기(효과음·이펙트). 기본은 기술 kind. */
   fx?: 'light' | 'heavy' | 'special';
   /** 땅에 서 있는 상대만 맞는다(지진: 점프하면 피함). */

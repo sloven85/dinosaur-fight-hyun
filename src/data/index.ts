@@ -78,6 +78,8 @@ export interface StageData {
   placeholderColor: string;
   /** 바닥 겹 밝기(1 = 그대로). 화산 바닥은 0.85(주황 공룡이 묻히지 않게, 마스터 판정 2026-10-01). */
   groundBrightness?: number;
+  /** 중경 겹 캔버스 필터(화산: 용암 줄이 캐릭터와 경쟁하지 않게, 마스터 5167648). */
+  midFilter?: string;
 }
 
 export const CHARACTERS = charactersJson.characters as CharacterData[];

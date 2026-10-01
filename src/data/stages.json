@@ -26,7 +26,8 @@
       "groundY": 900,
       "musicId": "bgm_volcano",
       "placeholderColor": "#5a3328",
-      "groundBrightness": 0.85
+      "groundBrightness": 0.85,
+      "midFilter": "brightness(0.8) saturate(0.85)"
     },
     {
       "id": "desert",

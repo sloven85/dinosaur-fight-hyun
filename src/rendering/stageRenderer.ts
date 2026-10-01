@@ -41,7 +41,7 @@ export function preloadStages(next: AssetLoader, stages: readonly StageData[]): 
           return img;
         }),
       );
-      if (mid) fadedLayer(mid, `${stage.id}:mid`, 0, 0.35, 1);
+      if (mid) fadedLayer(mid, `${stage.id}:mid`, 0, 0.35, stage.midFilter ?? 1);
       if (ground) fadedLayer(ground, `${stage.id}:ground`, 0.38, 0.12, stage.groundBrightness ?? 1);
       void sky;
     }),
@@ -68,7 +68,7 @@ function layerImage(path: string | undefined): HTMLImageElement | null {
  */
 const faded = new Map<string, HTMLCanvasElement>();
 
-function fadedLayer(img: HTMLImageElement, key: string, cropTop: number, fade: number, brightness: number): HTMLCanvasElement | HTMLImageElement {
+function fadedLayer(img: HTMLImageElement, key: string, cropTop: number, fade: number, brightness: number | string): HTMLCanvasElement | HTMLImageElement {
   const cached = faded.get(key);
   if (cached) return cached;
   if (typeof document === 'undefined') return img;
@@ -79,7 +79,8 @@ function fadedLayer(img: HTMLImageElement, key: string, cropTop: number, fade: n
   c.height = h;
   const g = c.getContext('2d');
   if (!g) return img;
-  if (brightness !== 1) g.filter = `brightness(${brightness})`;
+  if (typeof brightness === 'string') g.filter = brightness;
+  else if (brightness !== 1) g.filter = `brightness(${brightness})`;
   g.drawImage(img, 0, sy, img.width, h, 0, 0, img.width, h);
   g.filter = 'none';
   g.globalCompositeOperation = 'destination-in';
@@ -100,8 +101,8 @@ function drawSky(g: CanvasRenderingContext2D, img: HTMLImageElement, dx: number,
   g.drawImage(img, (w - iw) / 2 + dx, h - img.height * scale, iw, img.height * scale);
 }
 
-function drawMid(g: CanvasRenderingContext2D, img: HTMLImageElement, key: string, dx: number, w: number, groundY: number): void {
-  const layer = fadedLayer(img, key, 0, 0.35, 1);
+function drawMid(g: CanvasRenderingContext2D, img: HTMLImageElement, key: string, dx: number, w: number, groundY: number, filter: string | undefined): void {
+  const layer = fadedLayer(img, key, 0, 0.35, filter ?? 1);
   const scale = (w * 1.2) / layer.width;
   const iw = layer.width * scale;
   const ih = layer.height * scale;
@@ -331,7 +332,7 @@ export function renderStage(
   const ground = layerImage(paths.ground);
   if (sky && mid && ground) {
     drawSky(g, sky, parallaxOffset('sky', focusX, w), w, h);
-    drawMid(g, mid, `${stage.id}:mid`, parallaxOffset('mid', focusX, w), w, stage.groundY);
+    drawMid(g, mid, `${stage.id}:mid`, parallaxOffset('mid', focusX, w), w, stage.groundY, stage.midFilter);
     drawFloor(g, ground, `${stage.id}:ground`, parallaxOffset('ground', focusX, w), w, h, stage.groundY, stage.groundBrightness ?? 1);
   } else {
     const paint = PAINTERS[stage.id];

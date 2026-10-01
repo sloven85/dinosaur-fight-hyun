@@ -306,13 +306,31 @@ export class Fighter {
    * 방어(마스터 결정 2026-10-01, jk 요청): 땅에서 뒤 또는 아래를 누르고 있으면 막는다.
    * 4세도 쓰도록 버튼을 늘리지 않는다. 잡기는 Match에서 방어를 무시한다.
    */
-  isGuarding(opponent: Fighter): boolean {
+  isGuarding(opponent: Fighter, level: 'high' | 'mid' | 'low' = 'mid'): boolean {
     if (!this.onGround) return false;
     if (this.state !== 'idle' && this.state !== 'walk' && this.state !== 'crouch' && this.state !== 'guard') return false;
-    // 막는 반동 중에는 계속 막는다(상대가 몸을 통과해 왕복해도 방어가 풀리지 않게).
-    if (this.state === 'guard') return true;
+    const stance = this.guardKind(opponent);
+    if (stance === null) return false;
+    // 상단은 서서, 하단은 앉아서만 막는다. 중단은 둘 다. 도움 설정(4세)은 어느 쪽으로 막아도 다 막는다.
+    if (this.guardAll || level === 'mid') return true;
+    return level === 'high' ? stance === 'stand' : stance === 'crouch';
+  }
+
+  /** 도움 설정: 높이와 상관없이 막는다(Match가 1P에만 켠다). */
+  guardAll = false;
+  /** 막은 순간의 자세(반동 동안 유지). */
+  private guardHeldKind: 'stand' | 'crouch' = 'stand';
+
+  /**
+   * 지금 방어 자세: 뒤를 누르면 서서 막기, 아래(또는 아래+뒤)를 누르면 앉아 막기. 없으면 null.
+   * 막는 반동 중에는 막은 자세를 유지한다(상대가 몸을 통과해 왕복해도 방어가 풀리지 않게).
+   */
+  guardKind(opponent: Fighter): 'stand' | 'crouch' | null {
+    if (this.state === 'guard') return this.guardHeldKind;
     const awayIsLeft = this.x <= opponent.x;
-    return this.inputDown || (awayIsLeft ? this.inputLeft : this.inputRight);
+    const back = awayIsLeft ? this.inputLeft : this.inputRight;
+    if (this.inputDown) return 'crouch';
+    return back ? 'stand' : null;
   }
 
   /** 지금 방어 자세를 보여 줄지(뒤·아래를 누르고 서 있음). 연출용. */
@@ -321,6 +339,11 @@ export class Fighter {
     if (this.state === 'guard') return true;
     if (this.state !== 'idle' && this.state !== 'walk' && this.state !== 'crouch') return false;
     return this.isGuarding(this.opponent);
+  }
+
+  /** 앉아 막는 중인지(연출: 더 낮게 웅크리고 방패도 아래로). */
+  get guardCrouching(): boolean {
+    return this.guardStance && !!this.opponent && this.guardKind(this.opponent) === 'crouch';
   }
 
   isMeterFull(): boolean {
@@ -556,6 +579,7 @@ export class Fighter {
 
   /** 막았을 때: 짧은 반동(움직일 수 없음). 반동 중에도 계속 막는다. */
   guardRecoil(frames: number): void {
+    if (this.opponent && this.state !== 'guard') this.guardHeldKind = this.guardKind(this.opponent) ?? 'stand';
     this.state = 'guard';
     this.attack = null;
     this.scriptVisual = null;

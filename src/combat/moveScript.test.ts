@@ -97,9 +97,9 @@ describe('티라노 꽉 물고 흔들기(잡기·던지기)', () => {
     expect(Math.min(...held.map((t) => t.p2y))).toBeLessThan(-120);
   });
 
-  it('흔들 때 3번, 던질 때 1번 피해(총 20)', () => {
+  it('흔들 때 6번(좌우 휘두르기), 던질 때 1번 피해(총 20)', () => {
     const hits = r.events.filter((e) => e.type === 'hit');
-    expect(hits).toHaveLength(4);
+    expect(hits).toHaveLength(7);
     expect(r.trace[0].p2hp - r.trace[r.trace.length - 1].p2hp).toBe(20);
   });
 

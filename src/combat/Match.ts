@@ -187,6 +187,8 @@ export class Match {
   private applyAssistHealth(): void {
     if (this.assistActive) {
       this.fighters[0].setMaxHealthMultiplier(P1_ASSIST_HEALTH_MULTIPLIER);
+      // 4세 도움 모드: 상단·하단 구분 없이 뒤나 아래만 누르면 다 막는다.
+      this.fighters[0].guardAll = true;
     }
   }
 
@@ -567,7 +569,7 @@ export class Match {
         if (hit.groundOnly && !defender.onGround) return;
         if (!rectsOverlap(this.scriptBoxRect(attacker, hit.box), defender.hurtbox())) return;
         run.landed.add(index);
-        const guarded = !hit.unguardable && defender.isGuarding(attacker);
+        const guarded = !hit.unguardable && defender.isGuarding(attacker, hit.level ?? 'mid');
         // 밀려나는 방향은 '공격자에게서 멀어지는 쪽'(뒤돌아 꼬리로 칠 때도 맞다).
         const away: 1 | -1 = defender.x >= attacker.x ? 1 : -1;
         this.applyDamage(attacker, defender, hit, attack.move.kind, guarded, away, false);
@@ -681,7 +683,7 @@ export class Match {
         !(p.spec.groundOnly && !target.onGround) &&
         rectsOverlap(box, target.hurtbox())
       ) {
-        const guarded = !p.spec.unguardable && target.isGuarding(owner);
+        const guarded = !p.spec.unguardable && target.isGuarding(owner, p.spec.level ?? 'mid');
         this.applyDamage(owner, target, p.spec, p.kind, guarded, p.facing, false, p.x, p.attackId);
         if (!p.spec.pierce) continue;
         p.spent = true;

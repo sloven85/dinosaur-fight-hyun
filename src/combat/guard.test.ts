@@ -78,3 +78,26 @@ describe('방어(뒤·아래 홀드)', () => {
     expect(match.p2.isGuarding(match.p1)).toBe(false);
   });
 });
+
+describe('앉아 막기와 상단·하단(A단계)', () => {
+  it('중단은 서서도 앉아서도 막힌다', () => {
+    expect(attackGuarded('carnotaurus', 'triceratops', 'light', 'right').damage).toBe(0);
+    expect(attackGuarded('carnotaurus', 'triceratops', 'light', 'down').damage).toBe(0);
+  });
+
+  it('상단(점프 박치기)은 서서 막아야 하고 앉아 막으면 맞는다', () => {
+    expect(attackGuarded('pachycephalosaurus', 'triceratops', 'heavy', 'right').damage).toBe(0);
+    expect(attackGuarded('pachycephalosaurus', 'triceratops', 'heavy', 'down').damage).toBeGreaterThan(0);
+  });
+
+  it('하단(물보라 쓸기)은 앉아 막아야 하고 서서 막으면 맞는다', () => {
+    expect(attackGuarded('spinosaurus', 'triceratops', 'heavy', 'down', 200).damage).toBe(0);
+    expect(attackGuarded('spinosaurus', 'triceratops', 'heavy', 'right', 200).damage).toBeGreaterThan(0);
+  });
+
+  it('도움 설정(1P)은 높이와 상관없이 다 막는다', () => {
+    const match = new Match('cpu', ['tyrannosaurus', 'triceratops'], undefined, { assist: true });
+    expect(match.p1.guardAll).toBe(true);
+    expect(match.p2.guardAll).toBe(false);
+  });
+});

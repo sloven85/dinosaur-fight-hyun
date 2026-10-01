@@ -218,7 +218,10 @@ function drawBody(
 ): boolean {
   const feetY = groundY + view.y;
   const ghost = view.ghostAlpha > 0;
-  const partAngles = view.visual?.parts && fighter.assets.parts ? view.visual.parts : partAnglesFor(fighter, time);
+  let partAngles = view.visual?.parts && fighter.assets.parts ? view.visual.parts : partAnglesFor(fighter, time);
+  // 모든 관절이 거의 0°면 파츠 대신 한 장짜리 마스터를 그린다. 파츠 이음선(브라키오 목 등)이
+  // 대기 자세에서 선처럼 보이지 않게(마스터 5167648). 파츠 합성과 마스터는 IoU 0.999로 같은 모양이다.
+  if (partAngles && Object.values(partAngles).every((v) => Math.abs(v) < 0.5)) partAngles = null;
   const choice = partAngles ? partsChoice(fighter) : selectSprite(fighter);
   if (!choice) {
     if (!ghost) renderPlaceholder(g, fighter, feetY);
@@ -482,7 +485,7 @@ function guardStanceOf(fighter: Fighter) {
 function applyGuardTransform(g: CanvasRenderingContext2D, fighter: Fighter): void {
   const stance = guardStanceOf(fighter);
   const shake = fighter.state === 'guard' ? Math.sin(fighter.guardFrames * 2.4) * 0.03 : 0;
-  const squash = stance.squash - (fighter.state === 'guard' ? 0.03 : 0);
+  const squash = (stance.squash - (fighter.state === 'guard' ? 0.03 : 0)) * (fighter.guardCrouching ? 0.82 : 1);
   tiltAboutMiddle(g, fighter, stance.tilt + shake);
   g.scale(1 + (1 - squash) * 0.4, squash);
 }
@@ -491,11 +494,12 @@ function applyGuardTransform(g: CanvasRenderingContext2D, fighter: Fighter): voi
 function drawGuardShield(g: CanvasRenderingContext2D, fighter: Fighter, feetY: number, time: number): void {
   const h = fighter.data.displayHeight;
   const x = fighter.x + fighter.facing * (fighter.bodyFront * 0.95);
-  const y = feetY - h * 0.5;
+  // 앉아 막기는 방패도 아래쪽(발밑 공격을 받는 높이)으로.
+  const y = feetY - h * (fighter.guardCrouching ? 0.32 : 0.5);
   const flash = fighter.state === 'guard' ? 1 : 0.55 + Math.sin(time * 8) * 0.1;
   g.save();
   g.translate(x, y);
-  g.scale(fighter.facing, 1);
+  g.scale(fighter.facing, fighter.guardCrouching ? 0.62 : 1);
   g.globalAlpha = 0.35 + 0.45 * flash;
   const grad = g.createRadialGradient(0, 0, h * 0.05, 0, 0, h * 0.5);
   grad.addColorStop(0, 'rgba(180, 225, 255, 0.9)');
@@ -601,6 +605,8 @@ function applyAirTumble(g: CanvasRenderingContext2D, fighter: Fighter): void {
 
 function applyPoseTransform(g: CanvasRenderingContext2D, fighter: Fighter, time: number): void {
   if (fighter.guardStance) {
+    // 앉아 막기: 같은 방어 그림을 더 낮게(키 80%) 눌러 웅크린다.
+    if (fighter.guardCrouching) g.scale(1.06, 0.8);
     // 전용 방어 그림: 막은 순간만 살짝 눌리며 떨린다(그림 자체가 웅크린 자세).
     if (fighter.state === 'guard') {
       tiltAboutMiddle(g, fighter, Math.sin(fighter.guardFrames * 2.4) * 0.03);
@@ -679,8 +685,7 @@ function drawNameTag(g: CanvasRenderingContext2D, fighter: Fighter, feetY: numbe
   g.font = '24px "Noto Sans KR", system-ui, sans-serif';
   g.textAlign = 'center';
   g.textBaseline = 'middle';
-  g.fillStyle = '#f2f4f8';
-  g.fillText(fighter.data.name, fighter.x, feetY - fighter.data.displayHeight - 22);
+  // 머리 위 이름은 그리지 않는다(마스터 5167648): 이름은 체력바 아래 양쪽 같은 위치에 있다.
 
   // 동일 캐릭터 대전: 2P는 발밑에 표시한다(계획서 4절).
   if (fighter.useAlternatePalette) {

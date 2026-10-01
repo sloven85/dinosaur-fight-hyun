@@ -345,6 +345,10 @@ export class BattleScene extends BaseScene {
     this.renderRoundPips(g, 60, 118, false, p1.roundWins);
     this.renderRoundPips(g, width - 60, 118, true, p2.roundWins);
 
+    // 이름: 양쪽 체력바 바로 아래, 라운드 점 옆 같은 높이(1P 왼쪽 정렬, 2P 오른쪽 정렬).
+    drawText(g, p1.data.name, 60 + 90, 120, { font: FONTS.small, color: '#ffffff', align: 'left' });
+    drawText(g, p2.data.name, width - 60 - 90, 120, { font: FONTS.small, color: '#ffffff', align: 'right' });
+
     this.renderMeter(g, 60, 160, p1.meter, p1.specialFlashFrames > 0, false);
     this.renderMeter(g, width - 60 - 480, 160, p2.meter, p2.specialFlashFrames > 0, true);
 
