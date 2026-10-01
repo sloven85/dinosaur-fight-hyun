@@ -6,6 +6,7 @@ import {
   GLIDE_FALL_SPEED,
   GLIDE_MAX_FRAMES,
   GRAVITY,
+  HITBOX_OVERSHOOT,
   INPUT_BUFFER_FRAMES,
   JUMP_VELOCITY,
   LEAP_CHARGE_FRAMES,
@@ -202,12 +203,14 @@ export class Fighter {
     const { move, frame } = this.attack;
     if (attackPhase(move, frame) !== 'active') return [];
 
+    const shift = this.hitboxShift(move);
     const boxes: Rect[] = [];
     for (const hitbox of move.hitboxes) {
       if (frame < hitbox.startFrame || frame > hitbox.endFrame) continue;
       const top = this.y + hitbox.y;
       const bottom = top + hitbox.height;
-      const left = this.facing === 1 ? this.x + hitbox.x : this.x - hitbox.x - hitbox.width;
+      const x = hitbox.x + shift;
+      const left = this.facing === 1 ? this.x + x : this.x - x - hitbox.width;
       boxes.push({ left, right: left + hitbox.width, top, bottom });
     }
     return boxes;
@@ -235,12 +238,23 @@ export class Fighter {
 
   /** 기술별 최대 도달 거리(중심에서 바깥쪽 끝까지, 디자인 px). CPU가 사거리를 판단할 때 쓴다. */
   reachOf(kind: AttackKind): number {
-    const move = this.moves[kind];
-    let reach = 0;
-    for (const hitbox of move.hitboxes) {
-      reach = Math.max(reach, hitbox.x + hitbox.width);
-    }
-    return reach;
+    return this.bodyFront + HITBOX_OVERSHOOT[kind];
+  }
+
+  /**
+   * 몸 앞끝(중심에서 얼굴 쪽 바깥 경계, 디자인 px). 새 아트 비율을 따라가도록
+   * 기술 판정 상자의 가로 위치는 이 값을 기준으로 잡는다(마스터 결정 2026-10-01).
+   */
+  get bodyFront(): number {
+    const box = this.displayBox;
+    return box ? box.right : this.bodyWidth / 2;
+  }
+
+  /** moves.json의 가장 앞 상자 끝을 '몸 앞끝 + 초과분'에 맞추는 가로 이동량. */
+  private hitboxShift(move: MoveData): number {
+    let dataFront = 0;
+    for (const hitbox of move.hitboxes) dataFront = Math.max(dataFront, hitbox.x + hitbox.width);
+    return this.bodyFront + HITBOX_OVERSHOOT[move.kind] - dataFront;
   }
 
   /**

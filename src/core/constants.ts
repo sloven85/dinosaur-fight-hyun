@@ -66,3 +66,10 @@ export const INPUT_BUFFER_FRAMES = 7;
 /** 라운드 연출 길이(프레임). */
 export const ROUND_INTRO_FRAMES = 90;
 export const ROUND_OVER_FRAMES = 120;
+
+/**
+ * 기술 판정 상자의 가로 기준(마스터 결정 2026-10-01): 몸 앞끝(displayBox.right)에서
+ * 얼마나 더 앞으로 나가는지(디자인 px). 약 < 강 < 특수 순서를 지킨다.
+ * moves.json의 가로 값은 상자 모양(폭·여러 상자 간 간격)만 쓰고, 위치는 이 기준으로 다시 잡는다.
+ */
+export const HITBOX_OVERSHOOT = { light: 45, heavy: 100, special: 160 } as const;
