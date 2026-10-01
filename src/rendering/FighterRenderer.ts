@@ -1,4 +1,5 @@
 import type { Fighter } from '../combat/Fighter';
+import { emotionFor, type Emotion } from '../combat/emotion';
 import { attackPhase } from '../combat/types';
 import { spriteScale, type PoseName } from './rig';
 
@@ -145,6 +146,8 @@ export function renderFighter(
 
   if (choice.isPose) applyPoseTransform(g, fighter, time);
   else applyMasterTransform(g, fighter, time);
+  // 감정 3단계(프롬프트 6): 체력이 낮을수록 어깨가 처지고, 높으면 가볍게 들썩인다.
+  applyEmotionTransform(g, emotionFor(fighter.health / fighter.maxHealth), time);
 
   if (fighter.state === 'hit') {
     g.filter = 'brightness(1.45) saturate(1.35)';
@@ -285,6 +288,16 @@ function applyMasterTransform(g: CanvasRenderingContext2D, fighter: Fighter, tim
 function applyPoseTransform(g: CanvasRenderingContext2D, fighter: Fighter, time: number): void {
   if (fighter.state === 'victory') {
     g.translate(0, Math.sin(time * 6) * -8);
+  }
+}
+
+/** 감정 3단계의 자세 변화. 수치는 전투에 영향이 없는 순수 연출이다. */
+function applyEmotionTransform(g: CanvasRenderingContext2D, emotion: Emotion, time: number): void {
+  if (emotion === 'energetic') {
+    g.translate(0, Math.sin(time * 3.1) * 3);
+  } else if (emotion === 'tired') {
+    g.translate(0, 8);
+    g.rotate(0.05);
   }
 }
 

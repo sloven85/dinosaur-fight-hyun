@@ -1,3 +1,4 @@
+import type { AudioManager } from '../audio/AudioManager';
 import type { GameContext } from '../core/GameContext';
 import type { Session } from '../core/session';
 import type { SettingsStore } from '../core/settings';
@@ -10,12 +11,19 @@ export class SceneManager {
   private current: Scene | null = null;
   readonly context: GameContext;
 
-  constructor(input: InputManager, session: Session, assets: AssetLoader, settings: SettingsStore) {
+  constructor(
+    input: InputManager,
+    session: Session,
+    assets: AssetLoader,
+    settings: SettingsStore,
+    audio: AudioManager,
+  ) {
     this.context = {
       input,
       session,
       assets,
       settings,
+      audio,
       setScene: (scene) => this.change(scene),
       requestPause: () => input.requestPause('menu'),
     };

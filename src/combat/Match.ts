@@ -27,9 +27,24 @@ import type { GameMode } from '../core/session';
 import type { PlayerIndex } from '../input/InputManager';
 import { emptyAssets, type CharacterAssets } from '../rendering/CharacterAssets';
 import { Fighter, NULL_INPUT, type FighterInput } from './Fighter';
-import { rectsOverlap, type MoveData } from './types';
+import { rectsOverlap, type AttackKind, type MoveData } from './types';
 
 export type RoundPhase = 'intro' | 'fight' | 'roundOver' | 'matchOver';
+
+/**
+ * 프롬프트 6 연출용 사건. Match는 "무슨 일이 있었는지"만 남기고,
+ * 화면(BattleScene)이 이벤트를 소비해 먼지·별·충격파·진동·소리를 낸다.
+ * 이벤트는 보이는 연출 전용이라 전투 수치에 영향을 주지 않는다.
+ */
+export interface MatchEvent {
+  type: 'hit' | 'guard' | 'ko';
+  /** 사건이 일어난 위치(화면 x, 지면 기준 y). */
+  x: number;
+  y: number;
+  direction: 1 | -1;
+  kind: AttackKind;
+  player: PlayerIndex;
+}
 
 /** 계획서 16절 프롬프트 5: 난이도·도움 설정·테스트용 난수원. */
 export interface MatchOptions {
@@ -68,6 +83,8 @@ export class Match {
   readonly assistActive: boolean;
 
   private readonly cpu: AIController | null;
+  /** 아직 화면이 소비하지 않은 연출 이벤트. */
+  private events: MatchEvent[] = [];
 
   constructor(
     private readonly mode: GameMode,
@@ -105,6 +122,14 @@ export class Match {
   /** CPU 컨트롤러(1인 대전에서만 존재). 테스트·디버그용. */
   get cpuController(): AIController | null {
     return this.cpu;
+  }
+
+  /** 이번 틱에 쌓인 연출 이벤트를 돌려주고 비운다(화면이 매 프레임 소비). */
+  consumeEvents(): MatchEvent[] {
+    if (this.events.length === 0) return [];
+    const events = this.events;
+    this.events = [];
+    return events;
   }
 
   /** 2P가 CPU인 경로에서는 사람 입력 대신 AIController의 Action을 쓴다(프롬프트 5). */
@@ -199,11 +224,27 @@ export class Match {
       // 무승부는 승수를 올리지 않고 재라운드한다(계획서 2절).
       this.p1.state = 'down';
       this.p2.state = 'down';
+      this.pushKoEvent(this.p1);
+      this.pushKoEvent(this.p2);
     } else {
       this.fighters[winner].roundWins += 1;
       this.fighters[winner].state = 'victory';
-      this.fighters[1 - winner].state = 'down';
+      const loser = this.fighters[1 - winner];
+      loser.state = 'down';
+      // 프롬프트 6: KO 뒤 쓰러진 캐릭터에 별이 돈다.
+      this.pushKoEvent(loser);
     }
+  }
+
+  private pushKoEvent(fighter: Fighter): void {
+    this.events.push({
+      type: 'ko',
+      x: fighter.x,
+      y: fighter.y - fighter.bodyHeight * 0.4,
+      direction: fighter.facing,
+      kind: 'heavy',
+      player: fighter.player,
+    });
   }
 
   private advanceAfterRound(): void {
@@ -318,6 +359,16 @@ export class Match {
     // 타격 정지는 양측에 동일 적용한다.
     attacker.hitstopFrames = move.hitstopFrames;
     defender.hitstopFrames = move.hitstopFrames;
+
+    // 연출용 이벤트(피해와 무관). 맞은 지점은 두 몸통 사이, 가슴 높이로 잡는다.
+    this.events.push({
+      type: guarded ? 'guard' : 'hit',
+      x: (attacker.x + defender.x) / 2,
+      y: defender.y - defender.bodyHeight * 0.55,
+      direction,
+      kind: move.kind,
+      player: defender.player,
+    });
   }
 
   private checkKnockouts(): boolean {

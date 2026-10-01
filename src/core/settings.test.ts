@@ -93,3 +93,43 @@ describe('저장 실패 대응 (프롬프트 5)', () => {
     expect(store.difficulty).toBe('normal');
   });
 });
+
+describe('어른용 설정 실제 반영 (프롬프트 6)', () => {
+  it('음량·화면 흔들림·진동·전체화면을 저장하고 다시 읽는다', () => {
+    const storage = new FakeStorage();
+    const first = new SettingsStore(storage);
+    first.update({ volume: 0.2, screenShake: false, vibration: false, fullscreen: true });
+
+    const second = new SettingsStore(storage);
+    expect(second.value.volume).toBeCloseTo(0.2, 5);
+    expect(second.value.screenShake).toBe(false);
+    expect(second.value.vibration).toBe(false);
+    expect(second.value.fullscreen).toBe(true);
+  });
+
+  it('전체화면 기본값은 꺼짐이고 잘못된 값은 기본값으로 되돌린다', () => {
+    expect(DEFAULT_SETTINGS.fullscreen).toBe(false);
+    expect(sanitizeSettings({ fullscreen: 'yes' }).fullscreen).toBe(false);
+  });
+
+  it('키 재지정을 한 키씩 바꾸고 지우고 초기화한다', () => {
+    const store = new SettingsStore(new FakeStorage());
+    store.setKeyMapping('1.light', ['KeyQ']);
+    expect(store.value.keyMapping['1.light']).toEqual(['KeyQ']);
+
+    store.setKeyMapping('2.heavy', ['KeyP']);
+    store.clearKeyMapping('1.light');
+    expect(store.value.keyMapping['1.light']).toBeUndefined();
+    expect(store.value.keyMapping['2.heavy']).toEqual(['KeyP']);
+
+    store.resetKeyMapping();
+    expect(store.value.keyMapping).toEqual({});
+  });
+
+  it('키 재지정의 잘못된 값은 버린다', () => {
+    const sanitized = sanitizeSettings({
+      keyMapping: { '1.light': ['KeyQ', 5], '2.light': 'KeyW', '1.heavy': [] },
+    });
+    expect(sanitized.keyMapping).toEqual({ '1.light': ['KeyQ'] });
+  });
+});

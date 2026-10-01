@@ -3,9 +3,10 @@ import {
   GAMEPAD_BUTTONS,
   GAMEPAD_DPAD,
   GAMEPAD_JOIN_BUTTON,
-  KEYBOARD_BINDINGS,
   STICK_AXIS,
   STICK_DEADZONE,
+  buildKeyboardBindings,
+  type KeyMapping,
   type KeyboardBinding,
 } from './bindings';
 
@@ -41,10 +42,18 @@ function createHeldMap(): HeldMap {
 }
 
 interface PlayerSlot {
-  readonly keyboard: KeyboardBinding;
+  keyboard: KeyboardBinding;
   padIndex: number | null;
   readonly states: ActionStates;
   readonly held: HeldMap;
+}
+
+/** 진동을 지원하는 패드의 확장 API(표준 Gamepad 타입에 아직 없다). */
+interface RumbleActuator {
+  playEffect?: (
+    type: 'dual-rumble',
+    params: { duration: number; strongMagnitude: number; weakMagnitude: number },
+  ) => Promise<unknown>;
 }
 
 /**
@@ -62,10 +71,19 @@ export class InputManager {
   private pendingPresses = new Set<string>();
   private pause: PauseReason | null = null;
   private debugTogglePressed = false;
+  /** 설정의 키 재지정(없으면 기본 매핑). */
+  private keyMapping: KeyMapping;
+  /** 키 재지정 화면에서 다음 키 입력을 가로챌 때 쓴다. */
+  private keyCapture: ((code: string) => void) | null = null;
 
-  constructor(private readonly win: Window = window) {
+  constructor(
+    private readonly win: Window = window,
+    keyMapping: KeyMapping = {},
+  ) {
+    this.keyMapping = keyMapping;
+    const bindings = buildKeyboardBindings(keyMapping);
     this.players = PLAYERS.map((index) => ({
-      keyboard: KEYBOARD_BINDINGS[index],
+      keyboard: bindings[index],
       padIndex: null,
       states: createActionStates(),
       held: createHeldMap(),
@@ -172,6 +190,63 @@ export class InputManager {
     return pressed;
   }
 
+  // --- 키 재지정(계획서 2절 어른용 설정) ---
+
+  /** 저장된 키 재지정을 즉시 반영한다. 다음 틱부터 새 매핑으로 읽는다. */
+  setKeyMapping(mapping: KeyMapping): void {
+    this.keyMapping = mapping;
+    const bindings = buildKeyboardBindings(mapping);
+    this.players.forEach((slot, index) => {
+      slot.keyboard = bindings[index];
+    });
+  }
+
+  get currentKeyMapping(): KeyMapping {
+    return { ...this.keyMapping };
+  }
+
+  get isCapturingKey(): boolean {
+    return this.keyCapture !== null;
+  }
+
+  /**
+   * 다음 키 입력 하나를 재지정용으로 가로챈다.
+   * 잡는 동안에는 그 키가 게임 동작으로 처리되지 않는다.
+   */
+  captureNextKey(onCapture: (code: string) => void): void {
+    this.keyCapture = onCapture;
+  }
+
+  cancelKeyCapture(): void {
+    this.keyCapture = null;
+  }
+
+  // --- 진동(계획서 2절 어른용 설정) ---
+
+  /** 패드 진동. 미지원 패드·미참가 플레이어면 조용히 넘어간다. */
+  rumble(player: PlayerIndex, strength = 0.6, durationMs = 120): void {
+    const padIndex = this.players[player].padIndex;
+    if (padIndex === null) return;
+    try {
+      if (typeof navigator === 'undefined' || typeof navigator.getGamepads !== 'function') return;
+      const pad = navigator.getGamepads()[padIndex];
+      const actuator = (pad as unknown as { vibrationActuator?: RumbleActuator } | null)
+        ?.vibrationActuator;
+      void actuator?.playEffect?.('dual-rumble', {
+        duration: durationMs,
+        strongMagnitude: strength,
+        weakMagnitude: strength * 0.6,
+      });
+    } catch {
+      // 진동 미지원 패드에서는 조용히 넘어간다(게임 진행에는 영향 없음).
+    }
+  }
+
+  rumbleAll(strength = 0.6, durationMs = 120): void {
+    this.rumble(0, strength, durationMs);
+    this.rumble(1, strength, durationMs);
+  }
+
   // --- 내부 ---
 
   private readPads(): (Gamepad | null)[] {
@@ -264,6 +339,14 @@ export class InputManager {
   }
 
   private readonly onKeyDown = (event: KeyboardEvent): void => {
+    // 재지정 대기 중이면 이 키를 게임 동작으로 쓰지 않고 잡는다.
+    if (this.keyCapture) {
+      const capture = this.keyCapture;
+      this.keyCapture = null;
+      event.preventDefault();
+      capture(event.code);
+      return;
+    }
     if (event.code === DEBUG_TOGGLE_CODE) this.debugTogglePressed = true;
     if (PREVENT_DEFAULT_CODES.has(event.code)) event.preventDefault();
     // 자동 반복(꾹 누름)은 새 누름이 아니므로 보관하지 않는다.

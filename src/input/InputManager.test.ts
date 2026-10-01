@@ -128,3 +128,57 @@ describe('키보드 2인 확인 키 분리', () => {
     }
   });
 });
+
+describe('키 재지정 실제 반영 (프롬프트 6)', () => {
+  it('생성 시 넘긴 재지정을 바로 쓴다', () => {
+    const { win, dispatch } = createFakeWindow();
+    const input = new InputManager(win, { '1.light': ['KeyQ'] });
+
+    dispatch('keydown', 'KeyQ');
+    input.update();
+    expect(input.isPressed(0, 'light')).toBe(true);
+
+    // 기본 키(KeyF)는 더 이상 1P 약공격이 아니다.
+    dispatch('keyup', 'KeyQ');
+    input.update();
+    dispatch('keydown', 'KeyF');
+    input.update();
+    expect(input.isPressed(0, 'light')).toBe(false);
+  });
+
+  it('setKeyMapping으로 실행 중에도 바꿀 수 있다', () => {
+    const { win, dispatch } = createFakeWindow();
+    const input = new InputManager(win);
+
+    input.setKeyMapping({ '1.light': ['KeyQ'] });
+    expect(input.currentKeyMapping['1.light']).toEqual(['KeyQ']);
+
+    dispatch('keydown', 'KeyQ');
+    input.update();
+    expect(input.isPressed(0, 'light')).toBe(true);
+  });
+
+  it('키 입력 대기 중에는 그 키를 게임 동작으로 쓰지 않는다', () => {
+    const { win, dispatch } = createFakeWindow();
+    const input = new InputManager(win);
+
+    let captured: string | null = null;
+    input.captureNextKey((code) => {
+      captured = code;
+    });
+    expect(input.isCapturingKey).toBe(true);
+
+    dispatch('keydown', 'KeyF');
+    input.update();
+
+    expect(captured).toBe('KeyF');
+    expect(input.isCapturingKey).toBe(false);
+    expect(input.isPressed(0, 'light')).toBe(false);
+  });
+
+  it('패드가 없어도 진동 요청은 예외를 던지지 않는다', () => {
+    const { win } = createFakeWindow();
+    const input = new InputManager(win);
+    expect(() => input.rumbleAll()).not.toThrow();
+  });
+});

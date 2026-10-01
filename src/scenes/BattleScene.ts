@@ -3,9 +3,12 @@ import type { GameContext } from '../core/GameContext';
 import { getStage } from '../data';
 import { Match } from '../combat/Match';
 import type { Fighter } from '../combat/Fighter';
+import { EMOTION_COLORS, EMOTION_LABELS, emotionFor } from '../combat/emotion';
 import type { Rect } from '../combat/types';
+import { EffectSystem } from '../rendering/effects';
 import { renderFighter } from '../rendering/FighterRenderer';
 import type { CharacterAssets } from '../rendering/CharacterAssets';
+import { sfxIdForEvent } from '../audio/tracks';
 import { BaseScene } from './BaseScene';
 import { ResultScene } from './ResultScene';
 import { drawText, fillRoundRect } from '../ui/draw';
@@ -14,13 +17,23 @@ import { COLORS, FONTS } from '../ui/theme';
 const HUD_BAR_W = 700;
 const HUD_BAR_H = 42;
 
-/** 계획서 16절 프롬프트 2·3: 대전 화면. 전투 규칙은 Match, 보이는 모양은 FighterRenderer가 맡는다. */
+/** 화면 흔들림: 세기(px)와 지속 프레임. 약하게, 짧게. */
+const SHAKE_HEAVY = 9;
+const SHAKE_SPECIAL = 14;
+const SHAKE_FRAMES = 10;
+
+/** 계획서 16절 프롬프트 6: 대전 화면. 전투 규칙은 Match, 보이는 모양은 FighterRenderer·EffectSystem이 맡는다. */
 export class BattleScene extends BaseScene {
   readonly pausable = true;
 
   private match!: Match;
   private debugBoxes = false;
   private elapsed = 0;
+  private readonly effects = new EffectSystem();
+  private shakeFrames = 0;
+  private shakeStrength = 0;
+  private flashFrames = 0;
+  private prevPhase = '';
 
   constructor(private readonly characterAssets: [CharacterAssets, CharacterAssets] | null = null) {
     super();
@@ -30,34 +43,126 @@ export class BattleScene extends BaseScene {
     super.enter(context);
     const { session, settings } = context;
     this.elapsed = 0;
+    this.effects.clear();
+    this.shakeFrames = 0;
+    this.flashFrames = 0;
+    this.prevPhase = '';
     // 다시 하기를 눌러 새 경기를 시작할 때도 저장된 난이도·도움 설정을 그대로 다시 읽는다.
     const options = { difficulty: settings.difficulty, assist: settings.assist };
     this.match = this.characterAssets
       ? new Match(session.mode, session.characters, this.characterAssets, options)
       : new Match(session.mode, session.characters, undefined, options);
+    context.audio.playBgm('battle');
+  }
+
+  exit(): void {
+    this.context.audio.stopBgm();
   }
 
   protected tick(dt: number): void {
     const input = this.context.input;
+    const settings = this.context.settings.value;
+    const stage = getStage(this.context.session.stage);
     this.elapsed += dt;
 
     if (input.consumeDebugToggle()) this.debugBoxes = !this.debugBoxes;
 
     this.match.step(input, dt);
+    this.consumeMatchEvents(stage.groundY, settings.screenShake, settings.vibration);
+    this.spawnLandingDust(stage.groundY);
+    this.effects.update(dt);
+    if (this.shakeFrames > 0) this.shakeFrames -= 1;
+    if (this.flashFrames > 0) this.flashFrames -= 1;
 
-    if (this.match.phase === 'matchOver') {
-      this.context.setScene(new ResultScene(this.match.matchWinner, this.characterAssets));
+    // 라운드 시작 소리(준비 → 라운드 → 시작).
+    if (this.match.phase === 'intro' && this.prevPhase !== 'intro') {
+      this.context.audio.playSfx('countdown');
     }
+    if (this.match.phase === 'roundOver' && this.prevPhase === 'fight') {
+      this.onRoundFinished(stage.groundY);
+    }
+    if (this.match.phase === 'matchOver') {
+      this.context.audio.playBgm('victory');
+      this.context.setScene(new ResultScene(this.match.matchWinner, this.characterAssets));
+      return;
+    }
+    this.prevPhase = this.match.phase;
+  }
+
+  /** Match가 남긴 연출 이벤트를 먼지·별·충격파·소리·진동으로 바꾼다(피해와 무관). */
+  private consumeMatchEvents(groundY: number, screenShake: boolean, vibration: boolean): void {
+    for (const event of this.match.consumeEvents()) {
+      const y = groundY + event.y;
+      if (event.type === 'ko') {
+        this.effects.spawnStars(event.x, y, 7);
+        this.context.audio.playSfx('ko');
+        if (vibration) this.context.input.rumble(event.player, 0.9, 260);
+        continue;
+      }
+
+      this.effects.spawnHit(event.x, y, {
+        kind: event.kind,
+        guarded: event.type === 'guard',
+        direction: event.direction,
+      });
+      this.context.audio.playSfx(sfxIdForEvent(event));
+
+      if (vibration) {
+        const special = event.kind === 'special';
+        this.context.input.rumble(event.player, special ? 0.8 : 0.45, special ? 180 : 90);
+      }
+      if (screenShake && event.type === 'hit' && (event.kind === 'heavy' || event.kind === 'special')) {
+        this.triggerShake(event.kind === 'special' ? SHAKE_SPECIAL : SHAKE_HEAVY);
+      }
+      if (event.type === 'hit' && event.kind === 'special') this.flashFrames = 4;
+    }
+  }
+
+  private spawnLandingDust(groundY: number): void {
+    for (const fighter of this.match.fighters) {
+      if (!fighter.landedThisStep) continue;
+      fighter.landedThisStep = false;
+      this.effects.spawnDust(fighter.x, groundY, 5, 0.8);
+    }
+  }
+
+  private onRoundFinished(groundY: number): void {
+    const winner = this.match.roundWinner;
+    if (winner !== null) {
+      const fighter = this.match.fighters[winner];
+      this.effects.spawnStars(fighter.x, groundY + fighter.y - fighter.bodyHeight * 0.7, 5);
+      this.context.audio.playSfx('roar');
+    }
+  }
+
+  private triggerShake(strength: number): void {
+    this.shakeStrength = Math.max(this.shakeStrength, strength);
+    this.shakeFrames = SHAKE_FRAMES;
+  }
+
+  private shakeOffset(): { x: number; y: number } {
+    if (this.shakeFrames <= 0 || !this.context.settings.value.screenShake) return { x: 0, y: 0 };
+    const decay = this.shakeFrames / SHAKE_FRAMES;
+    const magnitude = this.shakeStrength * decay;
+    return {
+      x: Math.sin(this.elapsed * 82) * magnitude,
+      y: Math.cos(this.elapsed * 71) * magnitude * 0.6,
+    };
   }
 
   render(g: CanvasRenderingContext2D, width: number, height: number): void {
     const stage = getStage(this.context.session.stage);
+    const shake = this.shakeOffset();
+
+    // 흔들림은 무대·캐릭터·이펙트에만 적용하고 HUD는 고정한다.
+    g.save();
+    g.translate(shake.x, shake.y);
 
     g.fillStyle = stage.placeholderColor;
-    g.fillRect(0, 0, width, height);
+    g.fillRect(-40, -40, width + 80, height + 80);
 
     g.fillStyle = 'rgba(0, 0, 0, 0.28)';
-    g.fillRect(0, stage.groundY, width, height - stage.groundY);
+    g.fillRect(-40, stage.groundY, width + 80, height - stage.groundY + 40);
     g.strokeStyle = 'rgba(255, 255, 255, 0.25)';
     g.lineWidth = 4;
     g.beginPath();
@@ -69,11 +174,23 @@ export class BattleScene extends BaseScene {
       renderFighter(g, fighter, stage.groundY, this.elapsed);
     }
 
+    // 이펙트는 캐릭터 뒤가 아니라 앞에 그려 타격이 보이게 한다.
+    this.effects.render(g);
+
+    if (this.debugBoxes) {
+      this.renderDebugBoxes(g, stage.groundY);
+    }
+    g.restore();
+
+    if (this.flashFrames > 0) {
+      g.fillStyle = `rgba(255, 255, 255, ${this.flashFrames * 0.05})`;
+      g.fillRect(0, 0, width, height);
+    }
+
     this.renderHud(g, width);
     this.renderRoundText(g, width, height);
 
     if (this.debugBoxes) {
-      this.renderDebugBoxes(g, stage.groundY);
       drawText(g, 'F3: 판정 상자 표시', width / 2, height - 40, {
         font: FONTS.small,
         color: COLORS.textDim,
@@ -113,7 +230,58 @@ export class BattleScene extends BaseScene {
     drawText(g, '1P', 60, 256, { font: FONTS.small, color: COLORS.p1, align: 'left' });
     drawText(g, '2P', width - 60, 256, { font: FONTS.small, color: COLORS.p2, align: 'right' });
 
+    // 감정 3단계: 남은 체력 비율로 활기·보통·지침을 보여 준다(연출 전용).
+    this.renderEmotion(g, p1, 200, 256, false);
+    this.renderEmotion(g, p2, width - 200, 256, true);
+
     this.renderSettingsChip(g, width);
+  }
+
+  /** 감정 3단계 아이콘. 색과 표정만 바뀌고 전투 수치에는 영향이 없다. */
+  private renderEmotion(
+    g: CanvasRenderingContext2D,
+    fighter: Fighter,
+    x: number,
+    y: number,
+    right: boolean,
+  ): void {
+    const emotion = emotionFor(fighter.health / fighter.maxHealth);
+    const color = EMOTION_COLORS[emotion];
+
+    g.beginPath();
+    g.arc(x, y, 22, 0, Math.PI * 2);
+    g.fillStyle = 'rgba(8, 12, 16, 0.72)';
+    g.fill();
+    g.strokeStyle = color;
+    g.lineWidth = 3;
+    g.stroke();
+
+    // 눈 두 개.
+    g.fillStyle = color;
+    g.beginPath();
+    g.arc(x - 7, y - 5, 2.6, 0, Math.PI * 2);
+    g.arc(x + 7, y - 5, 2.6, 0, Math.PI * 2);
+    g.fill();
+
+    // 입 모양: 활기=웃음, 보통=일자, 지침=처짐.
+    g.strokeStyle = color;
+    g.lineWidth = 2.6;
+    g.beginPath();
+    if (emotion === 'energetic') {
+      g.arc(x, y + 3, 8, 0.15 * Math.PI, 0.85 * Math.PI);
+    } else if (emotion === 'tired') {
+      g.arc(x, y + 13, 8, 1.15 * Math.PI, 1.85 * Math.PI);
+    } else {
+      g.moveTo(x - 8, y + 7);
+      g.lineTo(x + 8, y + 7);
+    }
+    g.stroke();
+
+    drawText(g, EMOTION_LABELS[emotion], right ? x - 34 : x + 34, y, {
+      font: FONTS.tiny,
+      color,
+      align: right ? 'right' : 'left',
+    });
   }
 
   /**
@@ -178,8 +346,15 @@ export class BattleScene extends BaseScene {
     const { phase, phaseFrames } = this.match;
 
     if (phase === 'intro') {
-      const label = phaseFrames < 60 ? `라운드 ${this.match.roundNumber}` : '시작!';
-      drawText(g, label, width / 2, height / 2 - 120, { font: FONTS.title, color: COLORS.accent });
+      // 준비 → 라운드 → 시작! 3단계 연출.
+      const label =
+        phaseFrames < 30 ? '준비' : phaseFrames < 60 ? `라운드 ${this.match.roundNumber}` : '시작!';
+      const pop = 1 + Math.max(0, 0.25 - Math.abs(phaseFrames % 30) * 0.008);
+      g.save();
+      g.translate(width / 2, height / 2 - 120);
+      g.scale(pop, pop);
+      drawText(g, label, 0, 0, { font: FONTS.title, color: COLORS.accent });
+      g.restore();
       return;
     }
 

@@ -1,8 +1,17 @@
 import type { Action } from './actions';
+import type { PlayerIndex } from './InputManager';
 
 export type ActionBinding<T> = Partial<Record<Action, T>>;
 
 export type KeyboardBinding = Record<Action, readonly string[]>;
+
+/** 키 재지정 저장 형식. 키는 `bindingKeyFor(player, action)`(예: "1.light"). */
+export type KeyMapping = Record<string, readonly string[]>;
+
+/** 설정에 저장하는 키 재지정 키(플레이어 1 기준 번호 + 동작). */
+export function bindingKeyFor(player: PlayerIndex, action: Action): string {
+  return `${player + 1}.${action}`;
+}
 
 /**
  * 계획서 1절 "권장 버튼 배치"의 키보드 열.
@@ -41,6 +50,58 @@ export const KEYBOARD_BINDINGS: readonly [KeyboardBinding, KeyboardBinding] = [
     pause: ['ControlRight'],
   },
 ];
+
+/** 설정 화면에서 보여 주는 동작 이름. */
+export const ACTION_LABELS: Record<Action, string> = {
+  left: '왼쪽',
+  right: '오른쪽',
+  up: '위(점프)',
+  down: '아래(웅크리기)',
+  light: '약공격',
+  heavy: '강공격',
+  special: '특수기',
+  confirm: '확인',
+  cancel: '뒤로',
+  pause: '일시정지',
+};
+
+/**
+ * 기본 키보드 매핑에 사용자 재지정(설정)을 덮어써 실제 사용할 매핑을 만든다.
+ * 재지정이 없는 동작은 기본값을 그대로 쓴다.
+ */
+export function buildKeyboardBindings(
+  mapping: KeyMapping | undefined,
+): readonly [KeyboardBinding, KeyboardBinding] {
+  return [0, 1].map((player) => {
+    const base = KEYBOARD_BINDINGS[player];
+    const result = {} as Record<Action, readonly string[]>;
+    for (const action of Object.keys(base) as Action[]) {
+      const override = mapping?.[bindingKeyFor(player as PlayerIndex, action)];
+      result[action] = override && override.length > 0 ? [...override] : base[action];
+    }
+    return result;
+  }) as unknown as readonly [KeyboardBinding, KeyboardBinding];
+}
+
+/** 화면에 보여 줄 키 이름(예: KeyF → F, ShiftRight → 오른쪽 Shift). */
+export function keyCodeLabel(code: string): string {
+  const special: Record<string, string> = {
+    ShiftRight: '오른쪽 Shift',
+    ControlRight: '오른쪽 Ctrl',
+    NumpadEnter: 'Num Enter',
+    Escape: 'Esc',
+    ArrowLeft: '←',
+    ArrowRight: '→',
+    ArrowUp: '↑',
+    ArrowDown: '↓',
+    Space: 'Space',
+  };
+  if (special[code]) return special[code];
+  if (code.startsWith('Key')) return code.slice(3);
+  if (code.startsWith('Digit')) return code.slice(5);
+  if (code.startsWith('Numpad')) return `Num ${code.slice(6)}`;
+  return code;
+}
 
 /**
  * 표준 게임패드 매핑(W3C)의 버튼 index. 계획서 1절 "패드 기준" 열.

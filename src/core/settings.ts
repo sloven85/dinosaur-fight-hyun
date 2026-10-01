@@ -15,7 +15,12 @@ export interface GameSettings {
   volume: number;
   screenShake: boolean;
   vibration: boolean;
-  /** 키 재지정. 비어 있으면 bindings.ts의 기본 매핑을 쓴다. */
+  /** 계획서 2절 어른용 설정: 전체화면. 실패해도 창 모드로 계속한다. */
+  fullscreen: boolean;
+  /**
+   * 키 재지정. 키는 `bindings.ts`의 bindingKeyFor(player, action)`(예: "1.light")를 쓴다.
+   * 비어 있으면 기본 매핑을 쓴다.
+   */
   keyMapping: Record<string, string[]>;
 }
 
@@ -30,6 +35,7 @@ export const DEFAULT_SETTINGS: GameSettings = {
   volume: 0.8,
   screenShake: true,
   vibration: true,
+  fullscreen: false,
   keyMapping: {},
 };
 
@@ -75,6 +81,8 @@ export function sanitizeSettings(raw: unknown): GameSettings {
     screenShake:
       typeof value.screenShake === 'boolean' ? value.screenShake : DEFAULT_SETTINGS.screenShake,
     vibration: typeof value.vibration === 'boolean' ? value.vibration : DEFAULT_SETTINGS.vibration,
+    fullscreen:
+      typeof value.fullscreen === 'boolean' ? value.fullscreen : DEFAULT_SETTINGS.fullscreen,
     keyMapping: sanitizeKeyMapping(value.keyMapping),
   };
 }
@@ -128,6 +136,23 @@ export class SettingsStore {
   cycleDifficulty(): CpuDifficulty {
     const next: CpuDifficulty = this.data.cpuDifficulty === 'easy' ? 'normal' : 'easy';
     return this.update({ cpuDifficulty: next }).cpuDifficulty;
+  }
+
+  /** 한 키(예: "1.light")의 매핑을 새 코드 목록으로 바꾼다. */
+  setKeyMapping(key: string, codes: readonly string[]): GameSettings {
+    return this.update({ keyMapping: { ...this.data.keyMapping, [key]: [...codes] } });
+  }
+
+  /** 한 키의 재지정을 지워 기본 매핑으로 되돌린다. */
+  clearKeyMapping(key: string): GameSettings {
+    const next = { ...this.data.keyMapping };
+    delete next[key];
+    return this.update({ keyMapping: next });
+  }
+
+  /** 모든 키 재지정을 지운다. */
+  resetKeyMapping(): GameSettings {
+    return this.update({ keyMapping: {} });
   }
 
   private load(): GameSettings {

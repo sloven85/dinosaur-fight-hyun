@@ -114,6 +114,7 @@ export class CharacterSelectScene extends BaseScene {
     g.fillRect(0, 0, width, height);
 
     drawText(g, '공룡을 고르세요', width / 2, 110, { font: FONTS.heading, color: COLORS.text });
+    this.renderSettingsHint(g, width);
 
     const gridW = COLS * CELL_W + (COLS - 1) * GAP_X;
     const x0 = (width - gridW) / 2;
@@ -195,6 +196,14 @@ export class CharacterSelectScene extends BaseScene {
         align: 'left',
       });
     }
+  }
+
+  /** 음량·흔들림·진동·키 재지정은 제목 화면의 어른 설정에서 바꾼다(프롬프트 6). */
+  private renderSettingsHint(g: CanvasRenderingContext2D, width: number): void {
+    drawText(g, '음량·화면 흔들림·진동·키 재지정은 제목 화면의 "어른 설정"에서 바꿉니다', width / 2, 60, {
+      font: FONTS.tiny,
+      color: COLORS.textDim,
+    });
   }
 
   private renderCard(g: CanvasRenderingContext2D, x: number, y: number, character: CharacterData): void {

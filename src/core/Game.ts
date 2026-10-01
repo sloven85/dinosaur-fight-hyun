@@ -1,6 +1,7 @@
 import { DESIGN_HEIGHT, DESIGN_WIDTH, FIXED_DT, MAX_FRAME_DELTA } from './constants';
 import { createSession } from './session';
 import { createSettings, type SettingsStore } from './settings';
+import { AudioManager } from '../audio/AudioManager';
 import { InputManager } from '../input/InputManager';
 import { AssetLoader } from '../rendering/AssetLoader';
 import { SceneManager } from '../scenes/SceneManager';
@@ -16,6 +17,7 @@ export class Game {
   private readonly ctx: CanvasRenderingContext2D;
   private readonly input: InputManager;
   private readonly assets: AssetLoader;
+  private readonly audio: AudioManager;
   private readonly settings: SettingsStore;
   private readonly scenes: SceneManager;
   private running = false;
@@ -31,12 +33,27 @@ export class Game {
     canvas.width = DESIGN_WIDTH;
     canvas.height = DESIGN_HEIGHT;
 
-    this.input = new InputManager();
-    this.assets = new AssetLoader();
     // 저장된 설정이 없거나 저장소를 못 쓰면 기본값으로 시작한다.
+    // 키 재지정을 InputManager 생성 시점에 반영해야 첫 화면부터 적용된다.
     this.settings = createSettings();
-    this.scenes = new SceneManager(this.input, createSession(), this.assets, this.settings);
+    this.input = new InputManager(window, this.settings.value.keyMapping);
+    this.assets = new AssetLoader();
+    this.audio = new AudioManager(this.assets.resolve(''));
+    this.audio.setVolume(this.settings.value.volume);
+    this.audio.preload();
+    this.installAudioUnlock();
+    this.scenes = new SceneManager(this.input, createSession(), this.assets, this.settings, this.audio);
     this.scenes.change(new TitleScene());
+  }
+
+  /**
+   * 계획서 2절: 소리는 사용자의 클릭·키 입력 뒤에만 시작할 수 있다.
+   * 첫 입력에서 자동으로 잠금을 풀고, 그래도 막히면 화면이 "소리 켜기" 버튼을 보여 준다.
+   */
+  private installAudioUnlock(): void {
+    const unlock = (): void => this.audio.unlock();
+    window.addEventListener('pointerdown', unlock, { once: true });
+    window.addEventListener('keydown', unlock, { once: true });
   }
 
   start(): void {

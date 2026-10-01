@@ -1,3 +1,4 @@
+import type { AudioManager } from '../audio/AudioManager';
 import type { InputManager } from '../input/InputManager';
 import type { AssetLoader } from '../rendering/AssetLoader';
 import type { Scene } from '../scenes/Scene';
@@ -9,6 +10,8 @@ export interface GameContext {
   readonly input: InputManager;
   readonly session: Session;
   readonly assets: AssetLoader;
+  /** 계획서 13절 사운드. 음원이 없으면 무음으로 동작한다. */
+  readonly audio: AudioManager;
   /** 계획서 2절 어른용 설정(난이도·도움 설정·저장). */
   readonly settings: SettingsStore;
   setScene(scene: Scene): void;

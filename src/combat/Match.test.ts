@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { FIXED_DT, ROUND_INTRO_FRAMES, ROUND_SECONDS, SIMULATION_HZ } from '../core/constants';
-import { Match } from './Match';
+import { Match, type MatchEvent } from './Match';
 import { ScriptInput } from './ScriptInput';
 
 /** 인트로를 건너뛰고 대전이 시작된 상태로 만든다. */
@@ -205,5 +205,93 @@ describe('1인 대전 CPU와 도움 설정 (프롬프트 5)', () => {
 
     expect(match.phase).toBe('roundOver');
     expect(match.roundWinner).toBeNull();
+  });
+});
+
+/** 공격을 내지르며 이벤트를 모은다. */
+function attackUntilEvent(match: Match, input: ScriptInput, frames: number): MatchEvent[] {
+  const events: MatchEvent[] = [];
+  for (let i = 0; i < frames; i++) {
+    match.step(input, FIXED_DT);
+    input.clearPressed();
+    events.push(...match.consumeEvents());
+    if (events.length > 0) break;
+  }
+  return events;
+}
+
+describe('연출 이벤트 (프롬프트 6)', () => {
+  it('명중하면 공격 종류가 담긴 hit 이벤트를 남기고 한 번만 소비된다', () => {
+    const match = new Match('versus', ['tyrannosaurus', 'triceratops']);
+    fighting(match);
+    match.consumeEvents();
+    placeClose(match);
+
+    const input = new ScriptInput();
+    input.press(0, 'light');
+    const events = attackUntilEvent(match, input, 30);
+
+    const hit = events.find((event) => event.type === 'hit');
+    expect(hit).toBeDefined();
+    expect(hit?.kind).toBe('light');
+    expect(hit?.player).toBe(1);
+    expect(match.consumeEvents()).toEqual([]);
+  });
+
+  it('가드된 공격은 guard 이벤트로 구분된다', () => {
+    const match = new Match('versus', ['tyrannosaurus', 'triceratops']);
+    fighting(match);
+    match.consumeEvents();
+    placeClose(match);
+
+    const input = new ScriptInput();
+    input.hold(1, 'right'); // 2P가 바깥(오른쪽)을 눌러 자동 가드
+    input.press(0, 'light');
+    const events = attackUntilEvent(match, input, 30);
+
+    expect(events.some((event) => event.type === 'guard')).toBe(true);
+  });
+
+  it('특수기는 kind가 special인 이벤트를 남긴다', () => {
+    const match = new Match('versus', ['tyrannosaurus', 'triceratops']);
+    fighting(match);
+    match.consumeEvents();
+    placeClose(match);
+    match.p1.meter = 100;
+
+    const input = new ScriptInput();
+    input.press(0, 'special');
+    const events = attackUntilEvent(match, input, 60);
+
+    const hit = events.find((event) => event.type === 'hit');
+    expect(hit?.kind).toBe('special');
+  });
+
+  it('KO되면 별 연출용 ko 이벤트를 남긴다', () => {
+    const match = new Match('versus', ['tyrannosaurus', 'triceratops']);
+    fighting(match);
+    match.consumeEvents();
+
+    match.p2.health = 0;
+    match.step(new ScriptInput(), FIXED_DT);
+
+    const events = match.consumeEvents();
+    expect(match.phase).toBe('roundOver');
+    expect(events.some((event) => event.type === 'ko' && event.player === 1)).toBe(true);
+  });
+
+  it('강공격은 양측에 타격 정지 프레임을 남긴다', () => {
+    const match = new Match('versus', ['tyrannosaurus', 'triceratops']);
+    fighting(match);
+    match.consumeEvents();
+    placeClose(match);
+
+    const input = new ScriptInput();
+    input.press(0, 'heavy');
+    const events = attackUntilEvent(match, input, 40);
+
+    expect(events.some((event) => event.type === 'hit')).toBe(true);
+    expect(match.p1.hitstopFrames).toBeGreaterThan(0);
+    expect(match.p2.hitstopFrames).toBeGreaterThan(0);
   });
 });
