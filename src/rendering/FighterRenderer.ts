@@ -436,6 +436,7 @@ function isAirborneHit(fighter: Fighter): boolean {
 }
 
 function poseForState(fighter: Fighter): PoseName | null {
+  if (fighter.entrancePose && hasPose(fighter, 'entrance')) return 'entrance';
   if (fighter.guardStance && hasPose(fighter, 'guard')) return 'guard';
   if (isAirborneHit(fighter)) return hasPose(fighter, 'airborne') ? 'airborne' : 'hit';
   switch (fighter.state) {

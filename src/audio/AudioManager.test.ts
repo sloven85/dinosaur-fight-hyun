@@ -1,6 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import { AudioManager, type AudioElementLike } from './AudioManager';
-import { AUDIO_TRACKS } from './tracks';
+import { AUDIO_TRACKS, trackById } from './tracks';
+
+/** 트랙 id가 쓰는 요소(같은 파일을 여러 id가 같이 쓴다). */
+function elementFor(created: FakeAudio[], id: string): FakeAudio {
+  const path = trackById(id)?.path ?? '';
+  const found = created.find((e) => e.src.endsWith(path));
+  if (!found) throw new Error(`no element for ${id}`);
+  return found;
+}
 
 class FakeAudio implements AudioElementLike {
   src: string;
@@ -64,7 +72,8 @@ describe('사운드 매니저 (프롬프트 6)', () => {
     const audio = new AudioManager('./', factory);
     audio.preload();
 
-    expect(created).toHaveLength(AUDIO_TRACKS.length);
+    // 파일마다 요소 하나(같은 파일을 쓰는 id끼리는 같이 쓴다).
+    expect(created).toHaveLength(new Set(AUDIO_TRACKS.map((t) => t.path)).size);
     audio.unlock();
     // 아직 loadeddata가 없으므로 무음 상태다.
     expect(audio.status).toBe('silent');
@@ -79,11 +88,11 @@ describe('사운드 매니저 (프롬프트 6)', () => {
     audio.setVolume(0.4);
     audio.unlock();
 
-    const light = created[AUDIO_TRACKS.findIndex((track) => track.id === 'light')];
+    const light = elementFor(created, 'light');
     light.emit('loadeddata');
 
     expect(audio.status).toBe('ready');
-    expect(audio.readySourceCount).toBe(1);
+    expect(audio.readySourceCount).toBeGreaterThanOrEqual(1);
     audio.playSfx('light');
     expect(light.playCalls).toBe(1);
     expect(light.volume).toBeCloseTo(0.4, 5);
@@ -96,7 +105,7 @@ describe('사운드 매니저 (프롬프트 6)', () => {
     audio.preload();
     audio.unlock();
 
-    const light = created[AUDIO_TRACKS.findIndex((track) => track.id === 'light')];
+    const light = elementFor(created, 'light');
     light.emit('canplaythrough');
     light.playResult = Promise.reject(new Error('자동재생 차단'));
     audio.playSfx('light');
@@ -112,7 +121,7 @@ describe('사운드 매니저 (프롬프트 6)', () => {
     const audio = new AudioManager('./', factory);
     audio.preload();
 
-    const battle = created[AUDIO_TRACKS.findIndex((track) => track.id === 'battle')];
+    const battle = elementFor(created, 'battle');
     battle.emit('loadeddata');
 
     audio.playBgm('battle'); // 아직 잠김 → 예약만
@@ -124,11 +133,11 @@ describe('사운드 매니저 (프롬프트 6)', () => {
   });
   it('실제로 있는 음원 목록이 주어지면 목록 밖 트랙은 요청하지 않는다(404 방지)', () => {
     const { created, factory } = collectFactory();
-    const audio = new AudioManager('./', factory, new Set(['assets/audio/sfx/ko.mp3']));
+    const audio = new AudioManager('./', factory, new Set(['assets/audio/sfx/ko_bell.mp3']));
     audio.preload();
 
     expect(created).toHaveLength(1);
-    expect(created[0].src).toBe('./assets/audio/sfx/ko.mp3');
+    expect(created[0].src).toBe('./assets/audio/sfx/ko_bell.mp3');
     audio.unlock();
     expect(audio.status).toBe('silent');
     expect(() => audio.playSfx('light')).not.toThrow();

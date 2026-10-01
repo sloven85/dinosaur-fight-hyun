@@ -1,4 +1,4 @@
-import { MAX_METER, ROUNDS_TO_WIN } from '../core/constants';
+import { MAX_METER, ROUNDS_TO_WIN, ROUND_INTRO_FRAMES } from '../core/constants';
 import type { GameContext } from '../core/GameContext';
 import { getStage } from '../data';
 import { Match, SPECIAL_CUTIN_FRAMES, type Projectile } from '../combat/Match';
@@ -9,7 +9,7 @@ import { EffectSystem } from '../rendering/effects';
 import { renderFighter, setOverlayLoader } from '../rendering/FighterRenderer';
 import { renderStage, setStageLoader } from '../rendering/stageRenderer';
 import type { CharacterAssets } from '../rendering/CharacterAssets';
-import { sfxIdForEvent } from '../audio/tracks';
+import { SPECIES_VOICE, bgmForStage, sfxIdForEvent } from '../audio/tracks';
 import { BaseScene } from './BaseScene';
 import { ResultScene } from './ResultScene';
 import { drawText, fillRoundRect } from '../ui/draw';
@@ -26,6 +26,12 @@ const SHAKE_FRAMES = 10;
 const FINISH_FREEZE_FRAMES = 9;
 const FINISH_ZOOM_FRAMES = 24;
 const FINISH_ZOOM = 1.12;
+/** KO 슬로모션 길이(60fps 기준 1초). */
+const KO_SLOW_FRAMES = 60;
+const ROUND_INTRO_TOTAL = ROUND_INTRO_FRAMES;
+const LOGO_ROUND = 'assets/ui/logo_round.png';
+const LOGO_FIGHT = 'assets/ui/logo_fight.png';
+const LOGO_KO = 'assets/ui/logo_ko.png';
 
 /** 계획서 16절 프롬프트 6: 대전 화면. 전투 규칙은 Match, 보이는 모양은 FighterRenderer·EffectSystem이 맡는다. */
 export class BattleScene extends BaseScene {
@@ -44,6 +50,13 @@ export class BattleScene extends BaseScene {
   private cutinPlayer = 0;
   /** 마무리 확대·멈춤: 남은 프레임과 확대 중심. */
   private finishFrames = 0;
+  /** KO 슬로모션 남은 프레임, KO 로고 시작 시각. */
+  private koFrames = 0;
+  private koTick = 0;
+  private koLogoAt = -1;
+  /** 라운드 시작 아나운서를 이번 라운드에 냈는지. */
+  private announcedRound = 0;
+  private announcedFight = 0;
   private finishX = 960;
   private finishY = 600;
 
@@ -65,9 +78,16 @@ export class BattleScene extends BaseScene {
     this.match = this.characterAssets
       ? new Match(session.mode, session.characters, this.characterAssets, options)
       : new Match(session.mode, session.characters, undefined, options);
-    context.audio.playBgm('battle');
+    // 경기장별 배경음(아티스트 사운드 팩 v1).
+    context.audio.playBgm(bgmForStage(session.stage));
+    this.cuePrev = [];
     setOverlayLoader(context.assets);
     setStageLoader(context.assets);
+    void context.assets.loadImages([LOGO_ROUND, LOGO_FIGHT, LOGO_KO]);
+    this.koFrames = 0;
+    this.koLogoAt = -1;
+    this.announcedRound = 0;
+    this.announcedFight = 0;
   }
 
   exit(): void {
@@ -89,7 +109,21 @@ export class BattleScene extends BaseScene {
     }
     if (this.finishFrames > 0) this.finishFrames -= 1;
 
+    // KO 슬로모션: 1초 동안 경기를 2틱에 1번만 진행한다(화면 연출은 그대로 돈다).
+    this.koTick += 1;
+    if (this.koFrames > 0) {
+      this.koFrames -= 1;
+      if (this.koTick % 2 === 0) {
+        this.effects.update(dt);
+        return;
+      }
+    }
+
     this.match.step(input, dt);
+    // 개발 서버 전용: ?devko=1이면 2P 체력을 1로(KO 연출 확인용). 배포 빌드에는 들어가지 않는다.
+    if (import.meta.env.DEV && typeof location !== 'undefined' && location.search.includes('devko=1') && this.match.phase === 'fight') {
+      this.match.p2.health = Math.min(this.match.p2.health, 1);
+    }
     this.consumeMatchEvents(stage.groundY, settings.screenShake, settings.vibration);
     this.spawnLandingDust(stage.groundY);
     this.effects.update(dt);
@@ -97,8 +131,18 @@ export class BattleScene extends BaseScene {
     if (this.flashFrames > 0) this.flashFrames -= 1;
 
     // 라운드 시작 소리(준비 → 라운드 → 시작).
-    if (this.match.phase === 'intro' && this.prevPhase !== 'intro') {
-      this.context.audio.playSfx('countdown');
+    // 라운드 시작: 휘슬 + 아나운서 'ROUND 1' → 'FIGHT!'.
+    if (this.match.phase === 'intro') {
+      const n = this.match.roundNumber;
+      if (this.announcedRound !== n && this.match.phaseFrames >= 4) {
+        this.announcedRound = n;
+        this.context.audio.playSfx('countdown');
+        this.context.audio.playSfx('ann_round1');
+      }
+      if (this.announcedFight !== n && this.match.phaseFrames >= 55) {
+        this.announcedFight = n;
+        this.context.audio.playSfx('ann_fight');
+      }
     }
     if (this.match.phase === 'roundOver' && this.prevPhase === 'fight') {
       this.onRoundFinished(stage.groundY);
@@ -108,6 +152,7 @@ export class BattleScene extends BaseScene {
       this.context.setScene(new ResultScene(this.match.matchWinner, this.characterAssets));
       return;
     }
+    this.playFighterCues();
     this.prevPhase = this.match.phase;
   }
 
@@ -144,6 +189,9 @@ export class BattleScene extends BaseScene {
         this.finishY = y;
         this.effects.spawnStars(event.x, y, 7);
         this.context.audio.playSfx('ko');
+        this.context.audio.playSfx('ann_ko');
+        this.koFrames = KO_SLOW_FRAMES;
+        this.koLogoAt = this.elapsed;
         if (vibration) this.context.input.rumble(event.player, 0.9, 260);
         continue;
       }
@@ -151,7 +199,8 @@ export class BattleScene extends BaseScene {
       if (event.type === 'special') {
         this.cutinTotal = SPECIAL_CUTIN_FRAMES;
         this.cutinPlayer = event.player;
-        this.context.audio.playSfx('roar');
+        this.context.audio.playSfx('super_flash');
+        this.context.audio.playSfx(SPECIES_VOICE[event.attackerId ?? ''] ?? 'roar');
         continue;
       }
 
@@ -172,6 +221,32 @@ export class BattleScene extends BaseScene {
       }
       if (event.type === 'hit' && event.kind === 'special') this.flashFrames = 4;
     }
+  }
+
+  /** 직전 틱 상태(효과음 신호용). */
+  private cuePrev: { state: string; onGround: boolean; dash: number; holding: boolean; attackId: number; hit: boolean }[] = [];
+
+  /**
+   * 몸 상태 변화로 효과음을 낸다(점프·착지·대시·다운·기상·잡기·헛방). 전투 규칙과 무관한 연출.
+   * 헛방: 기술이 끝났는데 아무것도 맞히지 못했을 때.
+   */
+  private playFighterCues(): void {
+    const audio = this.context.audio;
+    this.match.fighters.forEach((f, i) => {
+      const prev = this.cuePrev[i];
+      const attackId = f.attack?.attackId ?? 0;
+      const hit = !!f.attack && (f.attack.hitTargets.size > 0 || (f.attack.script?.landed.size ?? 0) > 0 || !!f.holding);
+      if (prev) {
+        if (prev.onGround && !f.onGround && f.state === 'jump') audio.playSfx('jump');
+        if (!prev.onGround && f.onGround && prev.state === 'jump') audio.playSfx('land');
+        if (prev.dash === 0 && f.dashFrames > 0) audio.playSfx('dash');
+        if (prev.state !== 'fallen' && f.state === 'fallen') audio.playSfx('knockdown');
+        if (prev.state === 'fallen' && f.state !== 'fallen' && f.state !== 'down') audio.playSfx('getup');
+        if (!prev.holding && f.holding) audio.playSfx('throw_grab');
+        if (prev.attackId !== 0 && prev.attackId !== attackId && !prev.hit) audio.playSfx('whiff');
+      }
+      this.cuePrev[i] = { state: f.state, onGround: f.onGround, dash: f.dashFrames, holding: !!f.holding, attackId, hit };
+    });
   }
 
   private spawnLandingDust(groundY: number): void {
@@ -471,14 +546,58 @@ export class BattleScene extends BaseScene {
     const { phase, phaseFrames } = this.match;
 
     if (phase === 'intro') {
-      // 준비 → 라운드 → 시작! 3단계 연출.
-      const label =
-        phaseFrames < 30 ? '준비' : phaseFrames < 60 ? `라운드 ${this.match.roundNumber}` : '시작!';
-      const pop = 1 + Math.max(0, 0.25 - Math.abs(phaseFrames % 30) * 0.008);
+      // ROUND N(0~54틱) → FIGHT!(55틱~). 아티스트 로고가 있으면 로고, 없으면 글자.
+      const fight = phaseFrames >= 55;
+      const local = fight ? phaseFrames - 55 : phaseFrames;
+      const pop = local < 8 ? 1.6 - (local / 8) * 0.6 : 1 + Math.sin(local * 0.25) * 0.02;
+      const alpha = fight ? Math.min(1, (ROUND_INTRO_TOTAL - phaseFrames) / 8 + 0.2) : 1;
+      const logo = this.context.assets.image(fight ? LOGO_FIGHT : LOGO_ROUND);
       g.save();
+      g.globalAlpha = Math.max(0, Math.min(1, alpha));
       g.translate(width / 2, height / 2 - 120);
       g.scale(pop, pop);
-      drawText(g, label, 0, 0, { font: FONTS.title, color: COLORS.accent });
+      if (logo) {
+        const w = fight ? 760 : 820;
+        const h = (logo.height / logo.width) * w;
+        if (fight || this.match.roundNumber === 1) {
+          g.drawImage(logo, -w / 2, -h / 2, w, h);
+        } else {
+          // 2라운드부터: 로고의 'ROUND' 부분(왼쪽 79%)만 쓰고 숫자는 같은 느낌(흰 글자·주황 테두리)으로 그린다.
+          const cut = 0.79;
+          g.drawImage(logo, 0, 0, logo.width * cut, logo.height, -w / 2, -h / 2, w * cut, h);
+          g.font = `bold ${Math.round(h * 0.72)}px "Noto Sans KR", system-ui, sans-serif`;
+          g.textAlign = 'center';
+          g.textBaseline = 'middle';
+          g.lineJoin = 'round';
+          g.lineWidth = h * 0.12;
+          g.strokeStyle = '#e8781c';
+          const nx = -w / 2 + w * (cut + 0.1);
+          g.strokeText(`${this.match.roundNumber}`, nx, h * 0.04);
+          g.fillStyle = '#fffaf0';
+          g.fillText(`${this.match.roundNumber}`, nx, h * 0.04);
+        }
+      } else {
+        drawText(g, fight ? '시작!' : `라운드 ${this.match.roundNumber}`, 0, 0, { font: FONTS.title, color: COLORS.accent });
+      }
+      g.restore();
+      return;
+    }
+
+    if (this.koLogoAt >= 0 && this.elapsed - this.koLogoAt < 1.6) {
+      // K.O. 로고: 쾅 커졌다가 흔들리며 자리 잡는다.
+      const t = this.elapsed - this.koLogoAt;
+      const logo = this.context.assets.image(LOGO_KO);
+      const pop = t < 0.12 ? 2.2 - (t / 0.12) * 1.2 : 1 + Math.sin(t * 30) * Math.max(0, 0.06 - t * 0.05);
+      g.save();
+      g.globalAlpha = Math.min(1, (1.6 - t) / 0.3);
+      g.translate(width / 2, height / 2 - 80);
+      g.scale(pop, pop);
+      if (logo) {
+        const w = 640;
+        g.drawImage(logo, -w / 2, -((logo.height / logo.width) * w) / 2, w, (logo.height / logo.width) * w);
+      } else {
+        drawText(g, 'K.O.', 0, 0, { font: FONTS.title, color: '#ff4d3d' });
+      }
       g.restore();
       return;
     }

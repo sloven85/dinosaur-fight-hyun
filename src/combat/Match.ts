@@ -209,7 +209,10 @@ export class Match {
 
     switch (this.phase) {
       case 'intro':
+        // 등장 포즈: ROUND 로고 동안(첫 라운드만). FIGHT!부터는 기본 자세.
+        for (const f of this.fighters) f.entrancePose = this.roundNumber === 1 && this.phaseFrames < 55;
         if (this.phaseFrames >= ROUND_INTRO_FRAMES) {
+          for (const f of this.fighters) f.entrancePose = false;
           this.phase = 'fight';
           this.phaseFrames = 0;
         }

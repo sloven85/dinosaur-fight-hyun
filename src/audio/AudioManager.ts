@@ -34,6 +34,9 @@ function defaultFactory(src: string): AudioElementLike | null {
   }
 }
 
+/** 효과음 하나당 동시에 울릴 수 있는 수. */
+const SFX_VOICES = 3;
+
 export class AudioManager {
   private readonly elements = new Map<string, AudioElementLike>();
   private readonly readyIds = new Set<string>();
@@ -52,15 +55,27 @@ export class AudioManager {
 
   /** 음원 목록을 미리 만들어 둔다(실패한 항목은 무음으로 남는다). */
   preload(): void {
+    const byPath = new Map<string, { element: AudioElementLike; ids: string[] }>();
     for (const track of AUDIO_TRACKS) {
       if (this.elements.has(track.id)) continue;
       if (this.availablePaths && !this.availablePaths.has(track.path)) continue;
+      // 같은 파일을 여러 이름(예: ko·ko_bell)이 쓰면 요소 하나를 같이 쓴다.
+      const shared = byPath.get(track.path);
+      if (shared && (trackById(shared.ids[0])?.kind ?? 'sfx') === track.kind) {
+        shared.ids.push(track.id);
+        this.elements.set(track.id, shared.element);
+        continue;
+      }
       const element = this.factory(this.resolve(track.path));
       if (!element) continue;
       element.preload = 'auto';
       element.loop = track.kind === 'bgm';
       element.volume = this.volumeValue;
-      const markReady = () => this.readyIds.add(track.id);
+      const entry = { element, ids: [track.id] };
+      byPath.set(track.path, entry);
+      const markReady = () => {
+        for (const id of entry.ids) this.readyIds.add(id);
+      };
       try {
         element.addEventListener?.('canplaythrough', markReady);
         element.addEventListener?.('loadeddata', markReady);
@@ -110,10 +125,34 @@ export class AudioManager {
     for (const element of this.elements.values()) element.volume = this.volumeValue;
   }
 
+  /** 같은 효과음이 겹쳐 울릴 수 있게 효과음마다 복제본을 몇 개 돌려 쓴다(연타 때 앞소리가 끊기지 않게). */
+  private readonly sfxPool = new Map<string, { list: AudioElementLike[]; next: number }>();
+
+  private sfxElement(id: string, base: AudioElementLike): AudioElementLike {
+    let pool = this.sfxPool.get(id);
+    if (!pool) {
+      pool = { list: [base], next: 0 };
+      const track = trackById(id);
+      for (let i = 0; i < SFX_VOICES - 1 && track; i++) {
+        const extra = this.factory(this.resolve(track.path));
+        if (!extra) break;
+        extra.preload = 'auto';
+        extra.volume = this.volumeValue;
+        pool.list.push(extra);
+      }
+      this.sfxPool.set(id, pool);
+    }
+    const element = pool.list[pool.next % pool.list.length];
+    pool.next += 1;
+    return element;
+  }
+
   playSfx(id: string): void {
     if (!this.unlocked) return;
-    const element = this.elements.get(id);
-    if (!element || !this.readyIds.has(id)) return;
+    const base = this.elements.get(id);
+    if (!base || !this.readyIds.has(id)) return;
+    const element = this.sfxElement(id, base);
+    element.volume = this.volumeValue;
     try {
       element.currentTime = 0;
       void Promise.resolve(element.play()).catch(() => {

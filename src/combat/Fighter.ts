@@ -316,6 +316,9 @@ export class Fighter {
     return level === 'high' ? stance === 'stand' : stance === 'crouch';
   }
 
+  /** 라운드 시작 등장 자세를 보여 줄지(Match가 intro 앞부분에만 켠다, 연출 전용). */
+  entrancePose = false;
+
   /** 도움 설정: 높이와 상관없이 막는다(Match가 1P에만 켠다). */
   guardAll = false;
   /** 막은 순간의 자세(반동 동안 유지). */
