@@ -20,6 +20,7 @@ import { getCharacter, getMove, type CharacterData } from '../data';
 import type { Action } from '../input/actions';
 import type { PlayerIndex } from '../input/InputManager';
 import { emptyAssets, type CharacterAssets } from '../rendering/CharacterAssets';
+import { spriteScale } from '../rendering/rig';
 import {
   attackPhase,
   moveTotalFrames,
@@ -86,6 +87,8 @@ export class Fighter {
   glideFrames = GLIDE_MAX_FRAMES;
   /** 이번 틱에 활공 중이었는지(렌더링·테스트용). */
   gliding = false;
+  /** 이번 틱에 착지했는지(프롬프트 6 착지 먼지 연출용). */
+  landedThisStep = false;
 
   private airAttackUsed = false;
   private bufferedAttack: AttackKind | null = null;
@@ -128,24 +131,51 @@ export class Fighter {
     return { box: rig.master.box, rootX: rig.root.x, rootY: rig.root.y };
   }
 
-  get bodyWidth(): number {
+  /**
+   * 리그 실측 상자를 화면(디자인 px) 기준으로 환산한 값.
+   * 새 아트는 화면 키의 약 2.7배(슈퍼샘플)로 그려져 있어, 실측 상자를 그대로 쓰면
+   * 판정·이동 범위가 실제 화면 크기의 2.7배가 된다. 렌더러와 같은 배율로 환산해 쓴다.
+   */
+  private get displayBox(): {
+    w: number;
+    h: number;
+    left: number;
+    right: number;
+    top: number;
+    bottom: number;
+  } | null {
     const master = this.masterBox;
-    return master ? master.box.w : this.data.displayHeight * BODY_WIDTH_RATIO;
+    if (!master) return null;
+    const scale = spriteScale(this.data.displayHeight, master.box);
+    const { box, rootX, rootY } = master;
+    return {
+      w: box.w * scale,
+      h: box.h * scale,
+      left: (box.minX - rootX) * scale,
+      right: (box.maxX - rootX) * scale,
+      top: (box.minY - rootY) * scale,
+      bottom: (box.maxY - rootY) * scale,
+    };
+  }
+
+  get bodyWidth(): number {
+    const box = this.displayBox;
+    return box ? box.w : this.data.displayHeight * BODY_WIDTH_RATIO;
   }
 
   get bodyHeight(): number {
-    const master = this.masterBox;
-    const base = master ? master.box.h : this.data.displayHeight;
+    const box = this.displayBox;
+    const base = box ? box.h : this.data.displayHeight;
     return base * (this.state === 'crouch' ? CROUCH_HEIGHT_RATIO : 1);
   }
 
   /**
-   * 몸통 판정. 리그의 실측 마스터 경계를 그대로 쓴다(계획서 3절: 몸통 판정은 리그 데이터에 둔다).
+   * 몸통 판정. 리그의 실측 마스터 경계를 화면 크기로 환산해 쓴다(계획서 3절).
    * 리그가 없으면 표시 높이 기반 임시 판정으로 대체한다.
    */
   hurtbox(): Rect {
-    const master = this.masterBox;
-    if (!master) {
+    const box = this.displayBox;
+    if (!box) {
       const halfW = this.bodyWidth / 2;
       return {
         left: this.x - halfW,
@@ -156,10 +186,10 @@ export class Fighter {
     }
 
     const crouch = this.state === 'crouch' ? CROUCH_HEIGHT_RATIO : 1;
-    const left = master.box.minX - master.rootX;
-    const right = master.box.maxX - master.rootX;
-    const top = (master.box.minY - master.rootY) * crouch;
-    const bottom = master.box.maxY - master.rootY;
+    const left = box.left;
+    const right = box.right;
+    const top = box.top * crouch;
+    const bottom = box.bottom;
 
     return this.facing === 1
       ? { left: this.x + left, right: this.x + right, top: this.y + top, bottom: this.y + bottom }
@@ -225,6 +255,7 @@ export class Fighter {
   // --- 진행 ---
 
   step(input: FighterInput, dt: number): void {
+    this.landedThisStep = false;
     if (this.state === 'down' || this.state === 'victory') return;
 
     if (this.hitstopFrames > 0) {
@@ -270,15 +301,13 @@ export class Fighter {
 
   /** 스프라이트 실측 폭을 고려해 화면 밖으로 나가지 않게 한다(계획서 2절: 양끝을 통과하지 않는다). */
   clampToArena(): void {
-    const master = this.masterBox;
-    if (!master) {
+    const box = this.displayBox;
+    if (!box) {
       this.x = clamp(this.x, ARENA_LEFT, ARENA_RIGHT);
       return;
     }
-    const left = master.box.minX - master.rootX;
-    const right = master.box.maxX - master.rootX;
-    const minX = this.facing === 1 ? ARENA_LEFT - left : ARENA_LEFT + right;
-    const maxX = this.facing === 1 ? ARENA_RIGHT - right : ARENA_RIGHT + left;
+    const minX = this.facing === 1 ? ARENA_LEFT - box.left : ARENA_LEFT + box.right;
+    const maxX = this.facing === 1 ? ARENA_RIGHT - box.right : ARENA_RIGHT + box.left;
     this.x = Math.min(Math.max(this.x, minX), Math.max(minX, maxX));
   }
 
@@ -303,6 +332,7 @@ export class Fighter {
     this.leapPerFrame = 0;
     this.glideFrames = GLIDE_MAX_FRAMES;
     this.gliding = false;
+    this.landedThisStep = false;
     this.airAttackUsed = false;
     this.bufferedAttack = null;
     this.bufferFrames = 0;
@@ -436,6 +466,7 @@ export class Fighter {
       this.y = 0;
       this.vy = 0;
       this.onGround = true;
+      this.landedThisStep = true;
       if (this.state === 'jump') this.state = 'idle';
     }
   }
