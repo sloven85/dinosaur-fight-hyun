@@ -1,7 +1,7 @@
 import { MAX_METER, ROUNDS_TO_WIN } from '../core/constants';
 import type { GameContext } from '../core/GameContext';
 import { getStage } from '../data';
-import { Match } from '../combat/Match';
+import { Match, type Projectile } from '../combat/Match';
 import type { Fighter } from '../combat/Fighter';
 import { EMOTION_COLORS, EMOTION_LABELS, emotionFor } from '../combat/emotion';
 import type { Rect } from '../combat/types';
@@ -93,6 +93,25 @@ export class BattleScene extends BaseScene {
   private consumeMatchEvents(groundY: number, screenShake: boolean, vibration: boolean): void {
     for (const event of this.match.consumeEvents()) {
       const y = groundY + event.y;
+      if (event.type === 'fx') {
+        const strength = event.strength ?? 1;
+        if (event.fx === 'shake') {
+          if (screenShake) this.triggerShake(SHAKE_HEAVY * strength);
+        } else if (event.fx === 'dust') {
+          this.effects.spawnDust(event.x, y, Math.round(6 * strength), strength);
+        } else if (event.fx === 'shockwave') {
+          this.effects.spawnShockwave(event.x, y, event.direction);
+        } else if (event.fx === 'splash') {
+          this.effects.spawnDust(event.x, y, Math.round(8 * strength), strength * 1.2);
+        } else if (event.fx === 'flash') {
+          this.flashFrames = Math.max(this.flashFrames, Math.round(3 * strength));
+        }
+        continue;
+      }
+      if (event.type === 'stun') {
+        this.effects.spawnStars(event.x, y, 3);
+        continue;
+      }
       if (event.type === 'ko') {
         this.effects.spawnStars(event.x, y, 7);
         this.context.audio.playSfx('ko');
@@ -170,8 +189,15 @@ export class BattleScene extends BaseScene {
     g.lineTo(width, stage.groundY);
     g.stroke();
 
-    for (const fighter of this.match.fighters) {
+    // 잡힌 쪽은 잡은 쪽 뒤에 그린다(입에 물린 것처럼).
+    const order = [...this.match.fighters].sort(
+      (a, b) => (a.state === 'held' ? 0 : 1) - (b.state === 'held' ? 0 : 1),
+    );
+    for (const fighter of order) {
       renderFighter(g, fighter, stage.groundY, this.elapsed);
+    }
+    for (const projectile of this.match.projectiles) {
+      this.renderProjectile(g, projectile, stage.groundY);
     }
 
     // 이펙트는 캐릭터 뒤가 아니라 앞에 그려 타격이 보이게 한다.
@@ -379,7 +405,51 @@ export class BattleScene extends BaseScene {
       for (const box of fighter.activeHitboxes()) {
         drawBox(g, shift(box, groundY), '#ff6b6b');
       }
+      for (const box of this.match.scriptHitboxes(fighter)) {
+        drawBox(g, shift(box, groundY), '#ff6b6b');
+      }
     }
+    for (const p of this.match.projectiles) {
+      const box = { left: p.x - p.spec.w / 2, right: p.x + p.spec.w / 2, top: p.y - p.spec.h / 2, bottom: p.y + p.spec.h / 2 };
+      drawBox(g, shift(box, groundY), '#ffa94d');
+    }
+  }
+
+  /** 투사체: 그림이 있으면 그림, 없으면 색 마름모. 진행 방향으로 뒤집고 속도선 3줄을 붙인다. */
+  private renderProjectile(g: CanvasRenderingContext2D, p: Projectile, groundY: number): void {
+    const { spec } = p;
+    const image = spec.sprite ? this.context.assets.image(spec.sprite) : null;
+    if (spec.sprite && !image) void this.context.assets.loadImage(spec.sprite);
+    g.save();
+    g.translate(p.x, groundY + p.y);
+    // 속도선(회전 전, 진행 반대쪽).
+    g.strokeStyle = 'rgba(255,255,255,0.75)';
+    g.lineWidth = 5;
+    g.lineCap = 'round';
+    for (let i = -1; i <= 1; i++) {
+      g.beginPath();
+      g.moveTo(-p.facing * spec.w * 0.55, i * spec.h * 0.22);
+      g.lineTo(-p.facing * spec.w * (0.95 + Math.abs(i) * -0.15), i * spec.h * 0.22);
+      g.stroke();
+    }
+    if (p.facing === -1) g.scale(-1, 1);
+    g.rotate(p.facing === -1 ? -p.rotation : p.rotation);
+    if (image) {
+      const scale = Math.max(spec.w / image.width, spec.h / image.height);
+      const w = image.width * scale;
+      const h = image.height * scale;
+      g.drawImage(image, -w / 2, -h / 2, w, h);
+    } else {
+      g.fillStyle = spec.color ?? '#ffffff';
+      g.beginPath();
+      g.moveTo(spec.w / 2, 0);
+      g.lineTo(0, -spec.h / 2);
+      g.lineTo(-spec.w / 2, 0);
+      g.lineTo(0, spec.h / 2);
+      g.closePath();
+      g.fill();
+    }
+    g.restore();
   }
 }
 

@@ -65,6 +65,7 @@
       "color": "#D9792E",
       "accentColor": "#7A4A22",
       "rigPath": "assets/characters/velociraptor/rig.json",
+      "partsPath": "assets/characters/velociraptor/parts/rig",
       "portraitPath": "assets/characters/velociraptor/portrait.png",
       "moves": {
         "light": "velociraptor_light",
@@ -140,6 +141,7 @@
       "color": "#77A65A",
       "accentColor": "#C85848",
       "rigPath": "assets/characters/stegosaurus/rig.json",
+      "partsPath": "assets/characters/stegosaurus/parts/rig",
       "portraitPath": "assets/characters/stegosaurus/portrait.png",
       "moves": {
         "light": "stegosaurus_light",

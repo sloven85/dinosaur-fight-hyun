@@ -27,7 +27,24 @@ import type { GameMode } from '../core/session';
 import type { PlayerIndex } from '../input/InputManager';
 import { emptyAssets, type CharacterAssets } from '../rendering/CharacterAssets';
 import { Fighter, NULL_INPUT, type FighterInput } from './Fighter';
-import { rectsOverlap, type AttackKind, type MoveData } from './types';
+import { rectsOverlap, type AttackKind, type MoveData, type Rect } from './types';
+import type { HitParams, ProjectileSpec, ScriptBox } from './moveScript';
+
+/** 날아가는 그림(골판·물결·충격파). 판정은 Match가, 그림은 BattleScene이 맡는다. */
+export interface Projectile {
+  owner: PlayerIndex;
+  kind: AttackKind;
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  gravity: number;
+  rotation: number;
+  spin: number | null;
+  life: number;
+  readonly spec: ProjectileSpec;
+  facing: 1 | -1;
+}
 
 export type RoundPhase = 'intro' | 'fight' | 'roundOver' | 'matchOver';
 
@@ -37,7 +54,10 @@ export type RoundPhase = 'intro' | 'fight' | 'roundOver' | 'matchOver';
  * 이벤트는 보이는 연출 전용이라 전투 수치에 영향을 주지 않는다.
  */
 export interface MatchEvent {
-  type: 'hit' | 'guard' | 'ko';
+  /** fx = 기술 스크립트가 낸 화면 연출(흔들림·먼지·충격파·물보라·번쩍). stun = 기절 시작. */
+  type: 'hit' | 'guard' | 'ko' | 'fx' | 'stun';
+  fx?: 'shake' | 'dust' | 'shockwave' | 'splash' | 'flash';
+  strength?: number;
   /** 사건이 일어난 위치(화면 x, 지면 기준 y). */
   x: number;
   y: number;
@@ -85,6 +105,8 @@ export class Match {
   private readonly cpu: AIController | null;
   /** 아직 화면이 소비하지 않은 연출 이벤트. */
   private events: MatchEvent[] = [];
+  /** 지금 날아가는 투사체. */
+  projectiles: Projectile[] = [];
 
   constructor(
     private readonly mode: GameMode,
@@ -104,6 +126,8 @@ export class Match {
       new Fighter(0, characterIds[0], START_X_P1, 1, assets[0]),
       new Fighter(1, characterIds[1], START_X_P2, -1, assets[1]),
     ];
+    this.fighters[0].opponent = this.fighters[1];
+    this.fighters[1].opponent = this.fighters[0];
     // 동일 캐릭터일 때만 2P에 보조색을 적용해 구분한다.
     this.fighters[1].useAlternatePalette = this.mirrorMatch;
 
@@ -174,8 +198,12 @@ export class Match {
         for (const fighter of this.fighters) {
           fighter.step(this.inputFor(fighter.player, input), dt);
         }
+        this.updateHeld();
         this.updateFacing();
         this.separate();
+        this.resolveScripts();
+        this.updateHeld();
+        this.stepProjectiles(dt);
         this.resolveHits();
         this.timerFrames -= 1;
         if (this.checkKnockouts()) break;
@@ -203,6 +231,7 @@ export class Match {
     this.p1.resetForRound(START_X_P1, 1);
     this.p2.resetForRound(START_X_P2, -1);
     this.p2.useAlternatePalette = this.mirrorMatch;
+    this.projectiles = [];
     // 라운드가 바뀌면 CPU 판단·휴식·특수기 쿨다운도 정확히 초기화한다.
     this.cpu?.reset();
   }
@@ -213,8 +242,12 @@ export class Match {
     this.roundWinner = winner;
     this.roundWasDraw = winner === null;
 
+    this.projectiles = [];
     for (const fighter of this.fighters) {
+      fighter.releaseHold();
       fighter.attack = null;
+      fighter.scriptVisual = null;
+      fighter.ghosts = [];
       fighter.hitstunFrames = 0;
       fighter.kbFrames = 0;
       fighter.kbPerFrame = 0;
@@ -272,13 +305,18 @@ export class Match {
   private updateFacing(): void {
     const [a, b] = this.fighters;
     if (a.x === b.x) return;
-    if (a.state !== 'attack') a.facing = a.x < b.x ? 1 : -1;
-    if (b.state !== 'attack') b.facing = b.x < a.x ? 1 : -1;
+    const free = (f: Fighter): boolean => f.state !== 'attack' && f.state !== 'held';
+    if (free(a)) a.facing = a.x < b.x ? 1 : -1;
+    if (free(b)) b.facing = b.x < a.x ? 1 : -1;
   }
 
   /** 몸통이 겹치지 않게 밀어낸다. 상대 몸통을 통과하지 않는다. */
   private separate(): void {
     const [a, b] = this.fighters;
+    // 잡기 중이거나 상대를 통과하는 기술(왕복)은 밀어내지 않는다.
+    if (a.holding || b.holding || a.activeScript?.passThrough || b.activeScript?.passThrough) return;
+    // 넘어진 상대는 넘어갈 수 있다(쓰러진 위로 지나가기).
+    if (a.state === 'fallen' || b.state === 'fallen') return;
     const minGap = (a.bodyWidth + b.bodyWidth) / 2;
     const gap = Math.abs(a.x - b.x);
     if (gap >= minGap) return;
@@ -305,6 +343,7 @@ export class Match {
       if (attacker.attack.hitTargets.has(defender.player)) continue;
       if (defender.invulnFrames > 0) continue;
       if (defender.state === 'down' || defender.state === 'victory') continue;
+      if (defender.state === 'held' || defender.state === 'fallen') continue;
 
       const hitboxes = attacker.activeHitboxes();
       if (hitboxes.length === 0) continue;
@@ -339,9 +378,11 @@ export class Match {
       defender.kbFrames = KNOCKBACK_FRAMES;
     } else {
       defender.health = Math.max(0, defender.health - damage);
+      defender.releaseHold();
       defender.state = 'hit';
       defender.hitstunFrames = move.hitstunFrames;
       defender.attack = null;
+      defender.scriptVisual = null;
       defender.kbPerFrame = (direction * move.knockback) / KNOCKBACK_FRAMES;
       defender.kbFrames = KNOCKBACK_FRAMES;
 
@@ -367,6 +408,295 @@ export class Match {
       y: defender.y - defender.bodyHeight * 0.55,
       direction,
       kind: move.kind,
+      player: defender.player,
+    });
+  }
+
+  // --- 기술 스크립트(잡기·다단히트·투사체·던지기·위치 바꾸기) ---
+
+  /** 잡힌 쪽을 잡은 쪽 입 앞(스크립트 hold 키)에 붙인다. */
+  private updateHeld(): void {
+    for (const holder of this.fighters) {
+      const target = holder.holding;
+      if (!target) continue;
+      if (holder.state !== 'attack') {
+        holder.releaseHold();
+        continue;
+      }
+      const hold = holder.holdOffset();
+      target.x = holder.x + holder.facing * (holder.bodyFront + hold.x);
+      target.y = Math.min(0, holder.y + hold.y);
+      target.onGround = target.y >= 0;
+      target.vy = 0;
+      target.facing = (-holder.facing) as 1 | -1;
+      target.heldRot = hold.rot;
+    }
+  }
+
+  private scriptBoxRect(fighter: Fighter, box: ScriptBox): Rect {
+    const origin = box.anchor === 'center' ? 0 : fighter.bodyFront;
+    const near = origin + box.x;
+    const left = fighter.facing === 1 ? fighter.x + near : fighter.x - near - box.w;
+    const top = fighter.y + box.y;
+    return { left, right: left + box.w, top, bottom: top + box.h };
+  }
+
+  /** 디버그 표시용: 지금 프레임에 켜진 스크립트 판정 상자. */
+  scriptHitboxes(fighter: Fighter): Rect[] {
+    const script = fighter.activeScript;
+    const frame = fighter.attack?.frame ?? -1;
+    if (!script) return [];
+    const boxes: Rect[] = [];
+    for (const hit of script.hits ?? []) {
+      if (hit.box && frame >= hit.from && frame <= hit.to) boxes.push(this.scriptBoxRect(fighter, hit.box));
+    }
+    const grab = script.grab;
+    if (grab && frame >= grab.from && frame <= grab.to) boxes.push(this.scriptBoxRect(fighter, grab.box));
+    return boxes;
+  }
+
+  private canBeTouched(defender: Fighter): boolean {
+    return (
+      defender.invulnFrames <= 0 &&
+      defender.state !== 'down' &&
+      defender.state !== 'victory' &&
+      defender.state !== 'fallen'
+    );
+  }
+
+  private resolveScripts(): void {
+    for (const attacker of this.fighters) {
+      const attack = attacker.attack;
+      const script = attacker.activeScript;
+      const run = attack?.script;
+      if (!attack || !script || !run) continue;
+      if (attacker.hitstopFrames > 0) continue;
+      const defender = this.opponentOf(attacker);
+      const f = attack.frame;
+
+      // 잡기: 구간 안에 닿으면 붙잡고 성공 경로로, 끝까지 못 잡으면 헛방 경로로.
+      const grab = script.grab;
+      if (grab && !run.grabResolved && f >= grab.from && f <= grab.to) {
+        const touch =
+          this.canBeTouched(defender) &&
+          defender.state !== 'held' &&
+          rectsOverlap(this.scriptBoxRect(attacker, grab.box), defender.hurtbox());
+        if (touch) {
+          run.grabResolved = true;
+          run.grabbed = true;
+          defender.releaseHold();
+          defender.attack = null;
+          defender.scriptVisual = null;
+          defender.state = 'held';
+          defender.heldBy = attacker;
+          attacker.holding = defender;
+          attack.frame = grab.success;
+          attacker.applyScriptFrame();
+          this.pushFx(attacker, 'dust', 1);
+          continue;
+        }
+        if (f === grab.to) {
+          run.grabResolved = true;
+          attack.frame = grab.miss;
+          attacker.applyScriptFrame();
+          continue;
+        }
+      }
+
+      // 다단히트: 판정마다 한 번씩.
+      (script.hits ?? []).forEach((hit, index) => {
+        if (run.landed.has(index) || f < hit.from || f > hit.to) return;
+        if (hit.target === 'held') {
+          if (attacker.holding === defender) {
+            run.landed.add(index);
+            this.applyDamage(attacker, defender, hit, attack.move.kind, false, attacker.facing, true);
+          }
+          return;
+        }
+        if (!hit.box || !this.canBeTouched(defender) || defender.state === 'held') return;
+        if (!rectsOverlap(this.scriptBoxRect(attacker, hit.box), defender.hurtbox())) return;
+        run.landed.add(index);
+        const guarded = !hit.unguardable && defender.isGuarding(attacker);
+        this.applyDamage(attacker, defender, hit, attack.move.kind, guarded, attacker.facing, false);
+      });
+
+      // 사건: 해당 프레임에 한 번.
+      (script.events ?? []).forEach((event, index) => {
+        if (event.f !== f || run.fired.has(index)) return;
+        run.fired.add(index);
+        switch (event.type) {
+          case 'projectile':
+            this.projectiles.push({
+              owner: attacker.player,
+              kind: attack.move.kind,
+              x: attacker.x + attacker.facing * (attacker.bodyFront + event.x),
+              y: attacker.y + event.y,
+              vx: attacker.facing * event.vx,
+              vy: event.vy ?? 0,
+              gravity: event.gravity ?? 0,
+              rotation: 0,
+              spin: event.spin ?? null,
+              life: event.life,
+              spec: event,
+              facing: attacker.facing,
+            });
+            break;
+          case 'throw': {
+            const target = attacker.holding;
+            if (!target) break;
+            attacker.releaseHold();
+            if (event.behind) {
+              target.x = attacker.x - attacker.facing * (attacker.bodyWidth * 0.5);
+            }
+            const dir = event.behind ? -attacker.facing : attacker.facing;
+            target.health = Math.max(0, target.health - Math.round(event.damage * attacker.data.damageScale));
+            target.launch(dir * event.vx, event.vy, event.knockdown);
+            attacker.meter = Math.min(MAX_METER, attacker.meter + METER_ON_HIT);
+            this.pushHitEvent(attacker, target, attack.move.kind, false, dir as 1 | -1);
+            break;
+          }
+          case 'swap': {
+            const ax = attacker.x;
+            attacker.x = defender.x;
+            defender.x = ax;
+            break;
+          }
+          case 'fx':
+            this.pushFx(attacker, event.fx, event.strength ?? 1, event.x, event.y);
+            break;
+          case 'end':
+            attacker.endAttack();
+            break;
+        }
+      });
+    }
+  }
+
+  private pushFx(
+    fighter: Fighter,
+    fx: NonNullable<MatchEvent['fx']>,
+    strength: number,
+    x = 0,
+    y = 0,
+  ): void {
+    this.events.push({
+      type: 'fx',
+      fx,
+      strength,
+      x: fighter.x + fighter.facing * (fighter.bodyFront + x),
+      y: fighter.y + y,
+      direction: fighter.facing,
+      kind: fighter.attack?.move.kind ?? 'heavy',
+      player: fighter.player,
+    });
+  }
+
+  private stepProjectiles(dt: number): void {
+    const alive: Projectile[] = [];
+    for (const p of this.projectiles) {
+      p.life -= dt;
+      p.vy += p.gravity * dt;
+      p.x += p.vx * dt;
+      p.y += p.vy * dt;
+      p.rotation = p.spin === null ? Math.atan2(p.vy, Math.abs(p.vx)) : p.rotation + p.spin * dt;
+      if (p.life <= 0 || p.x < -200 || p.x > 2120 || p.y > 0) {
+        if (p.y > 0) this.events.push({ type: 'fx', fx: 'dust', strength: 0.8, x: p.x, y: 0, direction: p.facing, kind: p.kind, player: p.owner });
+        continue;
+      }
+      const target = this.fighters[1 - p.owner];
+      const owner = this.fighters[p.owner];
+      const box: Rect = {
+        left: p.x - p.spec.w / 2,
+        right: p.x + p.spec.w / 2,
+        top: p.y - p.spec.h / 2,
+        bottom: p.y + p.spec.h / 2,
+      };
+      if (this.canBeTouched(target) && target.state !== 'held' && rectsOverlap(box, target.hurtbox())) {
+        const guarded = !p.spec.unguardable && target.isGuarding(owner);
+        this.applyDamage(owner, target, p.spec, p.kind, guarded, p.facing, false, p.x);
+        continue;
+      }
+      alive.push(p);
+    }
+    this.projectiles = alive;
+  }
+
+  /**
+   * 피해·경직·넉백·띄우기·넘어뜨리기·기절 공통 처리(스크립트·투사체).
+   * held=true면 잡힌 채로 맞는 타격이라 경직·넉백 없이 피해와 멈칫만 준다.
+   */
+  private applyDamage(
+    attacker: Fighter,
+    defender: Fighter,
+    hit: HitParams,
+    moveKind: AttackKind,
+    guarded: boolean,
+    direction: 1 | -1,
+    held: boolean,
+    atX?: number,
+  ): void {
+    let damage = hit.damage * attacker.data.damageScale;
+    if (guarded) damage *= moveKind === 'special' ? GUARD_DAMAGE_SPECIAL_RATIO : 0;
+    damage = Math.round(damage);
+
+    if (guarded) {
+      defender.health = Math.max(GUARD_MIN_HEALTH, defender.health - damage);
+      defender.kbPerFrame = (direction * hit.knockback * GUARD_KNOCKBACK_RATIO) / KNOCKBACK_FRAMES;
+      defender.kbFrames = KNOCKBACK_FRAMES;
+    } else {
+      defender.health = Math.max(0, defender.health - damage);
+      attacker.meter = Math.min(MAX_METER, attacker.meter + METER_ON_HIT);
+      defender.meter = Math.min(MAX_METER, defender.meter + METER_ON_HIT_TAKEN);
+      if (!held) {
+        defender.releaseHold();
+        defender.attack = null;
+        defender.scriptVisual = null;
+        if (hit.launch) {
+          defender.launch(direction * hit.launch.vx, hit.launch.vy, hit.knockdown ?? 0);
+        } else if (hit.knockdown) {
+          defender.knockDown(hit.knockdown);
+        } else if (hit.stun) {
+          defender.stun(hit.stun);
+          this.events.push({ type: 'stun', x: defender.x, y: defender.y - defender.bodyHeight, direction, kind: moveKind, player: defender.player });
+        } else {
+          defender.state = 'hit';
+          defender.hitstunFrames = hit.hitstun;
+        }
+        defender.kbPerFrame = (direction * hit.knockback) / KNOCKBACK_FRAMES;
+        defender.kbFrames = hit.launch ? 0 : KNOCKBACK_FRAMES;
+      }
+      // 다단히트 기술은 한 기술을 '연속 피격 1회'로 센다(왕복 5연타가 보호 무적에 끊기지 않게).
+      const attackId = attacker.attack?.attackId ?? -1;
+      if (defender.lastCountedAttackId !== attackId || attackId === -1) {
+        defender.lastCountedAttackId = attackId;
+        attacker.consecutiveHits = 0;
+        defender.consecutiveHits += 1;
+        if (defender.consecutiveHits >= CONSECUTIVE_HIT_LIMIT && !held) {
+          defender.invulnFrames = HIT_INVULN_FRAMES;
+          defender.consecutiveHits = 0;
+        }
+      }
+    }
+
+    attacker.hitstopFrames = hit.hitstop;
+    defender.hitstopFrames = hit.hitstop;
+    this.pushHitEvent(attacker, defender, hit.fx ?? moveKind, guarded, direction, atX);
+  }
+
+  private pushHitEvent(
+    attacker: Fighter,
+    defender: Fighter,
+    kind: AttackKind,
+    guarded: boolean,
+    direction: 1 | -1,
+    atX?: number,
+  ): void {
+    this.events.push({
+      type: guarded ? 'guard' : 'hit',
+      x: atX ?? (attacker.x + defender.x) / 2,
+      y: defender.y - defender.bodyHeight * 0.55,
+      direction,
+      kind,
       player: defender.player,
     });
   }

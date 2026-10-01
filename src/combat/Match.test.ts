@@ -281,7 +281,8 @@ describe('연출 이벤트 (프롬프트 6)', () => {
   });
 
   it('강공격은 양측에 타격 정지 프레임을 남긴다', () => {
-    const match = new Match('versus', ['tyrannosaurus', 'triceratops']);
+    // 티라노 강공격은 잡기 기술(스크립트)로 바뀌어, 단타 강공격인 트리케라로 확인한다.
+    const match = new Match('versus', ['triceratops', 'tyrannosaurus']);
     fighting(match);
     match.consumeEvents();
     placeClose(match);

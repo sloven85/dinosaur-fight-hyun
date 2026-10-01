@@ -1,3 +1,5 @@
+import type { MoveScript, ScriptRuntime } from './moveScript';
+
 export type AttackKind = 'light' | 'heavy' | 'special';
 
 export type AttackPhase = 'startup' | 'active' | 'recovery';
@@ -11,7 +13,13 @@ export type FighterState =
   | 'attack'
   | 'hit'
   | 'down'
-  | 'victory';
+  | 'victory'
+  /** 상대에게 붙잡힘(잡기). 위치는 잡은 쪽이 정한다. */
+  | 'held'
+  /** 넘어져 누워 있음(KO 아님). 일어나면 잠깐 무적. */
+  | 'fallen'
+  /** 짧은 기절(머리 위 별). */
+  | 'stun';
 
 export interface Rect {
   left: number;
@@ -46,6 +54,8 @@ export interface MoveData {
   hitstopFrames: number;
   meterCost: number;
   hitboxes: HitboxData[];
+  /** 있으면 키프레임 기술 스크립트로 움직이고 판정한다(디렉터 결정 2026-10-01). */
+  script?: MoveScript;
 }
 
 /** 공격 1회분. attackId로 같은 공격이 같은 상대를 두 번 때리지 않게 한다(계획서 3절). */
@@ -54,6 +64,8 @@ export interface AttackInstance {
   readonly attackId: number;
   frame: number;
   readonly hitTargets: Set<number>;
+  /** 스크립트 기술의 진행 상태. */
+  script?: ScriptRuntime;
 }
 
 export function attackPhase(move: MoveData, frame: number): AttackPhase {
@@ -63,6 +75,7 @@ export function attackPhase(move: MoveData, frame: number): AttackPhase {
 }
 
 export function moveTotalFrames(move: MoveData): number {
+  if (move.script) return move.script.frames;
   return move.startupFrames + move.activeFrames + move.recoveryFrames;
 }
 

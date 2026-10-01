@@ -1,0 +1,72 @@
+{
+ "note": "velo motion profiles (deg, +ve=clockwise on screen; root=stage px). tailtip is relative to tailbase (whip enabled).",
+ "motions": {
+  "idle": {
+   "angles": {},
+   "root": [
+    0,
+    0
+   ]
+  },
+  "walk": {
+   "angles": {
+    "nearleg": 10,
+    "farleg": -2,
+    "neararm": -6,
+    "fararm": 4,
+    "tailbase": -3,
+    "tailtip": -3,
+    "head": 2
+   },
+   "root": [
+    0,
+    0
+   ]
+  },
+  "light": {
+   "angles": {
+    "neararm": -22,
+    "fararm": -16,
+    "head": 5,
+    "jaw": -8,
+    "tailbase": -2,
+    "tailtip": -2
+   },
+   "root": [
+    12,
+    0
+   ]
+  },
+  "strong": {
+   "angles": {
+    "farleg": 26,
+    "nearleg": -6,
+    "neararm": -14,
+    "fararm": -10,
+    "tailbase": -6,
+    "tailtip": -5,
+    "head": 6
+   },
+   "root": [
+    26,
+    -6
+   ]
+  },
+  "special": {
+   "angles": {
+    "neararm": -30,
+    "fararm": -22,
+    "head": 8,
+    "jaw": -6,
+    "tailbase": -8,
+    "tailtip": -6,
+    "nearleg": 4,
+    "farleg": -3
+   },
+   "root": [
+    60,
+    0
+   ]
+  }
+ }
+}

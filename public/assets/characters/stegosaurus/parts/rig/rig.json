@@ -1,0 +1,134 @@
+{
+ "stage": {
+  "width": 2048,
+  "height": 1536,
+  "rootX": 1024,
+  "rootY": 1280
+ },
+ "style": "radial-joint cutout rig (gap-free: child cap disk centred on pivot)",
+ "drawOrder": [
+  "farleg_back",
+  "nearleg_back",
+  "farleg_front",
+  "nearleg_front",
+  "torso",
+  "tailbase",
+  "tailtip",
+  "head",
+  "jaw"
+ ],
+ "parts": {
+  "farleg_back": {
+   "parent": "torso",
+   "drawOrder": 0,
+   "offsetX": 974,
+   "offsetY": 820,
+   "width": 337,
+   "height": 435,
+   "pivotX": 1140,
+   "pivotY": 990,
+   "capRadius": 170,
+   "localPivotX": 166,
+   "localPivotY": 170
+  },
+  "nearleg_back": {
+   "parent": "torso",
+   "drawOrder": 1,
+   "offsetX": 494,
+   "offsetY": 701,
+   "width": 537,
+   "height": 579,
+   "pivotX": 760,
+   "pivotY": 970,
+   "capRadius": 270,
+   "localPivotX": 266,
+   "localPivotY": 269
+  },
+  "farleg_front": {
+   "parent": "torso",
+   "drawOrder": 2,
+   "offsetX": 1401,
+   "offsetY": 830,
+   "width": 450,
+   "height": 428,
+   "pivotX": 1700,
+   "pivotY": 1020,
+   "capRadius": 190,
+   "localPivotX": 299,
+   "localPivotY": 190
+  },
+  "nearleg_front": {
+   "parent": "torso",
+   "drawOrder": 3,
+   "offsetX": 1206,
+   "offsetY": 840,
+   "width": 353,
+   "height": 440,
+   "pivotX": 1380,
+   "pivotY": 1020,
+   "capRadius": 180,
+   "localPivotX": 174,
+   "localPivotY": 180
+  },
+  "torso": {
+   "parent": null,
+   "drawOrder": 4,
+   "offsetX": 250,
+   "offsetY": 270,
+   "width": 1778,
+   "height": 971
+  },
+  "tailbase": {
+   "parent": "torso",
+   "drawOrder": 5,
+   "offsetX": 250,
+   "offsetY": 540,
+   "width": 706,
+   "height": 525,
+   "pivotX": 740,
+   "pivotY": 860,
+   "capRadius": 215,
+   "localPivotX": 490,
+   "localPivotY": 320
+  },
+  "tailtip": {
+   "parent": "tailbase",
+   "drawOrder": 6,
+   "offsetX": 20,
+   "offsetY": 750,
+   "width": 491,
+   "height": 264,
+   "pivotX": 380,
+   "pivotY": 930,
+   "capRadius": 130,
+   "localPivotX": 360,
+   "localPivotY": 180
+  },
+  "head": {
+   "parent": "torso",
+   "drawOrder": 7,
+   "offsetX": 1430,
+   "offsetY": 609,
+   "width": 598,
+   "height": 386,
+   "pivotX": 1660,
+   "pivotY": 800,
+   "capRadius": 230,
+   "localPivotX": 230,
+   "localPivotY": 191
+  },
+  "jaw": {
+   "parent": "head",
+   "drawOrder": 8,
+   "offsetX": 1706,
+   "offsetY": 803,
+   "width": 322,
+   "height": 105,
+   "pivotX": 1800,
+   "pivotY": 812,
+   "capRadius": 95,
+   "localPivotX": 94,
+   "localPivotY": 9
+  }
+ }
+}

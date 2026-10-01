@@ -1,4 +1,4 @@
-import type { Fighter } from '../combat/Fighter';
+import type { Fighter, ScriptVisual } from '../combat/Fighter';
 import { emotionFor, type Emotion } from '../combat/emotion';
 import { spriteScale, type PoseName } from './rig';
 import { applyMotion, attackMotion, drawAttackTrail, type MotionFrame } from './attackMotion';
@@ -139,32 +139,80 @@ export function renderFighter(
   groundY: number,
   time: number,
 ): void {
-  const feetY = groundY + fighter.y;
   renderShadow(g, fighter, groundY);
 
-  const partAngles = partAnglesFor(fighter, time);
+  // 잔상(번개 왕복 등): 지난 위치에 종 보조색 실루엣을 옅게 남긴다.
+  for (const ghost of fighter.ghosts) {
+    drawBody(g, fighter, groundY, time, {
+      x: ghost.x,
+      y: ghost.y,
+      facing: ghost.facing,
+      visual: ghost.visual,
+      ghostAlpha: ghost.alpha,
+    });
+  }
+
+  const drawn = drawBody(g, fighter, groundY, time, {
+    x: fighter.x,
+    y: fighter.y,
+    facing: fighter.facing,
+    visual: fighter.scriptVisual,
+    ghostAlpha: 0,
+  });
+  if (!drawn) return;
+
+  const feetY = groundY + fighter.y;
+  if (fighter.state === 'stun') drawStunStars(g, fighter, feetY, time);
+  if (fighter.state === 'down' || fighter.state === 'victory' || fighter.state === 'fallen') return;
+  drawNameTag(g, fighter, feetY);
+}
+
+interface BodyView {
+  x: number;
+  y: number;
+  facing: 1 | -1;
+  /** 스크립트 기술의 보이는 모양(없으면 기존 절차 동작). */
+  visual: ScriptVisual | null;
+  /** 0이면 본체, 0보다 크면 이 투명도로 잔상만 그린다. */
+  ghostAlpha: number;
+}
+
+/** 몸 한 벌을 그린다. 그림이 없어 임시 도형으로 대체했으면 false. */
+function drawBody(
+  g: CanvasRenderingContext2D,
+  fighter: Fighter,
+  groundY: number,
+  time: number,
+  view: BodyView,
+): boolean {
+  const feetY = groundY + view.y;
+  const ghost = view.ghostAlpha > 0;
+  const partAngles = view.visual?.parts && fighter.assets.parts ? view.visual.parts : partAnglesFor(fighter, time);
   const choice = partAngles ? partsChoice(fighter) : selectSprite(fighter);
   if (!choice) {
-    renderPlaceholder(g, fighter, feetY);
-    return;
+    if (!ghost) renderPlaceholder(g, fighter, feetY);
+    return false;
   }
 
   g.save();
-  g.translate(fighter.x, feetY);
-  if (fighter.facing === -1) g.scale(-1, 1);
+  g.translate(view.x, feetY);
+  if (view.facing === -1) g.scale(-1, 1);
 
   // 기술별·종별 공격 동작(포즈가 없으면 궤적 전체, 전용 포즈면 약하게 더한다).
   // 파츠 리그가 있는 종도 몸 전체 이동·기울기는 여기서 한 번만 건다. 파츠는 부위 회전만 맡는다
   // (아티스트 JSON의 root는 쓰지 않는다 — 디렉터 통합 규칙: 몸 변환 중복 금지).
-  const motion = attackMotionFor(fighter);
+  const motion = view.visual ? null : attackMotionFor(fighter);
   g.save();
-  if (choice.isPose) applyPoseTransform(g, fighter, time);
+  if (view.visual) applyScriptVisual(g, fighter, view.visual);
+  else if (choice.isPose) applyPoseTransform(g, fighter, time);
   else applyMasterTransform(g, fighter, time);
   if (motion) applyMotion(g, motion, choice.isPose ? 0.35 : 1);
   // 감정 3단계(프롬프트 6): 체력이 낮을수록 어깨가 처지고, 높으면 가볍게 들썩인다.
   applyEmotionTransform(g, emotionFor(fighter.health / fighter.maxHealth), time);
 
-  if (fighter.state === 'hit') {
+  if (ghost) {
+    // 잔상은 아래 draw에서 보조색 실루엣으로만 그린다.
+  } else if (fighter.state === 'hit' || fighter.state === 'held') {
     g.filter = 'brightness(1.45) saturate(1.35)';
   } else if (fighter.invulnFrames > 0) {
     g.globalAlpha = 0.55;
@@ -197,6 +245,14 @@ export function renderFighter(
     const source = pick(choice.image);
     if (source) g.drawImage(source, destX + dx, destY + dy, destW, destH);
   };
+
+  if (ghost) {
+    g.globalAlpha = view.ghostAlpha;
+    draw((image) => solidTintedSprite(image, fighter.data.accentColor));
+    g.restore();
+    g.restore();
+    return true;
+  }
 
   // 2P 파란 테두리는 스프라이트 뒤에 그린다.
   if (altSkin) {
@@ -231,9 +287,42 @@ export function renderFighter(
   }
 
   g.restore();
+  return true;
+}
 
-  if (fighter.state === 'down' || fighter.state === 'victory') return;
-  drawNameTag(g, fighter, feetY);
+/** 스크립트 기술의 기울기·늘이기. 몸 가운데(허리 높이)를 축으로 건다. */
+function applyScriptVisual(g: CanvasRenderingContext2D, fighter: Fighter, visual: ScriptVisual): void {
+  const pivotY = -fighter.data.displayHeight * 0.45;
+  g.translate(0, pivotY);
+  g.rotate(visual.rot);
+  g.scale(visual.sx, visual.sy);
+  g.translate(0, -pivotY);
+}
+
+/** 짧은 기절: 머리 위에서 별 3개가 돈다. */
+function drawStunStars(g: CanvasRenderingContext2D, fighter: Fighter, feetY: number, time: number): void {
+  const cx = fighter.x;
+  const cy = feetY - fighter.data.displayHeight - 10;
+  g.save();
+  g.fillStyle = '#ffe066';
+  g.strokeStyle = '#8a5a00';
+  g.lineWidth = 3;
+  for (let i = 0; i < 3; i++) {
+    const a = time * 6 + (i * Math.PI * 2) / 3;
+    const x = cx + Math.cos(a) * 70;
+    const y = cy + Math.sin(a) * 18;
+    g.beginPath();
+    for (let k = 0; k < 10; k++) {
+      const r = k % 2 === 0 ? 20 : 9;
+      const t = (Math.PI * k) / 5 - Math.PI / 2 + a;
+      if (k === 0) g.moveTo(x + Math.cos(t) * r, y + Math.sin(t) * r);
+      else g.lineTo(x + Math.cos(t) * r, y + Math.sin(t) * r);
+    }
+    g.closePath();
+    g.fill();
+    g.stroke();
+  }
+  g.restore();
 }
 
 function selectSprite(fighter: Fighter): SpriteChoice | null {
@@ -270,6 +359,7 @@ function selectSprite(fighter: Fighter): SpriteChoice | null {
 function poseForState(fighter: Fighter): PoseName | null {
   switch (fighter.state) {
     case 'hit':
+    case 'held':
       return 'hit';
     case 'down':
       return 'down';
@@ -307,6 +397,25 @@ function applyMasterTransform(g: CanvasRenderingContext2D, fighter: Fighter, tim
     case 'hit':
       g.rotate(-0.09);
       break;
+    case 'held':
+      // 물려서 들린 채 흔들린다(잡은 쪽 스크립트가 기울기를 정한다).
+      g.translate(0, -fighter.data.displayHeight * 0.4);
+      g.rotate(-0.25 + fighter.heldRot);
+      g.translate(0, fighter.data.displayHeight * 0.4);
+      break;
+    case 'stun':
+      g.rotate(Math.sin(time * 9) * 0.06);
+      break;
+    case 'fallen': {
+      // 넘어짐: 만화식으로 배를 위로 뒤집혀 다리를 버둥거린다(같은 폭 안에서 뒤집혀 화면 밖으로 안 나간다).
+      const h = fighter.assets.rig ? fighter.bodyHeight : fighter.data.displayHeight;
+      // 몸 가운데를 축으로 뒤집고(배가 위), 좌우 반전으로 얼굴 방향은 유지한다.
+      g.translate(0, -h * 0.5);
+      g.rotate(Math.PI + Math.sin(time * 14) * 0.04);
+      g.scale(-1, 1);
+      g.translate(0, h * 0.5);
+      break;
+    }
     case 'down':
       // 다운 전용 포즈가 없을 때는 발을 축으로 눕힌다.
       g.rotate(-1.25);
@@ -319,6 +428,11 @@ function applyMasterTransform(g: CanvasRenderingContext2D, fighter: Fighter, tim
 }
 
 function applyPoseTransform(g: CanvasRenderingContext2D, fighter: Fighter, time: number): void {
+  if (fighter.state === 'held') {
+    g.translate(0, -fighter.data.displayHeight * 0.4);
+    g.rotate(fighter.heldRot);
+    g.translate(0, fighter.data.displayHeight * 0.4);
+  }
   if (fighter.state === 'victory') {
     g.translate(0, Math.sin(time * 6) * -8);
   }
@@ -412,6 +526,7 @@ function partAnglesFor(fighter: Fighter, time: number): Record<string, number> |
     case 'idle':
     case 'crouch':
     case 'jump':
+    case 'stun':
       return {};
     case 'walk': {
       const walk = motions.walk;

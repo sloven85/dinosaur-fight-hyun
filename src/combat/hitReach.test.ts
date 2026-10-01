@@ -53,8 +53,11 @@ describe('기술 판정: 몸 앞끝 기준(마스터 결정 2026-10-01)', () => 
     for (const id of IDS) {
       const m = new Match('versus', [id, id], [realAssets(id), realAssets(id)]);
       const f = m.p1;
-      expect(f.reachOf('light')).toBeLessThan(f.reachOf('heavy'));
-      expect(f.reachOf('heavy')).toBeLessThan(f.reachOf('special'));
+      // 스크립트 기술(투사체·왕복·잡기)은 사거리가 기술 고유라 순서 비교에서 뺀다.
+      const plain = (['light', 'heavy', 'special'] as const).filter((k) => !f.moves[k].script);
+      for (let i = 1; i < plain.length; i++) {
+        expect(f.reachOf(plain[i - 1])).toBeLessThan(f.reachOf(plain[i]));
+      }
       expect(f.reachOf('light')).toBeGreaterThan(f.bodyFront);
     }
   });

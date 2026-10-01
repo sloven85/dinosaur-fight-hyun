@@ -69,4 +69,25 @@ describe('파츠 리그 렌더링 통합', () => {
     expect(drawn).toHaveLength(1);
     expect((drawn[0] as { master?: boolean }).master).toBe(true);
   });
+
+  it('스크립트 기술 중에는 스크립트의 파츠 각도로 파츠를 그린다', () => {
+    const f = new Fighter(0, 'tyrannosaurus', 600, 1, assets());
+    f.state = 'attack';
+    f.attack = { move: f.moves.heavy, attackId: 1, frame: 12, hitTargets: new Set() };
+    f.scriptVisual = { rot: 0.1, sx: 1.1, sy: 0.9, ghost: 1, parts: { head: -14, jaw: 24 } };
+    const { g, drawn } = recordingContext();
+    renderFighter(g, f, 900, 0);
+    // 본체 9파츠(잔상 착색은 DOM 캔버스가 필요해 헤드리스 크롬 캡처로 따로 확인).
+    expect(drawn.filter((d) => (d as { part?: string }).part)).toHaveLength(9);
+  });
+
+  it('잡힘·넘어짐·기절 상태도 예외 없이 그린다', () => {
+    for (const state of ['held', 'fallen', 'stun'] as const) {
+      const f = new Fighter(0, 'tyrannosaurus', 600, 1, assets());
+      f.state = state;
+      const { g, drawn } = recordingContext();
+      renderFighter(g, f, 900, 0);
+      expect(drawn.length).toBeGreaterThan(0);
+    }
+  });
 });
