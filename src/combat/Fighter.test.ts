@@ -14,21 +14,21 @@ function groundedFighter(id: string): Fighter {
 }
 
 describe('도약 돌진 (파키케팔로사우루스)', () => {
-  it('지상 강공격을 앞으로 뛰어들며 시작한다', () => {
+  it('지상 강공격(점프 박치기)은 뛰어올라 앞으로 나간다(기술 스크립트)', () => {
     const fighter = groundedFighter('pachycephalosaurus');
     const input = new ScriptInput();
     const startX = fighter.x;
 
     input.press(0, 'heavy');
     fighter.step(input, FIXED_DT);
-
-    expect(fighter.onGround).toBe(false);
-    expect(fighter.vy).toBeLessThan(0);
-
     input.clearPressed();
-    for (let i = 0; i < 10; i++) fighter.step(input, FIXED_DT);
+    let minY = 0;
+    for (let i = 0; i < 20; i++) {
+      fighter.step(input, FIXED_DT);
+      minY = Math.min(minY, fighter.y);
+    }
 
-    // 도약 전진분이 실제로 반영되어야 한다.
+    expect(minY).toBeLessThan(-150);
     expect(fighter.x).toBeGreaterThan(startX + 50);
   });
 

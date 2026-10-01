@@ -73,9 +73,9 @@
   "torso": {
    "parent": null,
    "drawOrder": 4,
-   "offsetX": 250,
+   "offsetX": 460,
    "offsetY": 270,
-   "width": 1778,
+   "width": 1568,
    "height": 971
   },
   "tailbase": {

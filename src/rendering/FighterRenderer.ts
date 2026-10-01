@@ -4,6 +4,7 @@ import { spriteScale, type PoseName } from './rig';
 import { fallPose, flailPartAngles } from './fallMotion';
 import { applyMotion, attackMotion, drawAttackTrail, type MotionFrame } from './attackMotion';
 import type { PartsAssets } from './CharacterAssets';
+import type { AssetLoader } from './AssetLoader';
 import {
   attackPartAngles,
   motionNameFor,
@@ -31,6 +32,18 @@ const ALT_PALETTE_ALPHA = 0.32;
 const SKIN_MATCH_TOLERANCE = 96;
 
 const solidTintCache = new Map<string, HTMLCanvasElement>();
+
+/** 기술 덧그림(볏·나는 자세)·투사체 그림을 꺼내 올 로더. BattleScene이 등록한다. */
+let overlayLoader: AssetLoader | null = null;
+export function setOverlayLoader(loader: AssetLoader | null): void {
+  overlayLoader = loader;
+}
+function overlayImage(path: string): HTMLImageElement | null {
+  if (!overlayLoader) return null;
+  const image = overlayLoader.image(path);
+  if (!image) void overlayLoader.loadImage(path);
+  return image;
+}
 const skinTintCache = new Map<string, HTMLCanvasElement>();
 
 function hexToRgb(hex: string): [number, number, number] | null {
@@ -255,9 +268,38 @@ function drawBody(
     if (source) g.drawImage(source, destX + dx, destY + dy, destW, destH);
   };
 
+  // 땅속으로 가라앉기: 지면 위만 보이게 자르고 아래로 내린다.
+  const sink = view.visual?.sink ?? 0;
+  if (sink > 0) {
+    g.beginPath();
+    g.rect(-4000, -4000, 8000, 4000);
+    g.clip();
+    g.translate(0, sink);
+  }
+
+  const overlays = view.visual?.overlays ?? [];
+  const hideBody = overlays.some((o) => o.hideBody);
+  const drawOverlays = (alphaPick?: (image: HTMLImageElement) => CanvasImageSource | null): void => {
+    for (const o of overlays) {
+      const image = overlayImage(o.sprite);
+      if (!image) continue;
+      const source = alphaPick ? alphaPick(image) : image;
+      if (!source) continue;
+      const [x0, y0, x1, y1] = o.rect;
+      g.save();
+      if (o.flash && !alphaPick) g.filter = `brightness(${1.25 + Math.abs(Math.sin(time * 24)) * 0.6})`;
+      g.drawImage(source, (x0 - choice.rootX) * scale, (y0 - choice.rootY) * scale, (x1 - x0) * scale, (y1 - y0) * scale);
+      g.restore();
+    }
+  };
+  const drawAll = (pick: (image: HTMLImageElement) => CanvasImageSource | null, dx = 0, dy = 0): void => {
+    if (!hideBody) draw(pick, dx, dy);
+  };
+
   if (ghost) {
     g.globalAlpha = view.ghostAlpha;
-    draw((image) => solidTintedSprite(image, fighter.data.accentColor));
+    drawAll((image) => solidTintedSprite(image, fighter.data.accentColor));
+    drawOverlays((image) => solidTintedSprite(image, fighter.data.accentColor));
     g.restore();
     g.restore();
     return true;
@@ -268,18 +310,19 @@ function drawBody(
     g.save();
     g.globalAlpha = 0.85;
     for (const [dx, dy] of OUTLINE_OFFSETS) {
-      draw((image) => solidTintedSprite(image, TWO_P_OUTLINE), dx, dy);
+      drawAll((image) => solidTintedSprite(image, TWO_P_OUTLINE), dx, dy);
     }
     g.restore();
   }
 
-  draw((image) => image);
+  drawAll((image) => image);
+  drawOverlays();
 
   // 2P 보조색 보정은 피부 픽셀만 원본 위에 옅게 얹는다(눈·이빨은 그대로).
   if (altSkin) {
     g.save();
     g.globalAlpha = ALT_PALETTE_ALPHA;
-    draw((image) => skinTintedSprite(image, fighter.data.color, altSkin));
+    drawAll((image) => skinTintedSprite(image, fighter.data.color, altSkin));
     g.restore();
   }
   g.restore();

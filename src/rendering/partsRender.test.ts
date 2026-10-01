@@ -74,7 +74,7 @@ describe('파츠 리그 렌더링 통합', () => {
     const f = new Fighter(0, 'tyrannosaurus', 600, 1, assets());
     f.state = 'attack';
     f.attack = { move: f.moves.heavy, attackId: 1, frame: 12, hitTargets: new Set() };
-    f.scriptVisual = { rot: 0.1, sx: 1.1, sy: 0.9, ghost: 1, parts: { head: -14, jaw: 24 } };
+    f.scriptVisual = { rot: 0.1, sx: 1.1, sy: 0.9, ghost: 1, sink: 0, parts: { head: -14, jaw: 24 }, overlays: [] };
     const { g, drawn } = recordingContext();
     renderFighter(g, f, 900, 0);
     // 본체 9파츠(잔상 착색은 DOM 캔버스가 필요해 헤드리스 크롬 캡처로 따로 확인).

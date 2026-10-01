@@ -53,7 +53,8 @@ describe('동일 캐릭터 대전과 2P 보조색', () => {
 
 describe('전투 규칙', () => {
   it('공격 1회는 같은 상대에게 한 번만 피해를 준다', () => {
-    const match = new Match('versus', ['tyrannosaurus', 'triceratops']);
+    // 옛 단타 기술이 남아 있지 않아(12종 전부 스크립트) 판정 상자 1개짜리 약공격(트리케라 뿔 찌르기)으로 확인한다.
+    const match = new Match('versus', ['triceratops', 'tyrannosaurus']);
     fighting(match);
     placeClose(match);
 
@@ -66,7 +67,7 @@ describe('전투 규칙', () => {
     // 공격이 끝날 때까지 넉넉히 진행한다.
     advance(match, input, 40);
 
-    expect(before - match.p2.health).toBe(10);
+    expect(before - match.p2.health).toBe(Math.round(10 * match.p1.data.damageScale));
   });
 
   it('새 공격은 다시 피해를 줄 수 있다', () => {
@@ -281,15 +282,20 @@ describe('연출 이벤트 (프롬프트 6)', () => {
   });
 
   it('강공격은 양측에 타격 정지 프레임을 남긴다', () => {
-    // 티라노 강공격은 잡기 기술(스크립트)로 바뀌어, 단타 강공격인 트리케라로 확인한다.
-    const match = new Match('versus', ['triceratops', 'tyrannosaurus']);
+    // 강공격이 모두 스크립트 기술로 바뀌어, 단타 강공격(카르노 순간 들이받기)으로 확인한다.
+    const match = new Match('versus', ['carnotaurus', 'tyrannosaurus']);
     fighting(match);
     match.consumeEvents();
     placeClose(match);
 
     const input = new ScriptInput();
     input.press(0, 'heavy');
-    const events = attackUntilEvent(match, input, 40);
+    const events: MatchEvent[] = [];
+    for (let i = 0; i < 40 && !events.some((e) => e.type === 'hit'); i++) {
+      match.step(input, FIXED_DT);
+      input.clearPressed();
+      events.push(...match.consumeEvents());
+    }
 
     expect(events.some((event) => event.type === 'hit')).toBe(true);
     expect(match.p1.hitstopFrames).toBeGreaterThan(0);

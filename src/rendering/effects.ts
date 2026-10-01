@@ -6,7 +6,7 @@
  * 이 모듈은 그 자리에 그림만 뿌린다.
  */
 
-export type EffectKind = 'dust' | 'star' | 'shockwave' | 'spark';
+export type EffectKind = 'dust' | 'star' | 'shockwave' | 'spark' | 'slash' | 'feather';
 
 export interface EffectParticle {
   kind: EffectKind;
@@ -95,6 +95,46 @@ export class EffectSystem {
         rotation: 0,
         spin: 0,
         color: DUST_COLOR,
+      });
+    }
+  }
+
+  /** 발톱 자국 세 줄(할퀴기·베기). angle = 긋는 방향(라디안). */
+  spawnSlash(x: number, y: number, angle = 0.9, size = 120, color = '#ffffff'): void {
+    this.push({
+      kind: 'slash',
+      x,
+      y,
+      vx: 0,
+      vy: 0,
+      gravity: 0,
+      life: 0.22,
+      maxLife: 0.22,
+      size,
+      rotation: angle,
+      spin: 0,
+      color,
+    });
+  }
+
+  /** 흩날리는 깃털(테리지노 회오리). */
+  spawnFeathers(x: number, y: number, count = 6, color = '#e9e4f2'): void {
+    for (let i = 0; i < count; i++) {
+      const angle = this.random() * Math.PI * 2;
+      const speed = 80 + this.random() * 160;
+      this.push({
+        kind: 'feather',
+        x,
+        y,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed - 80,
+        gravity: 120,
+        life: 0.7 + this.random() * 0.5,
+        maxLife: 1.2,
+        size: 12 + this.random() * 8,
+        rotation: angle,
+        spin: (this.random() - 0.5) * 8,
+        color,
       });
     }
   }
@@ -205,6 +245,19 @@ export class EffectSystem {
         case 'star':
           drawStar(g, p);
           break;
+        case 'slash':
+          drawSlash(g, p, t);
+          break;
+        case 'feather':
+          g.save();
+          g.translate(p.x, p.y);
+          g.rotate(p.rotation);
+          g.fillStyle = p.color;
+          g.beginPath();
+          g.ellipse(0, 0, p.size, p.size * 0.32, 0, 0, Math.PI * 2);
+          g.fill();
+          g.restore();
+          break;
         case 'shockwave': {
           const grow = 1 - t;
           g.strokeStyle = p.color;
@@ -227,6 +280,25 @@ function drawSpark(g: CanvasRenderingContext2D, p: EffectParticle): void {
   g.moveTo(p.x, p.y);
   g.lineTo(p.x - Math.cos(p.rotation) * p.size * 2.4, p.y - Math.sin(p.rotation) * p.size * 2.4);
   g.stroke();
+}
+
+function drawSlash(g: CanvasRenderingContext2D, p: EffectParticle, t: number): void {
+  // 나타날 때 길게 그어지고(1-t), 사라질 때 옅어진다.
+  const reveal = Math.min(1, (1 - t) * 3 + 0.2);
+  g.save();
+  g.translate(p.x, p.y);
+  g.rotate(p.rotation);
+  g.strokeStyle = p.color;
+  g.lineCap = 'round';
+  for (let i = -1; i <= 1; i++) {
+    g.lineWidth = 9 - Math.abs(i) * 2;
+    g.beginPath();
+    const len = p.size * (1 - Math.abs(i) * 0.15) * reveal;
+    g.moveTo(-p.size / 2, i * 26);
+    g.quadraticCurveTo(0, i * 26 - 22, -p.size / 2 + len, i * 26);
+    g.stroke();
+  }
+  g.restore();
 }
 
 function drawStar(g: CanvasRenderingContext2D, p: EffectParticle): void {

@@ -6,7 +6,7 @@ import type { Fighter } from '../combat/Fighter';
 import { EMOTION_COLORS, EMOTION_LABELS, emotionFor } from '../combat/emotion';
 import type { Rect } from '../combat/types';
 import { EffectSystem } from '../rendering/effects';
-import { renderFighter } from '../rendering/FighterRenderer';
+import { renderFighter, setOverlayLoader } from '../rendering/FighterRenderer';
 import type { CharacterAssets } from '../rendering/CharacterAssets';
 import { sfxIdForEvent } from '../audio/tracks';
 import { BaseScene } from './BaseScene';
@@ -53,6 +53,7 @@ export class BattleScene extends BaseScene {
       ? new Match(session.mode, session.characters, this.characterAssets, options)
       : new Match(session.mode, session.characters, undefined, options);
     context.audio.playBgm('battle');
+    setOverlayLoader(context.assets);
   }
 
   exit(): void {
@@ -103,6 +104,10 @@ export class BattleScene extends BaseScene {
           this.effects.spawnShockwave(event.x, y, event.direction);
         } else if (event.fx === 'splash') {
           this.effects.spawnDust(event.x, y, Math.round(8 * strength), strength * 1.2);
+        } else if (event.fx === 'slash') {
+          this.effects.spawnSlash(event.x, y, event.direction === 1 ? 0.9 : Math.PI - 0.9, 110 * strength);
+        } else if (event.fx === 'feathers') {
+          this.effects.spawnFeathers(event.x, y, Math.round(6 * strength));
         } else if (event.fx === 'flash') {
           this.flashFrames = Math.max(this.flashFrames, Math.round(3 * strength));
         }
@@ -190,9 +195,7 @@ export class BattleScene extends BaseScene {
     g.stroke();
 
     // 잡힌 쪽은 잡은 쪽 뒤에 그린다(입에 물린 것처럼).
-    const order = [...this.match.fighters].sort(
-      (a, b) => (a.state === 'held' ? 0 : 1) - (b.state === 'held' ? 0 : 1),
-    );
+    const order = drawOrder(this.match.fighters);
     for (const fighter of order) {
       renderFighter(g, fighter, stage.groundY, this.elapsed);
     }
@@ -422,11 +425,14 @@ export class BattleScene extends BaseScene {
     if (spec.sprite && !image) void this.context.assets.loadImage(spec.sprite);
     g.save();
     g.translate(p.x, groundY + p.y);
+    const grow = 1 + (spec.grow ?? 0) * p.age;
+    if (spec.fade) g.globalAlpha = Math.max(0, Math.min(1, p.life / 0.25));
+    g.scale(grow, grow);
     // 속도선(회전 전, 진행 반대쪽).
     g.strokeStyle = 'rgba(255,255,255,0.75)';
     g.lineWidth = 5;
     g.lineCap = 'round';
-    for (let i = -1; i <= 1; i++) {
+    for (let i = -1; i <= 1 && !spec.noTrail && !image; i++) {
       g.beginPath();
       g.moveTo(-p.facing * spec.w * 0.55, i * spec.h * 0.22);
       g.lineTo(-p.facing * spec.w * (0.95 + Math.abs(i) * -0.15), i * spec.h * 0.22);
@@ -451,6 +457,19 @@ export class BattleScene extends BaseScene {
     }
     g.restore();
   }
+}
+
+/**
+ * 그리기 순서(뒤 → 앞). 공격 중인 쪽을 항상 앞에 그려 돌진·왕복 중 상대 몸 뒤로 숨지 않게 한다
+ * (마스터 판정 2026-10-01). 잡힌 쪽은 잡은 쪽 뒤.
+ */
+export function drawOrder(fighters: readonly Fighter[]): Fighter[] {
+  const rank = (f: Fighter): number => {
+    if (f.state === 'held') return 0;
+    if (f.state === 'attack') return 2;
+    return 1;
+  };
+  return [...fighters].sort((a, b) => rank(a) - rank(b));
 }
 
 /** 판정 상자는 지면 기준 y라서 화면 좌표로 옮겨 그린다. */

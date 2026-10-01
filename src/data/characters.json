@@ -116,6 +116,7 @@
       "color": "#74523C",
       "accentColor": "#B99C70",
       "rigPath": "assets/characters/ankylosaurus/rig.json",
+      "partsPath": "assets/characters/ankylosaurus/parts/rig",
       "portraitPath": "assets/characters/ankylosaurus/portrait.png",
       "moves": {
         "light": "ankylosaurus_light",

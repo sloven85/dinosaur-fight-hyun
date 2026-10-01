@@ -32,7 +32,7 @@ function damageAtMinGap(p1: string, p2: string, kind: AttackKind): number {
   input.press(0, kind);
   match.step(input, FIXED_DT);
   input.clearPressed();
-  for (let i = 0; i < 60; i++) match.step(input, FIXED_DT);
+  for (let i = 0; i < 200; i++) match.step(input, FIXED_DT);
   return before - match.p2.health;
 }
 

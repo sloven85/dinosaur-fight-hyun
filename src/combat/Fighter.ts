@@ -56,7 +56,11 @@ export interface ScriptVisual {
   sx: number;
   sy: number;
   ghost: number;
+  /** 보이는 모양만 땅 아래로(px). */
+  sink: number;
   parts: Record<string, number> | null;
+  /** 지금 켜진 덧그림(마스터 무대 좌표). */
+  overlays: { sprite: string; rect: [number, number, number, number]; hideBody: boolean; flash: boolean }[];
 }
 
 /** 잔상 한 장. */
@@ -421,7 +425,10 @@ export class Fighter {
     if (!script || !run || !this.attack) return;
     const f = this.attack.frame;
     const forward =
-      sampleChannel(script, 'x', f) + sampleChannel(script, 'xr', f) * run.dashDistance;
+      sampleChannel(script, 'x', f) +
+      sampleChannel(script, 'xr', f) * run.dashDistance +
+      sampleChannel(script, 'xw', f) * run.wallDistance +
+      sampleChannel(script, 'xo', f) * run.opponentGap;
     this.x = run.startX + run.startFacing * forward;
     if (hasChannel(script, 'y')) {
       this.y = Math.min(0, run.startY + sampleChannel(script, 'y', f));
@@ -434,8 +441,32 @@ export class Fighter {
       sx: sampleChannel(script, 'sx', f),
       sy: sampleChannel(script, 'sy', f),
       ghost: sampleChannel(script, 'ghost', f),
+      sink: sampleChannel(script, 'sink', f),
       parts: sampleParts(script, f),
+      overlays: (script.overlays ?? [])
+        .filter((o) => f >= o.from && f <= o.to)
+        .map((o) => ({ sprite: o.sprite, rect: o.rect, hideBody: !!o.hideBody, flash: !!o.flash })),
     };
+  }
+
+  /** 땅속·순간이동 중이라 맞지 않는지. */
+  isIntangible(): boolean {
+    const script = this.activeScript;
+    return !!script && sampleChannel(script, 'intang', this.attack?.frame ?? 0) >= 0.5;
+  }
+
+  /** 반격 자세 구간이면 성공 프레임으로 건너뛰고 true. */
+  tryCounter(): boolean {
+    const script = this.activeScript;
+    const run = this.attack?.script;
+    const counter = script?.counter;
+    if (!script || !run || !counter || run.countered || !this.attack) return false;
+    const f = this.attack.frame;
+    if (f < counter.from || f > counter.to) return false;
+    run.countered = true;
+    this.attack.frame = counter.success;
+    this.applyScriptFrame();
+    return true;
   }
 
   /** 잡은 상대의 위치(몸 앞끝 기준)와 기울기. */
@@ -613,11 +644,18 @@ export class Fighter {
       const gap = opp ? Math.abs(opp.x - this.x) : 400;
       // xr=1: 상대 몸을 지나 바로 뒤까지(왕복 공격). 너무 멀거나 가까우면 자른다.
       const dash = opp ? gap + opp.bodyWidth / 2 + this.bodyFront * 0.6 : 500;
+      const wall =
+        (this.facing === 1 ? ARENA_RIGHT - this.x : this.x - ARENA_LEFT) -
+        this.bodyFront -
+        (opp ? opp.bodyWidth : 0);
       this.attack.script = {
         startX: this.x,
         startY: this.y,
         startFacing: this.facing,
         dashDistance: Math.max(260, Math.min(900, dash)),
+        wallDistance: Math.max(0, wall),
+        opponentGap: opp ? (opp.x - this.x) * this.facing : 400,
+        countered: false,
         fired: new Set(),
         landed: new Set(),
         grabbed: false,
@@ -631,7 +669,7 @@ export class Fighter {
     if (!this.onGround) this.airAttackUsed = true;
 
     // 파키케팔로사우루스: 지상 강공격은 앞으로 뛰어들며 시작한다(도약 돌진).
-    if (kind === 'heavy' && this.onGround && this.data.traits?.leapCharge) {
+    if (kind === 'heavy' && this.onGround && this.data.traits?.leapCharge && !move.script) {
       this.vy = LEAP_CHARGE_VELOCITY;
       this.onGround = false;
       this.airAttackUsed = true;

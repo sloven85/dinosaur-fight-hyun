@@ -53,6 +53,18 @@ describe('기술 스크립트 데이터', () => {
     expect(errors).toEqual([]);
   });
 
+  it('12종 36개 기술이 모두 스크립트 기술이다', () => {
+    expect(MOVES.filter((m) => !m.script).map((m) => m.id)).toEqual([]);
+  });
+
+  it('종마다 약·강·특수가 서로 다른 동작이다(키프레임 구성이 겹치지 않는다)', () => {
+    const species = new Set(MOVES.map((m) => m.id.split('_')[0]));
+    for (const id of species) {
+      const sig = ['light', 'heavy', 'special'].map((k) => JSON.stringify(MOVES.find((m) => m.id === `${id}_${k}`)!.script!.keys));
+      expect(new Set(sig).size).toBe(3);
+    }
+  });
+
   it('파일럿 3종이 스크립트 기술이다', () => {
     const ids = MOVES.filter((m) => m.script).map((m) => m.id);
     expect(ids).toEqual(expect.arrayContaining(['tyrannosaurus_heavy', 'stegosaurus_heavy', 'velociraptor_special']));
@@ -190,5 +202,97 @@ describe('벨로키 번개 왕복(다단히트·잔상·통과)', () => {
       maxGhosts = Math.max(maxGhosts, match.p1.ghosts.length);
     }
     expect(maxGhosts).toBeGreaterThanOrEqual(3);
+  });
+});
+
+describe('12종 확대 기술(대표 동작)', () => {
+  it('안킬로 철벽 반격: 웅크린 동안 맞으면 피해 없이 홈런으로 날린다', () => {
+    const match = new Match('versus', ['ankylosaurus', 'triceratops'], [realAssets('ankylosaurus'), realAssets('triceratops')]);
+    const idle = new ScriptInput();
+    for (let i = 0; i < ROUND_INTRO_FRAMES; i++) match.step(idle, FIXED_DT);
+    match.p1.x = 600;
+    match.p2.x = 600 + minGap('ankylosaurus', 'triceratops') + 40;
+    match.p1.meter = 100;
+    const input = new ScriptInput();
+    input.press(0, 'special');
+    const hp1 = match.p1.health;
+    const hp2 = match.p2.health;
+    let fallen = false;
+    for (let i = 0; i < 160; i++) {
+      if (i === 24) input.press(1, 'light');
+      match.step(input, FIXED_DT);
+      input.clearPressed();
+      fallen ||= match.p2.state === 'fallen';
+    }
+    expect(match.p1.health).toBe(hp1);
+    expect(match.p2.health).toBeLessThan(hp2);
+    expect(fallen).toBe(true);
+  });
+
+  it('브라키오 대지진: 땅에 있으면 넘어지고, 점프하면 피한다', () => {
+    const ground = run('brachiosaurus', 'triceratops', 'special', 1100, 120, 300);
+    expect(ground.trace.some((t) => t.p2state === 'fallen')).toBe(true);
+
+    const match = new Match('versus', ['brachiosaurus', 'triceratops'], [realAssets('brachiosaurus'), realAssets('triceratops')]);
+    const idle = new ScriptInput();
+    for (let i = 0; i < ROUND_INTRO_FRAMES; i++) match.step(idle, FIXED_DT);
+    match.p1.x = 300;
+    match.p2.x = 1400;
+    match.p1.meter = 100;
+    const input = new ScriptInput();
+    input.press(0, 'special');
+    const hp = match.p2.health;
+    for (let i = 0; i < 120; i++) {
+      if (i === 38) input.press(1, 'up');
+      match.step(input, FIXED_DT);
+      input.clearPressed();
+    }
+    expect(match.p2.health).toBe(hp);
+  });
+
+  it('스피노 잠수 기습: 땅속에 있는 동안은 맞지 않는다', () => {
+    const match = new Match('versus', ['spinosaurus', 'triceratops'], [realAssets('spinosaurus'), realAssets('triceratops')]);
+    const idle = new ScriptInput();
+    for (let i = 0; i < ROUND_INTRO_FRAMES; i++) match.step(idle, FIXED_DT);
+    match.p1.meter = 100;
+    const input = new ScriptInput();
+    input.press(0, 'special');
+    let intangible = 0;
+    for (let i = 0; i < 40; i++) {
+      match.step(input, FIXED_DT);
+      input.clearPressed();
+      if (match.p1.isIntangible()) intangible += 1;
+    }
+    expect(intangible).toBeGreaterThan(15);
+  });
+
+  it('트리케라 뿔로 퍼올리기: 상대를 머리 위로 넘겨 뒤로 보낸다(위치 바꾸기)', () => {
+    const r = run('triceratops', 'tyrannosaurus', 'heavy', minGap('triceratops', 'tyrannosaurus') + 40, 140);
+    const last = r.trace[r.trace.length - 1];
+    expect(last.p2x).toBeLessThan(last.p1x);
+  });
+
+  it('파키 박치기 로켓: 머리 위에 떨어져 기절(별)', () => {
+    const r = run('pachycephalosaurus', 'triceratops', 'special', minGap('pachycephalosaurus', 'triceratops') + 200, 120, 500);
+    expect(r.trace.some((t) => t.p2state === 'stun')).toBe(true);
+    expect(r.events.some((e) => e.type === 'stun')).toBe(true);
+  });
+
+  it('프테라 공중 납치: 낚아채 하늘로 들고 갔다가 떨어뜨린다', () => {
+    const r = run('pteranodon', 'triceratops', 'special', minGap('pteranodon', 'triceratops') + 150, 170);
+    expect(Math.min(...r.trace.filter((t) => t.p2state === 'held').map((t) => t.p2y))).toBeLessThan(-250);
+    expect(r.trace.some((t) => t.p2state === 'fallen')).toBe(true);
+  });
+});
+
+describe('그리기 순서(마스터 판정: 돌진 중 공격자를 상대 앞에)', () => {
+  it('공격 중인 쪽이 뒤에 그려지지 않는다', async () => {
+    const { drawOrder } = await import('../scenes/BattleScene');
+    const match = new Match('versus', ['triceratops', 'velociraptor']);
+    match.p2.state = 'attack';
+    expect(drawOrder(match.fighters)[1]).toBe(match.p2);
+    match.p2.state = 'idle';
+    match.p1.state = 'attack';
+    expect(drawOrder(match.fighters)[1]).toBe(match.p1);
   });
 });

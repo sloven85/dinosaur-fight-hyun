@@ -3,7 +3,7 @@
     {
       "id": "tyrannosaurus_light",
       "kind": "light",
-      "name": "약한 물기",
+      "name": "딱딱 2연속 물기",
       "startupFrames": 6,
       "activeFrames": 4,
       "recoveryFrames": 14,
@@ -21,7 +21,114 @@
           "width": 120,
           "height": 129
         }
-      ]
+      ],
+      "script": {
+        "frames": 30,
+        "reach": 110,
+        "keys": [
+          {
+            "f": 0,
+            "x": 0,
+            "rot": 0,
+            "sx": 1,
+            "sy": 1,
+            "parts": {
+              "head": 0,
+              "jaw": 0
+            }
+          },
+          {
+            "f": 4,
+            "ease": "out",
+            "x": -10,
+            "rot": -0.06,
+            "parts": {
+              "head": -12,
+              "jaw": 26
+            }
+          },
+          {
+            "f": 7,
+            "ease": "out",
+            "x": 40,
+            "rot": 0.07,
+            "sx": 1.08,
+            "sy": 0.95,
+            "parts": {
+              "head": 10,
+              "jaw": -6
+            }
+          },
+          {
+            "f": 10,
+            "ease": "out",
+            "x": 30,
+            "rot": -0.04,
+            "parts": {
+              "head": -12,
+              "jaw": 26
+            }
+          },
+          {
+            "f": 13,
+            "ease": "out",
+            "x": 70,
+            "rot": 0.09,
+            "sx": 1.1,
+            "sy": 0.94,
+            "parts": {
+              "head": 10,
+              "jaw": -6
+            }
+          },
+          {
+            "f": 28,
+            "x": 0,
+            "rot": 0,
+            "sx": 1,
+            "sy": 1,
+            "parts": {
+              "head": 0,
+              "jaw": 0
+            }
+          }
+        ],
+        "hits": [
+          {
+            "from": 6,
+            "to": 8,
+            "box": {
+              "x": -40,
+              "y": -344,
+              "w": 130,
+              "h": 163,
+              "anchor": "front"
+            },
+            "damage": 5,
+            "knockback": 20,
+            "hitstun": 14,
+            "hitstop": 3,
+            "fx": "light"
+          },
+          {
+            "from": 12,
+            "to": 15,
+            "box": {
+              "x": -40,
+              "y": -344,
+              "w": 150,
+              "h": 163,
+              "anchor": "front"
+            },
+            "damage": 6,
+            "knockback": 80,
+            "hitstun": 14,
+            "hitstop": 5,
+            "fx": "light"
+          }
+        ],
+        "events": []
+      }
     },
     {
       "id": "tyrannosaurus_heavy",
@@ -365,7 +472,7 @@
     {
       "id": "tyrannosaurus_special",
       "kind": "special",
-      "name": "티라노 로어",
+      "name": "대포효",
       "startupFrames": 24,
       "activeFrames": 10,
       "recoveryFrames": 38,
@@ -383,12 +490,185 @@
           "width": 210,
           "height": 232
         }
-      ]
+      ],
+      "script": {
+        "frames": 80,
+        "reach": 700,
+        "keys": [
+          {
+            "f": 0,
+            "x": 0,
+            "rot": 0,
+            "sx": 1,
+            "sy": 1,
+            "parts": {
+              "head": 0,
+              "jaw": 0,
+              "tailbase": 0,
+              "neararm": 0
+            }
+          },
+          {
+            "f": 18,
+            "ease": "out",
+            "x": -40,
+            "rot": -0.22,
+            "sx": 0.92,
+            "sy": 1.1,
+            "parts": {
+              "head": -22,
+              "jaw": 4,
+              "tailbase": 10,
+              "neararm": -10
+            }
+          },
+          {
+            "f": 22,
+            "ease": "out",
+            "x": -10,
+            "rot": 0.05,
+            "sx": 1.14,
+            "sy": 0.92,
+            "parts": {
+              "head": 6,
+              "jaw": 34,
+              "tailbase": -8,
+              "neararm": 10
+            }
+          },
+          {
+            "f": 38,
+            "x": -10,
+            "rot": 0.05,
+            "sx": 1.1,
+            "sy": 0.94,
+            "parts": {
+              "head": 4,
+              "jaw": 34
+            }
+          },
+          {
+            "f": 44,
+            "ease": "in",
+            "x": -30,
+            "rot": -0.06,
+            "sx": 1,
+            "sy": 1,
+            "parts": {
+              "head": -14,
+              "jaw": 26
+            }
+          },
+          {
+            "f": 52,
+            "ease": "out",
+            "xo": 0.72,
+            "x": 0,
+            "rot": 0.1,
+            "sx": 1.12,
+            "sy": 0.92,
+            "ghost": 0.9,
+            "parts": {
+              "head": 12,
+              "jaw": -6
+            }
+          },
+          {
+            "f": 56,
+            "ghost": 0
+          },
+          {
+            "f": 78,
+            "xo": 0.72,
+            "x": 0,
+            "rot": 0,
+            "sx": 1,
+            "sy": 1,
+            "parts": {
+              "head": 0,
+              "jaw": 0,
+              "tailbase": 0,
+              "neararm": 0
+            }
+          }
+        ],
+        "hits": [
+          {
+            "from": 50,
+            "to": 56,
+            "box": {
+              "x": -80,
+              "y": -237,
+              "w": 200,
+              "h": 258,
+              "anchor": "front"
+            },
+            "damage": 12,
+            "knockback": 120,
+            "hitstun": 24,
+            "hitstop": 8,
+            "otg": true,
+            "fx": "special"
+          }
+        ],
+        "events": [
+          {
+            "f": 22,
+            "type": "projectile",
+            "x": -40,
+            "y": -266.6,
+            "vx": 950,
+            "life": 0.85,
+            "w": 180,
+            "h": 300,
+            "sprite": "assets/effects/trex_shockwave.png",
+            "grow": 0.9,
+            "fade": true,
+            "noTrail": true,
+            "pierce": true,
+            "spin": 0,
+            "damage": 12,
+            "knockback": 30,
+            "hitstun": 20,
+            "hitstop": 6,
+            "knockdown": 70,
+            "fx": "special"
+          },
+          {
+            "f": 22,
+            "type": "fx",
+            "fx": "shake",
+            "strength": 1.6
+          },
+          {
+            "f": 22,
+            "type": "fx",
+            "fx": "flash",
+            "strength": 1.2
+          },
+          {
+            "f": 22,
+            "type": "fx",
+            "fx": "shockwave",
+            "strength": 1,
+            "x": 40,
+            "y": -258
+          },
+          {
+            "f": 52,
+            "type": "fx",
+            "fx": "dust",
+            "strength": 1,
+            "x": -200,
+            "y": 0
+          }
+        ]
+      }
     },
     {
       "id": "triceratops_light",
       "kind": "light",
-      "name": "짧은 들이받기",
+      "name": "뿔 찌르기",
       "startupFrames": 6,
       "activeFrames": 4,
       "recoveryFrames": 14,
@@ -406,12 +686,73 @@
           "width": 134,
           "height": 110
         }
-      ]
+      ],
+      "script": {
+        "frames": 28,
+        "reach": 140,
+        "keys": [
+          {
+            "f": 0,
+            "x": 0,
+            "rot": 0,
+            "sx": 1,
+            "sy": 1
+          },
+          {
+            "f": 6,
+            "ease": "out",
+            "x": -14,
+            "rot": -0.072,
+            "sx": 0.94,
+            "sy": 1.05
+          },
+          {
+            "f": 9,
+            "ease": "out",
+            "x": 60,
+            "rot": 0.12,
+            "sx": 1.12,
+            "sy": 0.8799999999999999,
+            "ghost": 0.5
+          },
+          {
+            "f": 14,
+            "x": 60,
+            "ghost": 0
+          },
+          {
+            "f": 26,
+            "x": 0,
+            "rot": 0,
+            "sx": 1,
+            "sy": 1
+          }
+        ],
+        "hits": [
+          {
+            "from": 8,
+            "to": 12,
+            "box": {
+              "x": -40,
+              "y": -228,
+              "w": 140,
+              "h": 155,
+              "anchor": "front"
+            },
+            "damage": 10,
+            "knockback": 70,
+            "hitstun": 13,
+            "hitstop": 4,
+            "fx": "light"
+          }
+        ],
+        "events": []
+      }
     },
     {
       "id": "triceratops_heavy",
       "kind": "heavy",
-      "name": "뿔 밀어내기",
+      "name": "뿔로 퍼올리기",
       "startupFrames": 14,
       "activeFrames": 6,
       "recoveryFrames": 24,
@@ -429,12 +770,146 @@
           "width": 185,
           "height": 155
         }
-      ]
+      ],
+      "script": {
+        "frames": 104,
+        "reach": 140,
+        "keys": [
+          {
+            "f": 0,
+            "x": 0,
+            "rot": 0,
+            "sx": 1,
+            "sy": 1
+          },
+          {
+            "f": 12,
+            "ease": "out",
+            "x": -20,
+            "rot": 0.18,
+            "sx": 0.94,
+            "sy": 0.92
+          },
+          {
+            "f": 17,
+            "ease": "out",
+            "x": 70,
+            "rot": 0.2,
+            "sx": 1.1,
+            "sy": 0.9,
+            "ghost": 0.6
+          },
+          {
+            "f": 22,
+            "ghost": 0
+          },
+          {
+            "f": 30,
+            "x": 50,
+            "rot": 0.16,
+            "hold": {
+              "x": -40,
+              "y": -40,
+              "rot": 0
+            }
+          },
+          {
+            "f": 44,
+            "ease": "in",
+            "x": 40,
+            "rot": -0.32,
+            "sx": 0.96,
+            "sy": 1.1,
+            "hold": {
+              "x": -150,
+              "y": -386.40000000000003,
+              "rot": -1.4
+            }
+          },
+          {
+            "f": 52,
+            "ease": "out",
+            "x": 30,
+            "rot": -0.4,
+            "sy": 1.12,
+            "hold": {
+              "x": -482,
+              "y": -331.2,
+              "rot": -2.6
+            }
+          },
+          {
+            "f": 70,
+            "x": 0,
+            "rot": 0,
+            "sx": 1,
+            "sy": 1
+          },
+          {
+            "f": 71,
+            "ease": "step",
+            "x": 70,
+            "rot": 0.2,
+            "sx": 1,
+            "sy": 1
+          },
+          {
+            "f": 102,
+            "x": 0,
+            "rot": 0,
+            "sx": 1,
+            "sy": 1
+          }
+        ],
+        "grab": {
+          "from": 15,
+          "to": 22,
+          "box": {
+            "x": -50,
+            "y": -258,
+            "w": 170,
+            "h": 258,
+            "anchor": "front"
+          },
+          "success": 30,
+          "miss": 71
+        },
+        "hits": [],
+        "events": [
+          {
+            "f": 52,
+            "type": "throw",
+            "vx": 300,
+            "vy": -500,
+            "damage": 18,
+            "knockdown": 50,
+            "behind": true
+          },
+          {
+            "f": 52,
+            "type": "fx",
+            "fx": "shake",
+            "strength": 1
+          },
+          {
+            "f": 66,
+            "type": "fx",
+            "fx": "dust",
+            "strength": 1.2,
+            "x": -724,
+            "y": 0
+          },
+          {
+            "f": 70,
+            "type": "end"
+          }
+        ]
+      }
     },
     {
       "id": "triceratops_special",
       "kind": "special",
-      "name": "트리플 혼 러시",
+      "name": "전력 돌진",
       "startupFrames": 24,
       "activeFrames": 10,
       "recoveryFrames": 38,
@@ -452,12 +927,190 @@
           "width": 235,
           "height": 199
         }
-      ]
+      ],
+      "script": {
+        "frames": 104,
+        "reach": 900,
+        "keys": [
+          {
+            "f": 0,
+            "x": 0,
+            "rot": 0,
+            "sx": 1,
+            "sy": 1
+          },
+          {
+            "f": 6,
+            "ease": "linear",
+            "x": -20,
+            "rot": 0.1,
+            "sy": 0.92
+          },
+          {
+            "f": 10,
+            "x": -10,
+            "rot": 0.12,
+            "sy": 0.9
+          },
+          {
+            "f": 14,
+            "x": -24,
+            "rot": 0.1,
+            "sy": 0.92
+          },
+          {
+            "f": 16,
+            "ease": "linear",
+            "x": 0,
+            "xw": 0,
+            "rot": 0.18,
+            "sx": 1.08,
+            "sy": 0.9,
+            "ghost": 1
+          },
+          {
+            "f": 56,
+            "ease": "in",
+            "xw": 1,
+            "rot": 0.2,
+            "sx": 1.12,
+            "sy": 0.9,
+            "ghost": 1,
+            "hold": {
+              "x": 30,
+              "y": 0,
+              "rot": 0.2
+            }
+          },
+          {
+            "f": 60,
+            "ease": "out",
+            "xw": 0.97,
+            "rot": -0.1,
+            "sx": 0.9,
+            "sy": 1.08,
+            "ghost": 0,
+            "hold": {
+              "x": 10,
+              "y": 0,
+              "rot": -0.3
+            }
+          },
+          {
+            "f": 76,
+            "xw": 0.92,
+            "x": 0,
+            "rot": 0,
+            "sx": 1,
+            "sy": 1
+          },
+          {
+            "f": 100,
+            "xw": 0.92,
+            "x": 0,
+            "rot": 0,
+            "sx": 1,
+            "sy": 1
+          }
+        ],
+        "grab": {
+          "from": 16,
+          "to": 56,
+          "box": {
+            "x": -40,
+            "y": -276,
+            "w": 140,
+            "h": 276,
+            "anchor": "front"
+          },
+          "miss": 57
+        },
+        "passThrough": false,
+        "hits": [],
+        "events": [
+          {
+            "f": 2,
+            "type": "fx",
+            "fx": "dust",
+            "strength": 0.8,
+            "x": -579.2,
+            "y": 0
+          },
+          {
+            "f": 8,
+            "type": "fx",
+            "fx": "dust",
+            "strength": 0.8,
+            "x": -579.2,
+            "y": 0
+          },
+          {
+            "f": 14,
+            "type": "fx",
+            "fx": "dust",
+            "strength": 1,
+            "x": -579.2,
+            "y": 0
+          },
+          {
+            "f": 24,
+            "type": "fx",
+            "fx": "dust",
+            "strength": 0.8,
+            "x": -651.6,
+            "y": 0
+          },
+          {
+            "f": 34,
+            "type": "fx",
+            "fx": "dust",
+            "strength": 0.8,
+            "x": -651.6,
+            "y": 0
+          },
+          {
+            "f": 44,
+            "type": "fx",
+            "fx": "dust",
+            "strength": 0.8,
+            "x": -651.6,
+            "y": 0
+          },
+          {
+            "f": 57,
+            "type": "throw",
+            "vx": 120,
+            "vy": -520,
+            "damage": 28,
+            "knockdown": 60
+          },
+          {
+            "f": 57,
+            "type": "fx",
+            "fx": "shake",
+            "strength": 2.2
+          },
+          {
+            "f": 57,
+            "type": "fx",
+            "fx": "flash",
+            "strength": 1.4
+          },
+          {
+            "f": 57,
+            "type": "fx",
+            "fx": "dust",
+            "strength": 2,
+            "x": 40,
+            "y": -147
+          }
+        ]
+      }
     },
     {
       "id": "velociraptor_light",
       "kind": "light",
-      "name": "짧은 발차기",
+      "name": "할퀴기 3연타",
       "startupFrames": 6,
       "activeFrames": 4,
       "recoveryFrames": 14,
@@ -475,12 +1128,184 @@
           "width": 108,
           "height": 97
         }
-      ]
+      ],
+      "script": {
+        "frames": 38,
+        "reach": 120,
+        "keys": [
+          {
+            "f": 0,
+            "x": 0,
+            "rot": 0,
+            "sx": 1,
+            "sy": 1,
+            "parts": {
+              "neararm": 0,
+              "fararm": 0,
+              "head": 0
+            }
+          },
+          {
+            "f": 3,
+            "ease": "out",
+            "x": 20,
+            "rot": -0.06,
+            "parts": {
+              "neararm": 16,
+              "fararm": 12
+            }
+          },
+          {
+            "f": 6,
+            "ease": "out",
+            "x": 34,
+            "rot": 0.12,
+            "sx": 1.1,
+            "sy": 0.94,
+            "parts": {
+              "neararm": -38,
+              "fararm": -30
+            }
+          },
+          {
+            "f": 10,
+            "ease": "out",
+            "x": 34,
+            "rot": -0.06,
+            "parts": {
+              "neararm": 16,
+              "fararm": 12
+            }
+          },
+          {
+            "f": 13,
+            "ease": "out",
+            "x": 48,
+            "rot": 0.12,
+            "sx": 1.1,
+            "sy": 0.94,
+            "parts": {
+              "neararm": -38,
+              "fararm": -30
+            }
+          },
+          {
+            "f": 17,
+            "ease": "out",
+            "x": 48,
+            "rot": -0.06,
+            "parts": {
+              "neararm": 16,
+              "fararm": 12
+            }
+          },
+          {
+            "f": 20,
+            "ease": "out",
+            "x": 62,
+            "rot": 0.12,
+            "sx": 1.1,
+            "sy": 0.94,
+            "parts": {
+              "neararm": -38,
+              "fararm": -30
+            }
+          },
+          {
+            "f": 36,
+            "x": 0,
+            "rot": 0,
+            "sx": 1,
+            "sy": 1,
+            "parts": {
+              "neararm": 0,
+              "fararm": 0,
+              "head": 0
+            }
+          }
+        ],
+        "hits": [
+          {
+            "from": 5,
+            "to": 7,
+            "box": {
+              "x": -40,
+              "y": -274,
+              "w": 140,
+              "h": 177,
+              "anchor": "front"
+            },
+            "damage": 4,
+            "knockback": 25,
+            "hitstun": 16,
+            "hitstop": 2,
+            "fx": "light"
+          },
+          {
+            "from": 12,
+            "to": 14,
+            "box": {
+              "x": -40,
+              "y": -274,
+              "w": 140,
+              "h": 177,
+              "anchor": "front"
+            },
+            "damage": 4,
+            "knockback": 25,
+            "hitstun": 16,
+            "hitstop": 2,
+            "fx": "light"
+          },
+          {
+            "from": 19,
+            "to": 21,
+            "box": {
+              "x": -40,
+              "y": -274,
+              "w": 140,
+              "h": 177,
+              "anchor": "front"
+            },
+            "damage": 4,
+            "knockback": 90,
+            "hitstun": 16,
+            "hitstop": 4,
+            "fx": "light"
+          }
+        ],
+        "events": [
+          {
+            "f": 6,
+            "type": "fx",
+            "fx": "slash",
+            "strength": 0.7,
+            "x": 50,
+            "y": -193
+          },
+          {
+            "f": 13,
+            "type": "fx",
+            "fx": "slash",
+            "strength": 0.7,
+            "x": 50,
+            "y": -193
+          },
+          {
+            "f": 20,
+            "type": "fx",
+            "fx": "slash",
+            "strength": 0.7,
+            "x": 50,
+            "y": -193
+          }
+        ]
+      }
     },
     {
       "id": "velociraptor_heavy",
       "kind": "heavy",
-      "name": "발톱 차기",
+      "name": "점프 낫발톱 킥",
       "startupFrames": 14,
       "activeFrames": 6,
       "recoveryFrames": 24,
@@ -498,7 +1323,128 @@
           "width": 149,
           "height": 135
         }
-      ]
+      ],
+      "script": {
+        "frames": 56,
+        "reach": 520,
+        "passThrough": true,
+        "keys": [
+          {
+            "f": 0,
+            "x": 0,
+            "rot": 0,
+            "sx": 1,
+            "sy": 1,
+            "y": 0,
+            "parts": {
+              "farleg": 0,
+              "nearleg": 0,
+              "tailbase": 0,
+              "neararm": 0
+            }
+          },
+          {
+            "f": 6,
+            "ease": "out",
+            "sx": 1.08,
+            "sy": 0.84,
+            "y": 0,
+            "parts": {
+              "farleg": -14,
+              "nearleg": 10
+            }
+          },
+          {
+            "f": 16,
+            "ease": "out",
+            "xo": 0.4,
+            "y": -300,
+            "rot": -0.3,
+            "sx": 0.94,
+            "sy": 1.08,
+            "parts": {
+              "farleg": -30,
+              "nearleg": 20,
+              "tailbase": -10,
+              "neararm": 10
+            }
+          },
+          {
+            "f": 26,
+            "ease": "in",
+            "xo": 0.78,
+            "y": 0,
+            "rot": 0.35,
+            "sx": 1.06,
+            "ghost": 0.9,
+            "parts": {
+              "farleg": 48,
+              "nearleg": -12,
+              "tailbase": 12,
+              "neararm": -20
+            }
+          },
+          {
+            "f": 30,
+            "ghost": 0,
+            "rot": 0.1,
+            "sx": 1.1,
+            "sy": 0.9
+          },
+          {
+            "f": 52,
+            "xo": 0.78,
+            "x": 0,
+            "rot": 0,
+            "sx": 1,
+            "sy": 1,
+            "y": 0,
+            "parts": {
+              "farleg": 0,
+              "nearleg": 0,
+              "tailbase": 0,
+              "neararm": 0
+            }
+          }
+        ],
+        "hits": [
+          {
+            "from": 20,
+            "to": 27,
+            "box": {
+              "x": -120,
+              "y": -193,
+              "w": 220,
+              "h": 225,
+              "anchor": "front"
+            },
+            "damage": 16,
+            "knockback": 60,
+            "hitstun": 22,
+            "hitstop": 7,
+            "knockdown": 40,
+            "fx": "heavy"
+          }
+        ],
+        "events": [
+          {
+            "f": 26,
+            "type": "fx",
+            "fx": "dust",
+            "strength": 1.2,
+            "x": -266,
+            "y": 0
+          },
+          {
+            "f": 24,
+            "type": "fx",
+            "fx": "slash",
+            "strength": 1,
+            "x": 0,
+            "y": -129
+          }
+        ]
+      }
     },
     {
       "id": "velociraptor_special",
@@ -837,7 +1783,7 @@
     {
       "id": "spinosaurus_light",
       "kind": "light",
-      "name": "팔 밀치기",
+      "name": "앞발 할퀴기",
       "startupFrames": 6,
       "activeFrames": 4,
       "recoveryFrames": 14,
@@ -855,12 +1801,82 @@
           "width": 120,
           "height": 126
         }
-      ]
+      ],
+      "script": {
+        "frames": 28,
+        "reach": 130,
+        "keys": [
+          {
+            "f": 0,
+            "x": 0,
+            "rot": 0,
+            "sx": 1,
+            "sy": 1
+          },
+          {
+            "f": 6,
+            "ease": "out",
+            "x": -14,
+            "rot": -0.06,
+            "sx": 0.94,
+            "sy": 1.05
+          },
+          {
+            "f": 9,
+            "ease": "out",
+            "x": 40,
+            "rot": 0.1,
+            "sx": 1.12,
+            "sy": 0.8799999999999999,
+            "ghost": 0.5
+          },
+          {
+            "f": 14,
+            "x": 40,
+            "ghost": 0
+          },
+          {
+            "f": 26,
+            "x": 0,
+            "rot": 0,
+            "sx": 1,
+            "sy": 1
+          }
+        ],
+        "hits": [
+          {
+            "from": 8,
+            "to": 12,
+            "box": {
+              "x": -40,
+              "y": -336,
+              "w": 150,
+              "h": 189,
+              "anchor": "front"
+            },
+            "damage": 10,
+            "knockback": 70,
+            "hitstun": 13,
+            "hitstop": 4,
+            "fx": "light"
+          }
+        ],
+        "events": [
+          {
+            "f": 9,
+            "type": "fx",
+            "fx": "slash",
+            "strength": 0.8,
+            "x": 45.0,
+            "y": -242
+          }
+        ]
+      }
     },
     {
       "id": "spinosaurus_heavy",
       "kind": "heavy",
-      "name": "꼬리 쓸기",
+      "name": "꼬리로 물보라 쓸기",
       "startupFrames": 14,
       "activeFrames": 6,
       "recoveryFrames": 24,
@@ -878,12 +1894,116 @@
           "width": 165,
           "height": 176
         }
-      ]
+      ],
+      "script": {
+        "frames": 50,
+        "reach": 900,
+        "keys": [
+          {
+            "f": 0,
+            "x": 0,
+            "rot": 0,
+            "sx": 1,
+            "sy": 1
+          },
+          {
+            "f": 8,
+            "ease": "out",
+            "x": -10,
+            "rot": -0.08,
+            "sx": 0.92
+          },
+          {
+            "f": 9,
+            "ease": "step",
+            "sx": -0.9,
+            "sy": 1.02,
+            "rot": 0.04
+          },
+          {
+            "f": 16,
+            "ease": "out",
+            "x": 20,
+            "rot": -0.12,
+            "sx": -1.06,
+            "sy": 0.96,
+            "ghost": 0.7
+          },
+          {
+            "f": 22,
+            "ghost": 0
+          },
+          {
+            "f": 30,
+            "sx": -1,
+            "rot": 0
+          },
+          {
+            "f": 31,
+            "ease": "step",
+            "sx": 1,
+            "x": 0
+          },
+          {
+            "f": 48,
+            "x": 0,
+            "rot": 0,
+            "sx": 1,
+            "sy": 1
+          }
+        ],
+        "hits": [
+          {
+            "from": 12,
+            "to": 16,
+            "box": {
+              "x": -60,
+              "y": -210,
+              "w": 180,
+              "h": 189,
+              "anchor": "front"
+            },
+            "damage": 6,
+            "knockback": 60,
+            "hitstun": 14,
+            "hitstop": 3,
+            "fx": "light"
+          }
+        ],
+        "events": [
+          {
+            "f": 15,
+            "type": "projectile",
+            "x": -30,
+            "y": -70,
+            "vx": 720,
+            "life": 1.3,
+            "w": 280,
+            "h": 120,
+            "sprite": "assets/effects/spino_wave.png",
+            "noTrail": true,
+            "spin": 0,
+            "damage": 12,
+            "knockback": 160,
+            "hitstun": 22,
+            "hitstop": 5,
+            "fx": "heavy"
+          },
+          {
+            "f": 15,
+            "type": "fx",
+            "fx": "splash",
+            "strength": 1.2,
+            "x": -20,
+            "y": 0
+          }
+        ]
+      }
     },
     {
       "id": "spinosaurus_special",
       "kind": "special",
-      "name": "세일 슬래시",
+      "name": "잠수 기습",
       "startupFrames": 24,
       "activeFrames": 10,
       "recoveryFrames": 38,
@@ -901,12 +2021,175 @@
           "width": 210,
           "height": 227
         }
-      ]
+      ],
+      "script": {
+        "frames": 76,
+        "reach": 900,
+        "passThrough": true,
+        "keys": [
+          {
+            "f": 0,
+            "x": 0,
+            "rot": 0,
+            "sx": 1,
+            "sy": 1,
+            "sink": 0,
+            "intang": 0,
+            "y": 0
+          },
+          {
+            "f": 6,
+            "ease": "out",
+            "sy": 0.86,
+            "sx": 1.08,
+            "rot": 0.2
+          },
+          {
+            "f": 16,
+            "ease": "in",
+            "sink": 441.0,
+            "rot": 0.35,
+            "sy": 1.04,
+            "sx": 0.96
+          },
+          {
+            "f": 17,
+            "ease": "step",
+            "intang": 1
+          },
+          {
+            "f": 18,
+            "xo": 0
+          },
+          {
+            "f": 40,
+            "ease": "inout",
+            "xo": 1
+          },
+          {
+            "f": 41,
+            "ease": "step",
+            "intang": 0,
+            "rot": -0.5
+          },
+          {
+            "f": 46,
+            "ease": "out",
+            "sink": 0,
+            "y": -280,
+            "rot": -0.55,
+            "sx": 0.9,
+            "sy": 1.15,
+            "ghost": 0.6
+          },
+          {
+            "f": 58,
+            "ease": "in",
+            "y": 0,
+            "rot": 0,
+            "sx": 1,
+            "sy": 1,
+            "ghost": 0
+          },
+          {
+            "f": 62,
+            "sx": 1.1,
+            "sy": 0.9
+          },
+          {
+            "f": 72,
+            "xo": 1,
+            "x": 0,
+            "rot": 0,
+            "sx": 1,
+            "sy": 1
+          }
+        ],
+        "hits": [
+          {
+            "from": 41,
+            "to": 48,
+            "box": {
+              "x": -160,
+              "y": -378,
+              "w": 320,
+              "h": 462,
+              "anchor": "center"
+            },
+            "damage": 26,
+            "knockback": 40,
+            "hitstun": 24,
+            "hitstop": 8,
+            "launch": {
+              "vx": 120,
+              "vy": -1050
+            },
+            "knockdown": 50,
+            "fx": "special"
+          }
+        ],
+        "events": [
+          {
+            "f": 10,
+            "type": "fx",
+            "fx": "splash",
+            "strength": 1.4,
+            "x": -378,
+            "y": 0
+          },
+          {
+            "f": 22,
+            "type": "fx",
+            "fx": "splash",
+            "strength": 0.7,
+            "x": -378,
+            "y": 0
+          },
+          {
+            "f": 28,
+            "type": "fx",
+            "fx": "splash",
+            "strength": 0.7,
+            "x": -378,
+            "y": 0
+          },
+          {
+            "f": 34,
+            "type": "fx",
+            "fx": "splash",
+            "strength": 0.7,
+            "x": -378,
+            "y": 0
+          },
+          {
+            "f": 40,
+            "type": "fx",
+            "fx": "splash",
+            "strength": 0.7,
+            "x": -378,
+            "y": 0
+          },
+          {
+            "f": 41,
+            "type": "fx",
+            "fx": "splash",
+            "strength": 2,
+            "x": -378,
+            "y": 0
+          },
+          {
+            "f": 41,
+            "type": "fx",
+            "fx": "shake",
+            "strength": 1.2
+          }
+        ]
+      }
     },
     {
       "id": "ankylosaurus_light",
       "kind": "light",
-      "name": "어깨 밀기",
+      "name": "몸통 밀치기",
       "startupFrames": 6,
       "activeFrames": 4,
       "recoveryFrames": 14,
@@ -924,12 +2207,97 @@
           "width": 118,
           "height": 99
         }
-      ]
+      ],
+      "script": {
+        "frames": 30,
+        "reach": 80,
+        "keys": [
+          {
+            "f": 0,
+            "x": 0,
+            "rot": 0,
+            "sx": 1,
+            "sy": 1,
+            "parts": {
+              "head": 0,
+              "nearleg_back": 0
+            }
+          },
+          {
+            "f": 7,
+            "ease": "out",
+            "x": -24,
+            "rot": 0.06,
+            "sx": 0.92,
+            "sy": 1.06,
+            "parts": {
+              "head": -6,
+              "nearleg_back": -8
+            }
+          },
+          {
+            "f": 10,
+            "ease": "out",
+            "x": 60,
+            "rot": -0.05,
+            "sx": 1.12,
+            "sy": 0.92,
+            "ghost": 0.5,
+            "parts": {
+              "head": 6,
+              "nearleg_back": 12
+            }
+          },
+          {
+            "f": 14,
+            "ghost": 0
+          },
+          {
+            "f": 28,
+            "x": 0,
+            "rot": 0,
+            "sx": 1,
+            "sy": 1,
+            "parts": {
+              "head": 0,
+              "nearleg_back": 0
+            }
+          }
+        ],
+        "hits": [
+          {
+            "from": 9,
+            "to": 12,
+            "box": {
+              "x": -60,
+              "y": -280,
+              "w": 130,
+              "h": 280,
+              "anchor": "front"
+            },
+            "damage": 9,
+            "knockback": 220,
+            "hitstun": 14,
+            "hitstop": 4,
+            "fx": "light"
+          }
+        ],
+        "events": [
+          {
+            "f": 10,
+            "type": "fx",
+            "fx": "dust",
+            "strength": 0.8,
+            "x": -675.0,
+            "y": 0
+          }
+        ]
+      }
     },
     {
       "id": "ankylosaurus_heavy",
       "kind": "heavy",
-      "name": "꼬리곤봉 치기",
+      "name": "곤봉 풀스윙",
       "startupFrames": 14,
       "activeFrames": 6,
       "recoveryFrames": 24,
@@ -947,12 +2315,150 @@
           "width": 162,
           "height": 139
         }
-      ]
+      ],
+      "script": {
+        "frames": 54,
+        "reach": 140,
+        "keys": [
+          {
+            "f": 0,
+            "x": 0,
+            "rot": 0,
+            "sx": 1,
+            "sy": 1,
+            "parts": {
+              "tailbase": 0,
+              "tailtip": 0,
+              "head": 0
+            }
+          },
+          {
+            "f": 8,
+            "ease": "out",
+            "x": -10,
+            "rot": -0.05,
+            "parts": {
+              "tailbase": 10,
+              "tailtip": 8,
+              "head": -4
+            }
+          },
+          {
+            "f": 9,
+            "ease": "step",
+            "sx": -0.94
+          },
+          {
+            "f": 13,
+            "ease": "in",
+            "sx": -1,
+            "parts": {
+              "tailbase": -34,
+              "tailtip": -28,
+              "head": -8
+            },
+            "rot": 0.05
+          },
+          {
+            "f": 18,
+            "ease": "out",
+            "sx": -1.04,
+            "rot": -0.06,
+            "parts": {
+              "tailbase": 22,
+              "tailtip": 30,
+              "head": -6
+            },
+            "ghost": 0.8
+          },
+          {
+            "f": 24,
+            "ghost": 0
+          },
+          {
+            "f": 36,
+            "sx": -1,
+            "rot": 0,
+            "parts": {
+              "tailbase": 0,
+              "tailtip": 0,
+              "head": 0
+            }
+          },
+          {
+            "f": 37,
+            "ease": "step",
+            "sx": 1
+          },
+          {
+            "f": 52,
+            "x": 0,
+            "rot": 0,
+            "sx": 1,
+            "sy": 1,
+            "parts": {
+              "tailbase": 0,
+              "tailtip": 0,
+              "head": 0
+            }
+          }
+        ],
+        "hits": [
+          {
+            "from": 14,
+            "to": 19,
+            "box": {
+              "x": -80,
+              "y": -363,
+              "w": 200,
+              "h": 363,
+              "anchor": "front"
+            },
+            "damage": 18,
+            "knockback": 60,
+            "hitstun": 20,
+            "hitstop": 8,
+            "launch": {
+              "vx": 520,
+              "vy": -760
+            },
+            "knockdown": 40,
+            "fx": "heavy"
+          }
+        ],
+        "events": [
+          {
+            "f": 13,
+            "type": "projectile",
+            "x": -112.5,
+            "y": -230.99999999999997,
+            "vx": 0,
+            "life": 0.22,
+            "w": 560,
+            "h": 460,
+            "sprite": "assets/effects/anky_club_arc.png",
+            "harmless": true,
+            "noTrail": true,
+            "spin": 0,
+            "fade": true,
+            "damage": 0,
+            "knockback": 0,
+            "hitstun": 0,
+            "hitstop": 0
+          },
+          {
+            "f": 16,
+            "type": "fx",
+            "fx": "shake",
+            "strength": 0.8
+          }
+        ]
+      }
     },
     {
       "id": "ankylosaurus_special",
       "kind": "special",
-      "name": "해머 테일 스매시",
+      "name": "철벽 반격",
       "startupFrames": 24,
       "activeFrames": 10,
       "recoveryFrames": 38,
@@ -970,12 +2476,245 @@
           "width": 206,
           "height": 178
         }
-      ]
+      ],
+      "script": {
+        "frames": 146,
+        "reach": 160,
+        "keys": [
+          {
+            "f": 0,
+            "x": 0,
+            "rot": 0,
+            "sx": 1,
+            "sy": 1,
+            "parts": {
+              "head": 0,
+              "tailbase": 0,
+              "tailtip": 0
+            }
+          },
+          {
+            "f": 10,
+            "ease": "out",
+            "sx": 1.06,
+            "sy": 0.82,
+            "rot": 0.04,
+            "parts": {
+              "head": 10,
+              "tailbase": -6,
+              "tailtip": -4
+            }
+          },
+          {
+            "f": 20,
+            "sy": 0.84
+          },
+          {
+            "f": 40,
+            "sy": 0.8
+          },
+          {
+            "f": 60,
+            "sy": 0.84
+          },
+          {
+            "f": 70,
+            "sy": 0.82
+          },
+          {
+            "f": 76,
+            "ease": "out",
+            "sy": 1.1,
+            "sx": 0.94,
+            "parts": {
+              "tailbase": -26,
+              "tailtip": -20
+            }
+          },
+          {
+            "f": 82,
+            "ease": "in",
+            "sy": 0.86,
+            "sx": 1.1,
+            "parts": {
+              "tailbase": 10,
+              "tailtip": 16
+            }
+          },
+          {
+            "f": 96,
+            "x": 0,
+            "rot": 0,
+            "sx": 1,
+            "sy": 1,
+            "parts": {
+              "head": 0,
+              "tailbase": 0,
+              "tailtip": 0
+            }
+          },
+          {
+            "f": 100,
+            "ease": "step",
+            "sx": -0.96,
+            "sy": 1,
+            "parts": {
+              "tailbase": -40,
+              "tailtip": -36,
+              "head": -8
+            }
+          },
+          {
+            "f": 108,
+            "ease": "in",
+            "sx": -1,
+            "rot": 0.06,
+            "parts": {
+              "tailbase": -40,
+              "tailtip": -36
+            }
+          },
+          {
+            "f": 114,
+            "ease": "out",
+            "sx": -1.08,
+            "rot": -0.08,
+            "ghost": 1,
+            "parts": {
+              "tailbase": 30,
+              "tailtip": 40
+            }
+          },
+          {
+            "f": 122,
+            "ghost": 0
+          },
+          {
+            "f": 134,
+            "sx": -1,
+            "rot": 0,
+            "parts": {
+              "head": 0,
+              "tailbase": 0,
+              "tailtip": 0
+            }
+          },
+          {
+            "f": 135,
+            "ease": "step",
+            "sx": 1
+          },
+          {
+            "f": 144,
+            "x": 0,
+            "rot": 0,
+            "sx": 1,
+            "sy": 1
+          }
+        ],
+        "counter": {
+          "from": 10,
+          "to": 70,
+          "success": 100
+        },
+        "hits": [
+          {
+            "from": 80,
+            "to": 84,
+            "box": {
+              "x": -2000,
+              "y": -60,
+              "w": 4000,
+              "h": 60,
+              "anchor": "center"
+            },
+            "damage": 6,
+            "knockback": 60,
+            "hitstun": 14,
+            "hitstop": 4,
+            "groundOnly": true,
+            "fx": "heavy"
+          },
+          {
+            "from": 109,
+            "to": 116,
+            "box": {
+              "x": -120,
+              "y": -429,
+              "w": 320,
+              "h": 429,
+              "anchor": "front"
+            },
+            "damage": 26,
+            "knockback": 0,
+            "hitstun": 24,
+            "hitstop": 12,
+            "launch": {
+              "vx": 1500,
+              "vy": -900
+            },
+            "knockdown": 60,
+            "unguardable": true,
+            "fx": "special"
+          }
+        ],
+        "events": [
+          {
+            "f": 82,
+            "type": "fx",
+            "fx": "shake",
+            "strength": 1.2
+          },
+          {
+            "f": 82,
+            "type": "fx",
+            "fx": "dust",
+            "strength": 1.6,
+            "x": -900,
+            "y": 0
+          },
+          {
+            "f": 97,
+            "type": "end"
+          },
+          {
+            "f": 108,
+            "type": "projectile",
+            "x": -112.5,
+            "y": -230.99999999999997,
+            "vx": 0,
+            "life": 0.25,
+            "w": 600,
+            "h": 500,
+            "sprite": "assets/effects/anky_club_arc.png",
+            "harmless": true,
+            "noTrail": true,
+            "spin": 0,
+            "fade": true,
+            "damage": 0,
+            "knockback": 0,
+            "hitstun": 0,
+            "hitstop": 0
+          },
+          {
+            "f": 112,
+            "type": "fx",
+            "fx": "shake",
+            "strength": 2
+          },
+          {
+            "f": 112,
+            "type": "fx",
+            "fx": "flash",
+            "strength": 1.4
+          }
+        ]
+      }
     },
     {
       "id": "stegosaurus_light",
       "kind": "light",
-      "name": "몸통 밀기",
+      "name": "꼬리가시 찌르기",
       "startupFrames": 6,
       "activeFrames": 4,
       "recoveryFrames": 14,
@@ -993,7 +2732,90 @@
           "width": 156,
           "height": 108
         }
-      ]
+      ],
+      "script": {
+        "frames": 32,
+        "reach": 90,
+        "keys": [
+          {
+            "f": 0,
+            "x": 0,
+            "rot": 0,
+            "sx": 1,
+            "sy": 1,
+            "parts": {
+              "tailbase": 0,
+              "tailtip": 0
+            }
+          },
+          {
+            "f": 5,
+            "ease": "step",
+            "sx": -0.94,
+            "parts": {
+              "tailbase": 12,
+              "tailtip": 10
+            }
+          },
+          {
+            "f": 9,
+            "ease": "out",
+            "sx": -1.08,
+            "x": 30,
+            "rot": -0.04,
+            "ghost": 0.5,
+            "parts": {
+              "tailbase": -18,
+              "tailtip": -16
+            }
+          },
+          {
+            "f": 13,
+            "ghost": 0
+          },
+          {
+            "f": 20,
+            "sx": -1,
+            "x": 0,
+            "rot": 0,
+            "parts": {
+              "tailbase": 0,
+              "tailtip": 0
+            }
+          },
+          {
+            "f": 21,
+            "ease": "step",
+            "sx": 1
+          },
+          {
+            "f": 30,
+            "x": 0,
+            "rot": 0,
+            "sx": 1,
+            "sy": 1
+          }
+        ],
+        "hits": [
+          {
+            "from": 8,
+            "to": 11,
+            "box": {
+              "x": -60,
+              "y": -253,
+              "w": 150,
+              "h": 162,
+              "anchor": "front"
+            },
+            "damage": 10,
+            "knockback": 80,
+            "hitstun": 13,
+            "hitstop": 4,
+            "fx": "light"
+          }
+        ],
+        "events": []
+      }
     },
     {
       "id": "stegosaurus_heavy",
@@ -1125,7 +2947,7 @@
     {
       "id": "stegosaurus_special",
       "kind": "special",
-      "name": "스파이크 휩",
+      "name": "골판 소나기",
       "startupFrames": 24,
       "activeFrames": 10,
       "recoveryFrames": 38,
@@ -1143,12 +2965,295 @@
           "width": 273,
           "height": 195
         }
-      ]
+      ],
+      "script": {
+        "frames": 80,
+        "reach": 1200,
+        "keys": [
+          {
+            "f": 0,
+            "x": 0,
+            "rot": 0,
+            "sx": 1,
+            "sy": 1,
+            "parts": {
+              "head": 0,
+              "tailbase": 0,
+              "tailtip": 0
+            }
+          },
+          {
+            "f": 16,
+            "ease": "out",
+            "x": -20,
+            "sy": 0.82,
+            "sx": 1.1,
+            "rot": 0.06,
+            "parts": {
+              "head": 10,
+              "tailbase": -10,
+              "tailtip": -10
+            }
+          },
+          {
+            "f": 22,
+            "ease": "out",
+            "sy": 1.16,
+            "sx": 0.92,
+            "rot": -0.1,
+            "parts": {
+              "head": -14,
+              "tailbase": 14,
+              "tailtip": 14
+            }
+          },
+          {
+            "f": 36,
+            "sy": 1.08,
+            "rot": -0.06
+          },
+          {
+            "f": 46,
+            "x": 0,
+            "rot": 0,
+            "sx": 1,
+            "sy": 1,
+            "parts": {
+              "head": 0,
+              "tailbase": 0,
+              "tailtip": 0
+            }
+          },
+          {
+            "f": 78,
+            "x": 0,
+            "rot": 0,
+            "sx": 1,
+            "sy": 1
+          }
+        ],
+        "hits": [],
+        "events": [
+          {
+            "f": 22,
+            "type": "projectile",
+            "x": -430.8,
+            "y": -342.95,
+            "vx": 40,
+            "vy": -1500,
+            "spin": 12,
+            "life": 0.6,
+            "w": 90,
+            "h": 100,
+            "sprite": "assets/effects/stego_plate.png",
+            "harmless": true,
+            "noTrail": true,
+            "damage": 0,
+            "knockback": 0,
+            "hitstun": 0,
+            "hitstop": 0
+          },
+          {
+            "f": 25,
+            "type": "projectile",
+            "x": -370.8,
+            "y": -342.95,
+            "vx": 40,
+            "vy": -1500,
+            "spin": 12,
+            "life": 0.6,
+            "w": 90,
+            "h": 100,
+            "sprite": "assets/effects/stego_plate.png",
+            "harmless": true,
+            "noTrail": true,
+            "damage": 0,
+            "knockback": 0,
+            "hitstun": 0,
+            "hitstop": 0
+          },
+          {
+            "f": 28,
+            "type": "projectile",
+            "x": -310.8,
+            "y": -342.95,
+            "vx": 40,
+            "vy": -1500,
+            "spin": 12,
+            "life": 0.6,
+            "w": 90,
+            "h": 100,
+            "sprite": "assets/effects/stego_plate.png",
+            "harmless": true,
+            "noTrail": true,
+            "damage": 0,
+            "knockback": 0,
+            "hitstun": 0,
+            "hitstop": 0
+          },
+          {
+            "f": 31,
+            "type": "projectile",
+            "x": -250.8,
+            "y": -342.95,
+            "vx": 40,
+            "vy": -1500,
+            "spin": 12,
+            "life": 0.6,
+            "w": 90,
+            "h": 100,
+            "sprite": "assets/effects/stego_plate.png",
+            "harmless": true,
+            "noTrail": true,
+            "damage": 0,
+            "knockback": 0,
+            "hitstun": 0,
+            "hitstop": 0
+          },
+          {
+            "f": 34,
+            "type": "projectile",
+            "x": -190.8,
+            "y": -342.95,
+            "vx": 40,
+            "vy": -1500,
+            "spin": 12,
+            "life": 0.6,
+            "w": 90,
+            "h": 100,
+            "sprite": "assets/effects/stego_plate.png",
+            "harmless": true,
+            "noTrail": true,
+            "damage": 0,
+            "knockback": 0,
+            "hitstun": 0,
+            "hitstop": 0
+          },
+          {
+            "f": 44,
+            "type": "projectile",
+            "at": "opponent",
+            "x": -180,
+            "y": -1100,
+            "vx": 0,
+            "vy": 1100,
+            "gravity": 900,
+            "spin": 9,
+            "life": 1.4,
+            "w": 120,
+            "h": 130,
+            "sprite": "assets/effects/stego_plate.png",
+            "noTrail": true,
+            "damage": 6,
+            "knockback": 20,
+            "hitstun": 16,
+            "hitstop": 2,
+            "fx": "heavy"
+          },
+          {
+            "f": 48,
+            "type": "projectile",
+            "at": "opponent",
+            "x": -90,
+            "y": -1100,
+            "vx": 0,
+            "vy": 1100,
+            "gravity": 900,
+            "spin": 9,
+            "life": 1.4,
+            "w": 120,
+            "h": 130,
+            "sprite": "assets/effects/stego_plate.png",
+            "noTrail": true,
+            "damage": 6,
+            "knockback": 20,
+            "hitstun": 16,
+            "hitstop": 2,
+            "fx": "heavy"
+          },
+          {
+            "f": 52,
+            "type": "projectile",
+            "at": "opponent",
+            "x": 0,
+            "y": -1100,
+            "vx": 0,
+            "vy": 1100,
+            "gravity": 900,
+            "spin": 9,
+            "life": 1.4,
+            "w": 120,
+            "h": 130,
+            "sprite": "assets/effects/stego_plate.png",
+            "noTrail": true,
+            "damage": 6,
+            "knockback": 20,
+            "hitstun": 16,
+            "hitstop": 2,
+            "fx": "heavy"
+          },
+          {
+            "f": 56,
+            "type": "projectile",
+            "at": "opponent",
+            "x": 90,
+            "y": -1100,
+            "vx": 0,
+            "vy": 1100,
+            "gravity": 900,
+            "spin": 9,
+            "life": 1.4,
+            "w": 120,
+            "h": 130,
+            "sprite": "assets/effects/stego_plate.png",
+            "noTrail": true,
+            "damage": 6,
+            "knockback": 20,
+            "hitstun": 16,
+            "hitstop": 2,
+            "fx": "heavy"
+          },
+          {
+            "f": 60,
+            "type": "projectile",
+            "at": "opponent",
+            "x": 180,
+            "y": -1100,
+            "vx": 0,
+            "vy": 1100,
+            "gravity": 900,
+            "spin": 9,
+            "life": 1.4,
+            "w": 120,
+            "h": 130,
+            "sprite": "assets/effects/stego_plate.png",
+            "noTrail": true,
+            "damage": 6,
+            "knockback": 20,
+            "hitstun": 16,
+            "hitstop": 2,
+            "knockdown": 40,
+            "fx": "heavy"
+          },
+          {
+            "f": 22,
+            "type": "fx",
+            "fx": "shake",
+            "strength": 0.8
+          },
+          {
+            "f": 22,
+            "type": "fx",
+            "fx": "flash",
+            "strength": 0.8
+          }
+        ]
+      }
     },
     {
       "id": "carnotaurus_light",
       "kind": "light",
-      "name": "머리 밀기",
+      "name": "짧은 뿔 박치기",
       "startupFrames": 6,
       "activeFrames": 4,
       "recoveryFrames": 14,
@@ -1166,12 +3271,73 @@
           "width": 134,
           "height": 114
         }
-      ]
+      ],
+      "script": {
+        "frames": 28,
+        "reach": 125,
+        "keys": [
+          {
+            "f": 0,
+            "x": 0,
+            "rot": 0,
+            "sx": 1,
+            "sy": 1
+          },
+          {
+            "f": 6,
+            "ease": "out",
+            "x": -14,
+            "rot": -0.084,
+            "sx": 0.94,
+            "sy": 1.05
+          },
+          {
+            "f": 9,
+            "ease": "out",
+            "x": 55,
+            "rot": 0.14,
+            "sx": 1.12,
+            "sy": 0.8799999999999999,
+            "ghost": 0.5
+          },
+          {
+            "f": 14,
+            "x": 55,
+            "ghost": 0
+          },
+          {
+            "f": 26,
+            "x": 0,
+            "rot": 0,
+            "sx": 1,
+            "sy": 1
+          }
+        ],
+        "hits": [
+          {
+            "from": 8,
+            "to": 12,
+            "box": {
+              "x": -40,
+              "y": -341,
+              "w": 130,
+              "h": 171,
+              "anchor": "front"
+            },
+            "damage": 10,
+            "knockback": 70,
+            "hitstun": 13,
+            "hitstop": 4,
+            "fx": "light"
+          }
+        ],
+        "events": []
+      }
     },
     {
       "id": "carnotaurus_heavy",
       "kind": "heavy",
-      "name": "들이받기",
+      "name": "순간 들이받기",
       "startupFrames": 14,
       "activeFrames": 6,
       "recoveryFrames": 24,
@@ -1189,12 +3355,93 @@
           "width": 185,
           "height": 159
         }
-      ]
+      ],
+      "script": {
+        "frames": 44,
+        "reach": 700,
+        "keys": [
+          {
+            "f": 0,
+            "x": 0,
+            "rot": 0,
+            "sx": 1,
+            "sy": 1
+          },
+          {
+            "f": 8,
+            "ease": "out",
+            "x": -30,
+            "rot": 0.16,
+            "sx": 0.9,
+            "sy": 0.92
+          },
+          {
+            "f": 12,
+            "ease": "in",
+            "xo": 0.62,
+            "x": 0,
+            "rot": 0.18,
+            "sx": 1.25,
+            "sy": 0.86,
+            "ghost": 1
+          },
+          {
+            "f": 16,
+            "xo": 0.62,
+            "ghost": 0.2,
+            "sx": 0.92,
+            "sy": 1.06
+          },
+          {
+            "f": 42,
+            "xo": 0.62,
+            "x": 0,
+            "rot": 0,
+            "sx": 1,
+            "sy": 1,
+            "ghost": 0
+          }
+        ],
+        "hits": [
+          {
+            "from": 10,
+            "to": 14,
+            "box": {
+              "x": -100,
+              "y": -341,
+              "w": 200,
+              "h": 303,
+              "anchor": "front"
+            },
+            "damage": 17,
+            "knockback": 320,
+            "hitstun": 22,
+            "hitstop": 7,
+            "fx": "heavy"
+          }
+        ],
+        "events": [
+          {
+            "f": 8,
+            "type": "fx",
+            "fx": "dust",
+            "strength": 1,
+            "x": -414.0,
+            "y": 0
+          },
+          {
+            "f": 12,
+            "type": "fx",
+            "fx": "shake",
+            "strength": 0.8
+          }
+        ]
+      }
     },
     {
       "id": "carnotaurus_special",
       "kind": "special",
-      "name": "카르노 차지",
+      "name": "투우 3연 돌진",
       "startupFrames": 24,
       "activeFrames": 10,
       "recoveryFrames": 38,
@@ -1212,12 +3459,248 @@
           "width": 235,
           "height": 205
         }
-      ]
+      ],
+      "script": {
+        "frames": 88,
+        "reach": 600,
+        "passThrough": true,
+        "keys": [
+          {
+            "f": 0,
+            "x": 0,
+            "rot": 0,
+            "sx": 1,
+            "sy": 1,
+            "face": 1,
+            "xr": 0
+          },
+          {
+            "f": 4,
+            "ease": "out",
+            "rot": 0.12,
+            "sy": 0.9,
+            "x": -14
+          },
+          {
+            "f": 8,
+            "rot": 0.04,
+            "sy": 1,
+            "x": -6
+          },
+          {
+            "f": 12,
+            "ease": "out",
+            "rot": 0.12,
+            "sy": 0.9,
+            "x": -14
+          },
+          {
+            "f": 16,
+            "rot": 0.04,
+            "sy": 1,
+            "x": -6
+          },
+          {
+            "f": 20,
+            "ease": "out",
+            "rot": 0.12,
+            "sy": 0.9,
+            "x": -14
+          },
+          {
+            "f": 24,
+            "rot": 0.04,
+            "sy": 1,
+            "x": -6
+          },
+          {
+            "f": 29,
+            "ease": "step",
+            "rot": 0.18,
+            "sx": 1.2,
+            "sy": 0.88,
+            "ghost": 1
+          },
+          {
+            "f": 42,
+            "ease": "in",
+            "xr": 1,
+            "x": 0
+          },
+          {
+            "f": 42,
+            "face": -1
+          },
+          {
+            "f": 43,
+            "ease": "step",
+            "rot": 0.18,
+            "sx": 1.2,
+            "sy": 0.88,
+            "ghost": 1
+          },
+          {
+            "f": 56,
+            "ease": "in",
+            "xr": 0,
+            "x": 0
+          },
+          {
+            "f": 56,
+            "face": 1
+          },
+          {
+            "f": 57,
+            "ease": "step",
+            "rot": 0.18,
+            "sx": 1.2,
+            "sy": 0.88,
+            "ghost": 1
+          },
+          {
+            "f": 70,
+            "ease": "in",
+            "xr": 1,
+            "x": 0
+          },
+          {
+            "f": 70,
+            "face": -1
+          },
+          {
+            "f": 71,
+            "ease": "out",
+            "rot": -0.06,
+            "sx": 0.92,
+            "sy": 1.08,
+            "ghost": 0.2
+          },
+          {
+            "f": 86,
+            "x": 0,
+            "rot": 0,
+            "sx": 1,
+            "sy": 1,
+            "ghost": 0
+          }
+        ],
+        "hits": [
+          {
+            "from": 31,
+            "to": 42,
+            "box": {
+              "x": -180,
+              "y": -341,
+              "w": 360,
+              "h": 322,
+              "anchor": "center"
+            },
+            "damage": 7,
+            "knockback": 0,
+            "hitstun": 26,
+            "hitstop": 4,
+            "fx": "heavy"
+          },
+          {
+            "from": 45,
+            "to": 56,
+            "box": {
+              "x": -180,
+              "y": -341,
+              "w": 360,
+              "h": 322,
+              "anchor": "center"
+            },
+            "damage": 7,
+            "knockback": 0,
+            "hitstun": 26,
+            "hitstop": 4,
+            "fx": "heavy"
+          },
+          {
+            "from": 59,
+            "to": 70,
+            "box": {
+              "x": -180,
+              "y": -341,
+              "w": 360,
+              "h": 322,
+              "anchor": "center"
+            },
+            "damage": 12,
+            "knockback": 0,
+            "hitstun": 26,
+            "hitstop": 8,
+            "fx": "special",
+            "launch": {
+              "vx": -200,
+              "vy": -850
+            },
+            "knockdown": 45
+          }
+        ],
+        "events": [
+          {
+            "f": 4,
+            "type": "fx",
+            "fx": "dust",
+            "strength": 0.8,
+            "x": -441.6,
+            "y": 0
+          },
+          {
+            "f": 12,
+            "type": "fx",
+            "fx": "dust",
+            "strength": 0.8,
+            "x": -441.6,
+            "y": 0
+          },
+          {
+            "f": 20,
+            "type": "fx",
+            "fx": "dust",
+            "strength": 0.8,
+            "x": -441.6,
+            "y": 0
+          },
+          {
+            "f": 42,
+            "type": "fx",
+            "fx": "dust",
+            "strength": 1,
+            "x": 0,
+            "y": 0
+          },
+          {
+            "f": 56,
+            "type": "fx",
+            "fx": "dust",
+            "strength": 1,
+            "x": 0,
+            "y": 0
+          },
+          {
+            "f": 70,
+            "type": "fx",
+            "fx": "dust",
+            "strength": 1,
+            "x": 0,
+            "y": 0
+          },
+          {
+            "f": 70,
+            "type": "fx",
+            "fx": "shake",
+            "strength": 1.4
+          }
+        ]
+      }
     },
     {
       "id": "pachycephalosaurus_light",
       "kind": "light",
-      "name": "머리 톡 치기",
+      "name": "머리 콩",
       "startupFrames": 6,
       "activeFrames": 4,
       "recoveryFrames": 14,
@@ -1235,12 +3718,73 @@
           "width": 134,
           "height": 105
         }
-      ]
+      ],
+      "script": {
+        "frames": 28,
+        "reach": 105,
+        "keys": [
+          {
+            "f": 0,
+            "x": 0,
+            "rot": 0,
+            "sx": 1,
+            "sy": 1
+          },
+          {
+            "f": 6,
+            "ease": "out",
+            "x": -14,
+            "rot": -0.168,
+            "sx": 0.94,
+            "sy": 1.05
+          },
+          {
+            "f": 9,
+            "ease": "out",
+            "x": 45,
+            "rot": 0.28,
+            "sx": 1.08,
+            "sy": 0.9199999999999999,
+            "ghost": 0.5
+          },
+          {
+            "f": 14,
+            "x": 45,
+            "ghost": 0
+          },
+          {
+            "f": 26,
+            "x": 0,
+            "rot": 0,
+            "sx": 1,
+            "sy": 1
+          }
+        ],
+        "hits": [
+          {
+            "from": 8,
+            "to": 12,
+            "box": {
+              "x": -40,
+              "y": -333,
+              "w": 120,
+              "h": 176,
+              "anchor": "front"
+            },
+            "damage": 10,
+            "knockback": 70,
+            "hitstun": 13,
+            "hitstop": 4,
+            "fx": "light"
+          }
+        ],
+        "events": []
+      }
     },
     {
       "id": "pachycephalosaurus_heavy",
       "kind": "heavy",
-      "name": "강한 박치기",
+      "name": "점프 박치기",
       "startupFrames": 14,
       "activeFrames": 6,
       "recoveryFrames": 24,
@@ -1258,12 +3802,102 @@
           "width": 185,
           "height": 147
         }
-      ]
+      ],
+      "script": {
+        "frames": 52,
+        "reach": 480,
+        "passThrough": true,
+        "keys": [
+          {
+            "f": 0,
+            "x": 0,
+            "rot": 0,
+            "sx": 1,
+            "sy": 1,
+            "y": 0
+          },
+          {
+            "f": 6,
+            "ease": "out",
+            "sy": 0.82,
+            "sx": 1.1
+          },
+          {
+            "f": 16,
+            "ease": "out",
+            "xo": 0.35,
+            "y": -320,
+            "rot": -0.2,
+            "sy": 1.1,
+            "sx": 0.94
+          },
+          {
+            "f": 26,
+            "ease": "in",
+            "xo": 0.7,
+            "y": 0,
+            "rot": 0.55,
+            "sx": 1.04,
+            "sy": 1,
+            "ghost": 0.9
+          },
+          {
+            "f": 30,
+            "rot": 0.1,
+            "sy": 0.86,
+            "sx": 1.12,
+            "ghost": 0
+          },
+          {
+            "f": 50,
+            "xo": 0.7,
+            "x": 0,
+            "rot": 0,
+            "sx": 1,
+            "sy": 1,
+            "y": 0
+          }
+        ],
+        "hits": [
+          {
+            "from": 19,
+            "to": 27,
+            "box": {
+              "x": -60,
+              "y": -316,
+              "w": 180,
+              "h": 316,
+              "anchor": "front"
+            },
+            "damage": 18,
+            "knockback": 200,
+            "hitstun": 24,
+            "hitstop": 7,
+            "fx": "heavy"
+          }
+        ],
+        "events": [
+          {
+            "f": 26,
+            "type": "fx",
+            "fx": "dust",
+            "strength": 1.3,
+            "x": -264,
+            "y": 0
+          },
+          {
+            "f": 26,
+            "type": "fx",
+            "fx": "shake",
+            "strength": 0.7
+          }
+        ]
+      }
     },
     {
       "id": "pachycephalosaurus_special",
       "kind": "special",
-      "name": "미티어 헤드버트",
+      "name": "박치기 로켓",
       "startupFrames": 24,
       "activeFrames": 10,
       "recoveryFrames": 38,
@@ -1281,12 +3915,131 @@
           "width": 235,
           "height": 190
         }
-      ]
+      ],
+      "script": {
+        "frames": 70,
+        "reach": 900,
+        "passThrough": true,
+        "keys": [
+          {
+            "f": 0,
+            "x": 0,
+            "rot": 0,
+            "sx": 1,
+            "sy": 1,
+            "y": 0
+          },
+          {
+            "f": 10,
+            "ease": "out",
+            "sy": 0.75,
+            "sx": 1.15
+          },
+          {
+            "f": 14,
+            "sy": 0.8
+          },
+          {
+            "f": 30,
+            "ease": "out",
+            "xo": 0.6,
+            "y": -720,
+            "rot": -0.4,
+            "sy": 1.25,
+            "sx": 0.85,
+            "ghost": 1
+          },
+          {
+            "f": 36,
+            "xo": 0.95,
+            "y": -700,
+            "rot": 1.6,
+            "sy": 1,
+            "sx": 1,
+            "ghost": 0.3
+          },
+          {
+            "f": 46,
+            "ease": "in",
+            "xo": 0.98,
+            "y": -333.45,
+            "rot": 1.6,
+            "ghost": 1
+          },
+          {
+            "f": 50,
+            "ease": "out",
+            "xo": 0.98,
+            "y": -368.55,
+            "rot": 1.2,
+            "ghost": 0
+          },
+          {
+            "f": 58,
+            "ease": "in",
+            "xo": 0.55,
+            "y": 0,
+            "rot": 0,
+            "sy": 0.88,
+            "sx": 1.1
+          },
+          {
+            "f": 68,
+            "xo": 0.55,
+            "x": 0,
+            "rot": 0,
+            "sx": 1,
+            "sy": 1,
+            "y": 0
+          }
+        ],
+        "hits": [
+          {
+            "from": 42,
+            "to": 50,
+            "box": {
+              "x": -120,
+              "y": -40,
+              "w": 240,
+              "h": 220,
+              "anchor": "center"
+            },
+            "damage": 24,
+            "knockback": 40,
+            "hitstun": 24,
+            "hitstop": 10,
+            "fx": "special",
+            "stun": 80
+          }
+        ],
+        "events": [
+          {
+            "f": 10,
+            "type": "fx",
+            "fx": "dust",
+            "strength": 1.2,
+            "x": -264,
+            "y": 0
+          },
+          {
+            "f": 46,
+            "type": "fx",
+            "fx": "shake",
+            "strength": 1.4
+          },
+          {
+            "f": 46,
+            "type": "fx",
+            "fx": "flash",
+            "strength": 1
+          }
+        ]
+      }
     },
     {
       "id": "therizinosaurus_light",
       "kind": "light",
-      "name": "팔 긁기",
+      "name": "긴 발톱 할퀴기",
       "startupFrames": 6,
       "activeFrames": 4,
       "recoveryFrames": 14,
@@ -1304,12 +4057,82 @@
           "width": 156,
           "height": 126
         }
-      ]
+      ],
+      "script": {
+        "frames": 29,
+        "reach": 240,
+        "keys": [
+          {
+            "f": 0,
+            "x": 0,
+            "rot": 0,
+            "sx": 1,
+            "sy": 1
+          },
+          {
+            "f": 7,
+            "ease": "out",
+            "x": -14,
+            "rot": -0.036,
+            "sx": 0.94,
+            "sy": 1.05
+          },
+          {
+            "f": 10,
+            "ease": "out",
+            "x": 30,
+            "rot": 0.06,
+            "sx": 1.14,
+            "sy": 0.8600000000000001,
+            "ghost": 0.5
+          },
+          {
+            "f": 15,
+            "x": 30,
+            "ghost": 0
+          },
+          {
+            "f": 27,
+            "x": 0,
+            "rot": 0,
+            "sx": 1,
+            "sy": 1
+          }
+        ],
+        "hits": [
+          {
+            "from": 9,
+            "to": 13,
+            "box": {
+              "x": -40,
+              "y": -295,
+              "w": 270,
+              "h": 168,
+              "anchor": "front"
+            },
+            "damage": 10,
+            "knockback": 70,
+            "hitstun": 13,
+            "hitstop": 4,
+            "fx": "light"
+          }
+        ],
+        "events": [
+          {
+            "f": 10,
+            "type": "fx",
+            "fx": "slash",
+            "strength": 0.8,
+            "x": 105.0,
+            "y": -210
+          }
+        ]
+      }
     },
     {
       "id": "therizinosaurus_heavy",
       "kind": "heavy",
-      "name": "크게 휘두르기",
+      "name": "발톱 X자 2연 베기",
       "startupFrames": 14,
       "activeFrames": 6,
       "recoveryFrames": 24,
@@ -1327,12 +4150,121 @@
           "width": 215,
           "height": 177
         }
-      ]
+      ],
+      "script": {
+        "frames": 46,
+        "reach": 230,
+        "keys": [
+          {
+            "f": 0,
+            "x": 0,
+            "rot": 0,
+            "sx": 1,
+            "sy": 1
+          },
+          {
+            "f": 8,
+            "ease": "out",
+            "x": -16,
+            "rot": -0.18,
+            "sy": 1.06
+          },
+          {
+            "f": 12,
+            "ease": "out",
+            "x": 40,
+            "rot": 0.2,
+            "sx": 1.14,
+            "sy": 0.92,
+            "ghost": 0.6
+          },
+          {
+            "f": 18,
+            "ease": "out",
+            "x": 30,
+            "rot": -0.2,
+            "sx": 1,
+            "sy": 1.06
+          },
+          {
+            "f": 22,
+            "ease": "out",
+            "x": 70,
+            "rot": 0.18,
+            "sx": 1.16,
+            "sy": 0.9,
+            "ghost": 0.8
+          },
+          {
+            "f": 26,
+            "ghost": 0
+          },
+          {
+            "f": 44,
+            "x": 0,
+            "rot": 0,
+            "sx": 1,
+            "sy": 1
+          }
+        ],
+        "hits": [
+          {
+            "from": 11,
+            "to": 14,
+            "box": {
+              "x": -40,
+              "y": -358,
+              "w": 250,
+              "h": 253,
+              "anchor": "front"
+            },
+            "damage": 8,
+            "knockback": 30,
+            "hitstun": 20,
+            "hitstop": 4,
+            "fx": "heavy"
+          },
+          {
+            "from": 21,
+            "to": 24,
+            "box": {
+              "x": -40,
+              "y": -358,
+              "w": 270,
+              "h": 253,
+              "anchor": "front"
+            },
+            "damage": 10,
+            "knockback": 180,
+            "hitstun": 22,
+            "hitstop": 6,
+            "fx": "heavy"
+          }
+        ],
+        "events": [
+          {
+            "f": 12,
+            "type": "fx",
+            "fx": "slash",
+            "strength": 1.3,
+            "x": 120,
+            "y": -232
+          },
+          {
+            "f": 22,
+            "type": "fx",
+            "fx": "slash",
+            "strength": 1.3,
+            "x": 140,
+            "y": -232
+          }
+        ]
+      }
     },
     {
       "id": "therizinosaurus_special",
       "kind": "special",
-      "name": "클로 크레센트",
+      "name": "발톱 회오리",
       "startupFrames": 24,
       "activeFrames": 10,
       "recoveryFrames": 38,
@@ -1350,12 +4282,272 @@
           "width": 273,
           "height": 227
         }
-      ]
+      ],
+      "script": {
+        "frames": 80,
+        "reach": 600,
+        "passThrough": true,
+        "keys": [
+          {
+            "f": 0,
+            "x": 0,
+            "rot": 0,
+            "sx": 1,
+            "sy": 1,
+            "face": 1,
+            "xr": 0
+          },
+          {
+            "f": 10,
+            "ease": "out",
+            "sx": 1.1,
+            "sy": 0.9,
+            "rot": -0.1
+          },
+          {
+            "f": 12,
+            "face": -1
+          },
+          {
+            "f": 12,
+            "ease": "linear",
+            "xr": 0,
+            "ghost": 0.6,
+            "rot": 0
+          },
+          {
+            "f": 16,
+            "face": 1
+          },
+          {
+            "f": 20,
+            "face": -1
+          },
+          {
+            "f": 24,
+            "face": 1
+          },
+          {
+            "f": 28,
+            "face": -1
+          },
+          {
+            "f": 32,
+            "face": 1
+          },
+          {
+            "f": 36,
+            "face": -1
+          },
+          {
+            "f": 40,
+            "face": 1
+          },
+          {
+            "f": 44,
+            "face": -1
+          },
+          {
+            "f": 48,
+            "face": 1
+          },
+          {
+            "f": 52,
+            "face": -1
+          },
+          {
+            "f": 56,
+            "face": 1
+          },
+          {
+            "f": 60,
+            "face": -1
+          },
+          {
+            "f": 60,
+            "ease": "linear",
+            "xr": 0.85,
+            "ghost": 0.6
+          },
+          {
+            "f": 62,
+            "face": 1
+          },
+          {
+            "f": 64,
+            "ghost": 0
+          },
+          {
+            "f": 78,
+            "xr": 0.85,
+            "x": 0,
+            "rot": 0,
+            "sx": 1,
+            "sy": 1
+          }
+        ],
+        "hits": [
+          {
+            "from": 14,
+            "to": 19,
+            "box": {
+              "x": -383,
+              "y": -379,
+              "w": 766,
+              "h": 337,
+              "anchor": "center"
+            },
+            "damage": 6,
+            "knockback": 10,
+            "hitstun": 18,
+            "hitstop": 2,
+            "fx": "light"
+          },
+          {
+            "from": 22,
+            "to": 27,
+            "box": {
+              "x": -383,
+              "y": -379,
+              "w": 766,
+              "h": 337,
+              "anchor": "center"
+            },
+            "damage": 6,
+            "knockback": 10,
+            "hitstun": 18,
+            "hitstop": 2,
+            "fx": "light"
+          },
+          {
+            "from": 30,
+            "to": 35,
+            "box": {
+              "x": -383,
+              "y": -379,
+              "w": 766,
+              "h": 337,
+              "anchor": "center"
+            },
+            "damage": 6,
+            "knockback": 10,
+            "hitstun": 18,
+            "hitstop": 2,
+            "fx": "light"
+          },
+          {
+            "from": 38,
+            "to": 43,
+            "box": {
+              "x": -383,
+              "y": -379,
+              "w": 766,
+              "h": 337,
+              "anchor": "center"
+            },
+            "damage": 6,
+            "knockback": 10,
+            "hitstun": 18,
+            "hitstop": 2,
+            "fx": "light"
+          },
+          {
+            "from": 46,
+            "to": 51,
+            "box": {
+              "x": -383,
+              "y": -379,
+              "w": 766,
+              "h": 337,
+              "anchor": "center"
+            },
+            "damage": 6,
+            "knockback": 10,
+            "hitstun": 18,
+            "hitstop": 2,
+            "fx": "light"
+          },
+          {
+            "from": 54,
+            "to": 59,
+            "box": {
+              "x": -383,
+              "y": -379,
+              "w": 766,
+              "h": 337,
+              "anchor": "center"
+            },
+            "damage": 8,
+            "knockback": 260,
+            "hitstun": 18,
+            "hitstop": 6,
+            "fx": "special"
+          }
+        ],
+        "events": [
+          {
+            "f": 10,
+            "type": "fx",
+            "fx": "feathers",
+            "strength": 1,
+            "x": -263,
+            "y": -253
+          },
+          {
+            "f": 16,
+            "type": "fx",
+            "fx": "feathers",
+            "strength": 0.8,
+            "x": -263,
+            "y": -253
+          },
+          {
+            "f": 24,
+            "type": "fx",
+            "fx": "feathers",
+            "strength": 0.8,
+            "x": -263,
+            "y": -253
+          },
+          {
+            "f": 32,
+            "type": "fx",
+            "fx": "feathers",
+            "strength": 0.8,
+            "x": -263,
+            "y": -253
+          },
+          {
+            "f": 40,
+            "type": "fx",
+            "fx": "feathers",
+            "strength": 0.8,
+            "x": -263,
+            "y": -253
+          },
+          {
+            "f": 48,
+            "type": "fx",
+            "fx": "feathers",
+            "strength": 0.8,
+            "x": -263,
+            "y": -253
+          },
+          {
+            "f": 56,
+            "type": "fx",
+            "fx": "feathers",
+            "strength": 0.8,
+            "x": -263,
+            "y": -253
+          }
+        ]
+      }
     },
     {
       "id": "dilophosaurus_light",
       "kind": "light",
-      "name": "주둥이 타격",
+      "name": "빠른 쪼기",
       "startupFrames": 6,
       "activeFrames": 4,
       "recoveryFrames": 14,
@@ -1373,12 +4565,73 @@
           "width": 122,
           "height": 105
         }
-      ]
+      ],
+      "script": {
+        "frames": 26,
+        "reach": 100,
+        "keys": [
+          {
+            "f": 0,
+            "x": 0,
+            "rot": 0,
+            "sx": 1,
+            "sy": 1
+          },
+          {
+            "f": 4,
+            "ease": "out",
+            "x": -14,
+            "rot": -0.096,
+            "sx": 0.94,
+            "sy": 1.05
+          },
+          {
+            "f": 7,
+            "ease": "out",
+            "x": 40,
+            "rot": 0.16,
+            "sx": 1.1,
+            "sy": 0.8999999999999999,
+            "ghost": 0.5
+          },
+          {
+            "f": 12,
+            "x": 40,
+            "ghost": 0
+          },
+          {
+            "f": 24,
+            "x": 0,
+            "rot": 0,
+            "sx": 1,
+            "sy": 1
+          }
+        ],
+        "hits": [
+          {
+            "from": 6,
+            "to": 10,
+            "box": {
+              "x": -40,
+              "y": -315,
+              "w": 120,
+              "h": 122,
+              "anchor": "front"
+            },
+            "damage": 9,
+            "knockback": 70,
+            "hitstun": 13,
+            "hitstop": 4,
+            "fx": "light"
+          }
+        ],
+        "events": []
+      }
     },
     {
       "id": "dilophosaurus_heavy",
       "kind": "heavy",
-      "name": "앞발 차기",
+      "name": "볏 번쩍",
       "startupFrames": 14,
       "activeFrames": 6,
       "recoveryFrames": 24,
@@ -1396,12 +4649,99 @@
           "width": 168,
           "height": 147
         }
-      ]
+      ],
+      "script": {
+        "frames": 58,
+        "reach": 300,
+        "keys": [
+          {
+            "f": 0,
+            "x": 0,
+            "rot": 0,
+            "sx": 1,
+            "sy": 1
+          },
+          {
+            "f": 10,
+            "ease": "out",
+            "rot": -0.16,
+            "sy": 1.1,
+            "sx": 0.94
+          },
+          {
+            "f": 14,
+            "ease": "out",
+            "rot": 0.04,
+            "sy": 0.96,
+            "sx": 1.06
+          },
+          {
+            "f": 34,
+            "rot": 0.02
+          },
+          {
+            "f": 56,
+            "x": 0,
+            "rot": 0,
+            "sx": 1,
+            "sy": 1
+          }
+        ],
+        "overlays": [
+          {
+            "sprite": "assets/effects/dilo_crest.png",
+            "rect": [
+              1180,
+              261,
+              1740,
+              920
+            ],
+            "from": 10,
+            "to": 40,
+            "flash": true
+          }
+        ],
+        "hits": [
+          {
+            "from": 14,
+            "to": 18,
+            "box": {
+              "x": -40,
+              "y": -385,
+              "w": 300,
+              "h": 315,
+              "anchor": "front"
+            },
+            "damage": 8,
+            "knockback": 40,
+            "hitstun": 20,
+            "hitstop": 6,
+            "fx": "heavy",
+            "stun": 70
+          }
+        ],
+        "events": [
+          {
+            "f": 14,
+            "type": "fx",
+            "fx": "flash",
+            "strength": 1.6
+          },
+          {
+            "f": 14,
+            "type": "fx",
+            "fx": "shockwave",
+            "strength": 1,
+            "x": 40,
+            "y": -298
+          }
+        ]
+      }
     },
     {
       "id": "dilophosaurus_special",
       "kind": "special",
-      "name": "크레스트 플래시",
+      "name": "분신 페이크",
       "startupFrames": 24,
       "activeFrames": 10,
       "recoveryFrames": 38,
@@ -1419,12 +4759,130 @@
           "width": 214,
           "height": 189
         }
-      ]
+      ],
+      "script": {
+        "frames": 60,
+        "reach": 700,
+        "passThrough": true,
+        "keys": [
+          {
+            "f": 0,
+            "x": 0,
+            "rot": 0,
+            "sx": 1,
+            "sy": 1,
+            "xr": 0,
+            "face": 1,
+            "intang": 0
+          },
+          {
+            "f": 6,
+            "ease": "out",
+            "sy": 0.86,
+            "sx": 1.1,
+            "ghost": 1
+          },
+          {
+            "f": 8,
+            "ease": "step",
+            "intang": 1
+          },
+          {
+            "f": 10,
+            "ease": "linear",
+            "xr": 0.33,
+            "ghost": 1,
+            "sx": 1.1
+          },
+          {
+            "f": 12,
+            "ease": "linear",
+            "xr": 0.66
+          },
+          {
+            "f": 14,
+            "ease": "linear",
+            "xr": 1.0,
+            "sx": 1
+          },
+          {
+            "f": 14,
+            "face": -1
+          },
+          {
+            "f": 16,
+            "ease": "step",
+            "intang": 0
+          },
+          {
+            "f": 18,
+            "ease": "out",
+            "rot": -0.12,
+            "sy": 1.1,
+            "ghost": 0.3
+          },
+          {
+            "f": 22,
+            "ease": "out",
+            "x": -40,
+            "rot": 0.16,
+            "sx": 1.12,
+            "sy": 0.92,
+            "ghost": 0.6
+          },
+          {
+            "f": 28,
+            "ghost": 0
+          },
+          {
+            "f": 58,
+            "x": -40,
+            "rot": 0,
+            "sx": 1,
+            "sy": 1
+          }
+        ],
+        "hits": [
+          {
+            "from": 20,
+            "to": 25,
+            "box": {
+              "x": -30,
+              "y": -298,
+              "w": 150,
+              "h": 175,
+              "anchor": "front"
+            },
+            "damage": 26,
+            "knockback": 200,
+            "hitstun": 26,
+            "hitstop": 8,
+            "unguardable": true,
+            "fx": "special"
+          }
+        ],
+        "events": [
+          {
+            "f": 8,
+            "type": "fx",
+            "fx": "flash",
+            "strength": 0.8
+          },
+          {
+            "f": 14,
+            "type": "fx",
+            "fx": "dust",
+            "strength": 0.8,
+            "x": -245,
+            "y": 0
+          }
+        ]
+      }
     },
     {
       "id": "brachiosaurus_light",
       "kind": "light",
-      "name": "앞발 밀기",
+      "name": "긴 목 채찍",
       "startupFrames": 6,
       "activeFrames": 4,
       "recoveryFrames": 14,
@@ -1442,12 +4900,80 @@
           "width": 118,
           "height": 176
         }
-      ]
+      ],
+      "script": {
+        "frames": 36,
+        "reach": 560,
+        "keys": [
+          {
+            "f": 0,
+            "x": 0,
+            "rot": 0,
+            "sx": 1,
+            "sy": 1
+          },
+          {
+            "f": 8,
+            "ease": "out",
+            "x": -14,
+            "rot": -0.12,
+            "sx": 0.94
+          },
+          {
+            "f": 13,
+            "ease": "out",
+            "x": 30,
+            "rot": 0.32,
+            "sx": 1.3,
+            "sy": 0.86,
+            "ghost": 0.7
+          },
+          {
+            "f": 18,
+            "ghost": 0
+          },
+          {
+            "f": 34,
+            "x": 0,
+            "rot": 0,
+            "sx": 1,
+            "sy": 1
+          }
+        ],
+        "hits": [
+          {
+            "from": 12,
+            "to": 15,
+            "box": {
+              "x": 0,
+              "y": -441,
+              "w": 500,
+              "h": 265,
+              "anchor": "front"
+            },
+            "damage": 10,
+            "knockback": 110,
+            "hitstun": 14,
+            "hitstop": 4,
+            "fx": "light"
+          }
+        ],
+        "events": [
+          {
+            "f": 13,
+            "type": "fx",
+            "fx": "slash",
+            "strength": 1.2,
+            "x": 340,
+            "y": -265
+          }
+        ]
+      }
     },
     {
       "id": "brachiosaurus_heavy",
       "kind": "heavy",
-      "name": "앞발 내려찍기",
+      "name": "앞발 들어 쿵 밟기",
       "startupFrames": 14,
       "activeFrames": 6,
       "recoveryFrames": 24,
@@ -1465,12 +4991,107 @@
           "width": 162,
           "height": 247
         }
-      ]
+      ],
+      "script": {
+        "frames": 58,
+        "reach": 800,
+        "keys": [
+          {
+            "f": 0,
+            "x": 0,
+            "rot": 0,
+            "sx": 1,
+            "sy": 1
+          },
+          {
+            "f": 18,
+            "ease": "out",
+            "x": -20,
+            "rot": -0.32,
+            "sy": 1.06
+          },
+          {
+            "f": 24,
+            "ease": "in",
+            "x": 30,
+            "rot": 0.06,
+            "sy": 0.88,
+            "sx": 1.08
+          },
+          {
+            "f": 30,
+            "rot": 0,
+            "sy": 1,
+            "sx": 1
+          },
+          {
+            "f": 56,
+            "x": 0,
+            "rot": 0,
+            "sx": 1,
+            "sy": 1
+          }
+        ],
+        "hits": [
+          {
+            "from": 23,
+            "to": 27,
+            "box": {
+              "x": -60,
+              "y": -235,
+              "w": 220,
+              "h": 235,
+              "anchor": "front"
+            },
+            "damage": 10,
+            "knockback": 120,
+            "hitstun": 18,
+            "hitstop": 6,
+            "fx": "heavy"
+          }
+        ],
+        "events": [
+          {
+            "f": 24,
+            "type": "projectile",
+            "x": 60,
+            "y": -34,
+            "vx": 760,
+            "life": 0.8,
+            "w": 240,
+            "h": 70,
+            "color": "#cbb68c",
+            "noTrail": true,
+            "spin": 0,
+            "groundOnly": true,
+            "damage": 10,
+            "knockback": 40,
+            "hitstun": 20,
+            "hitstop": 5,
+            "knockdown": 40,
+            "fx": "heavy"
+          },
+          {
+            "f": 24,
+            "type": "fx",
+            "fx": "shake",
+            "strength": 1.6
+          },
+          {
+            "f": 24,
+            "type": "fx",
+            "fx": "dust",
+            "strength": 2,
+            "x": 0,
+            "y": 0
+          }
+        ]
+      }
     },
     {
       "id": "brachiosaurus_special",
       "kind": "special",
-      "name": "기가 스텝",
+      "name": "대지진",
       "startupFrames": 24,
       "activeFrames": 10,
       "recoveryFrames": 38,
@@ -1488,12 +5109,120 @@
           "width": 206,
           "height": 318
         }
-      ]
+      ],
+      "script": {
+        "frames": 92,
+        "reach": 2000,
+        "keys": [
+          {
+            "f": 0,
+            "x": 0,
+            "rot": 0,
+            "sx": 1,
+            "sy": 1,
+            "y": 0
+          },
+          {
+            "f": 30,
+            "ease": "out",
+            "x": -40,
+            "rot": -0.55,
+            "sy": 1.08,
+            "y": -30
+          },
+          {
+            "f": 38,
+            "rot": -0.58,
+            "y": -40
+          },
+          {
+            "f": 46,
+            "ease": "in",
+            "x": 20,
+            "rot": 0.08,
+            "sy": 0.84,
+            "sx": 1.1,
+            "y": 0
+          },
+          {
+            "f": 54,
+            "rot": 0,
+            "sy": 1,
+            "sx": 1
+          },
+          {
+            "f": 90,
+            "x": 0,
+            "rot": 0,
+            "sx": 1,
+            "sy": 1,
+            "y": 0
+          }
+        ],
+        "hits": [
+          {
+            "from": 46,
+            "to": 50,
+            "box": {
+              "x": -2400,
+              "y": -70,
+              "w": 4800,
+              "h": 70,
+              "anchor": "center"
+            },
+            "damage": 24,
+            "knockback": 40,
+            "hitstun": 24,
+            "hitstop": 10,
+            "groundOnly": true,
+            "knockdown": 60,
+            "fx": "special"
+          }
+        ],
+        "events": [
+          {
+            "f": 46,
+            "type": "fx",
+            "fx": "shake",
+            "strength": 3
+          },
+          {
+            "f": 46,
+            "type": "fx",
+            "fx": "flash",
+            "strength": 1.6
+          },
+          {
+            "f": 46,
+            "type": "fx",
+            "fx": "dust",
+            "strength": 2.5,
+            "x": -200,
+            "y": 0
+          },
+          {
+            "f": 46,
+            "type": "fx",
+            "fx": "dust",
+            "strength": 2.5,
+            "x": -776,
+            "y": 0
+          },
+          {
+            "f": 46,
+            "type": "fx",
+            "fx": "shockwave",
+            "strength": 1,
+            "x": 0,
+            "y": 0
+          }
+        ]
+      }
     },
     {
       "id": "pteranodon_light",
       "kind": "light",
-      "name": "부리 톡 치기",
+      "name": "부리 쪼기",
       "startupFrames": 6,
       "activeFrames": 4,
       "recoveryFrames": 14,
@@ -1511,12 +5240,73 @@
           "width": 108,
           "height": 104
         }
-      ]
+      ],
+      "script": {
+        "frames": 26,
+        "reach": 140,
+        "keys": [
+          {
+            "f": 0,
+            "x": 0,
+            "rot": 0,
+            "sx": 1,
+            "sy": 1
+          },
+          {
+            "f": 4,
+            "ease": "out",
+            "x": -14,
+            "rot": -0.132,
+            "sx": 0.94,
+            "sy": 1.05
+          },
+          {
+            "f": 7,
+            "ease": "out",
+            "x": 50,
+            "rot": 0.22,
+            "sx": 1.1,
+            "sy": 0.8999999999999999,
+            "ghost": 0.5
+          },
+          {
+            "f": 12,
+            "x": 50,
+            "ghost": 0
+          },
+          {
+            "f": 24,
+            "x": 0,
+            "rot": 0,
+            "sx": 1,
+            "sy": 1
+          }
+        ],
+        "hits": [
+          {
+            "from": 6,
+            "to": 10,
+            "box": {
+              "x": -40,
+              "y": -296,
+              "w": 150,
+              "h": 122,
+              "anchor": "front"
+            },
+            "damage": 9,
+            "knockback": 70,
+            "hitstun": 13,
+            "hitstop": 4,
+            "fx": "light"
+          }
+        ],
+        "events": []
+      }
     },
     {
       "id": "pteranodon_heavy",
       "kind": "heavy",
-      "name": "날개 밀기",
+      "name": "급강하",
       "startupFrames": 14,
       "activeFrames": 6,
       "recoveryFrames": 24,
@@ -1534,12 +5324,114 @@
           "width": 149,
           "height": 146
         }
-      ]
+      ],
+      "script": {
+        "frames": 58,
+        "reach": 620,
+        "passThrough": true,
+        "keys": [
+          {
+            "f": 0,
+            "x": 0,
+            "rot": 0,
+            "sx": 1,
+            "sy": 1,
+            "y": 0
+          },
+          {
+            "f": 4,
+            "ease": "out",
+            "sy": 0.86
+          },
+          {
+            "f": 16,
+            "ease": "out",
+            "xo": 0.15,
+            "y": -420,
+            "rot": -0.1,
+            "sy": 1
+          },
+          {
+            "f": 20,
+            "y": -430,
+            "rot": 0.45
+          },
+          {
+            "f": 32,
+            "ease": "in",
+            "xo": 0.85,
+            "y": -40,
+            "rot": 0.55,
+            "ghost": 1
+          },
+          {
+            "f": 36,
+            "ease": "out",
+            "y": 0,
+            "rot": 0,
+            "ghost": 0,
+            "sy": 0.9,
+            "sx": 1.1
+          },
+          {
+            "f": 56,
+            "xo": 0.85,
+            "x": 0,
+            "rot": 0,
+            "sx": 1,
+            "sy": 1,
+            "y": 0
+          }
+        ],
+        "overlays": [
+          {
+            "sprite": "assets/effects/ptera_flying.png",
+            "rect": [
+              345,
+              428,
+              1703,
+              952
+            ],
+            "hideBody": true,
+            "from": 5,
+            "to": 36
+          }
+        ],
+        "hits": [
+          {
+            "from": 24,
+            "to": 34,
+            "box": {
+              "x": -60,
+              "y": -174,
+              "w": 200,
+              "h": 209,
+              "anchor": "front"
+            },
+            "damage": 17,
+            "knockback": 150,
+            "hitstun": 22,
+            "hitstop": 7,
+            "knockdown": 36,
+            "fx": "heavy"
+          }
+        ],
+        "events": [
+          {
+            "f": 36,
+            "type": "fx",
+            "fx": "dust",
+            "strength": 1,
+            "x": -132,
+            "y": 0
+          }
+        ]
+      }
     },
     {
       "id": "pteranodon_special",
       "kind": "special",
-      "name": "스카이 다이브",
+      "name": "공중 납치",
       "startupFrames": 24,
       "activeFrames": 10,
       "recoveryFrames": 38,
@@ -1557,7 +5449,141 @@
           "width": 189,
           "height": 188
         }
-      ]
+      ],
+      "script": {
+        "frames": 120,
+        "reach": 700,
+        "passThrough": true,
+        "keys": [
+          {
+            "f": 0,
+            "x": 0,
+            "rot": 0,
+            "sx": 1,
+            "sy": 1,
+            "y": 0
+          },
+          {
+            "f": 4,
+            "ease": "out",
+            "sy": 0.86
+          },
+          {
+            "f": 18,
+            "ease": "out",
+            "xo": 0.7,
+            "y": -260,
+            "rot": 0.2
+          },
+          {
+            "f": 26,
+            "xo": 0.95,
+            "y": -200,
+            "rot": 0.1
+          },
+          {
+            "f": 34,
+            "xo": 0.95,
+            "y": -200
+          },
+          {
+            "f": 40,
+            "ease": "in",
+            "xo": 0.95,
+            "y": -240,
+            "hold": {
+              "x": -132,
+              "y": 210,
+              "rot": 0
+            }
+          },
+          {
+            "f": 72,
+            "ease": "out",
+            "xo": 0.7,
+            "y": -600,
+            "rot": -0.15,
+            "hold": {
+              "x": -132,
+              "y": 260,
+              "rot": 0.2
+            }
+          },
+          {
+            "f": 78,
+            "y": -620,
+            "hold": {
+              "x": -132,
+              "y": 260,
+              "rot": -0.2
+            }
+          },
+          {
+            "f": 86,
+            "y": -590
+          },
+          {
+            "f": 104,
+            "ease": "in",
+            "xo": 0.7,
+            "y": 0,
+            "rot": 0
+          },
+          {
+            "f": 118,
+            "xo": 0.7,
+            "x": 0,
+            "rot": 0,
+            "sx": 1,
+            "sy": 1,
+            "y": 0
+          }
+        ],
+        "overlays": [
+          {
+            "sprite": "assets/effects/ptera_flying.png",
+            "rect": [
+              345,
+              428,
+              1703,
+              952
+            ],
+            "hideBody": true,
+            "from": 5,
+            "to": 104
+          }
+        ],
+        "grab": {
+          "from": 20,
+          "to": 34,
+          "box": {
+            "x": -192,
+            "y": -40,
+            "w": 384,
+            "h": 300,
+            "anchor": "center"
+          },
+          "success": 40,
+          "miss": 86
+        },
+        "hits": [],
+        "events": [
+          {
+            "f": 80,
+            "type": "throw",
+            "vx": 120,
+            "vy": 400,
+            "damage": 28,
+            "knockdown": 60
+          },
+          {
+            "f": 80,
+            "type": "fx",
+            "fx": "flash",
+            "strength": 1
+          }
+        ]
+      }
     }
   ]
 }
