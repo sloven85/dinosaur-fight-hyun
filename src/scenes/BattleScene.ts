@@ -7,6 +7,7 @@ import { EMOTION_COLORS, EMOTION_LABELS, emotionFor } from '../combat/emotion';
 import type { Rect } from '../combat/types';
 import { EffectSystem } from '../rendering/effects';
 import { renderFighter, setOverlayLoader } from '../rendering/FighterRenderer';
+import { renderStage, setStageLoader } from '../rendering/stageRenderer';
 import type { CharacterAssets } from '../rendering/CharacterAssets';
 import { sfxIdForEvent } from '../audio/tracks';
 import { BaseScene } from './BaseScene';
@@ -54,6 +55,7 @@ export class BattleScene extends BaseScene {
       : new Match(session.mode, session.characters, undefined, options);
     context.audio.playBgm('battle');
     setOverlayLoader(context.assets);
+    setStageLoader(context.assets);
   }
 
   exit(): void {
@@ -182,17 +184,8 @@ export class BattleScene extends BaseScene {
     g.save();
     g.translate(shake.x, shake.y);
 
-    g.fillStyle = stage.placeholderColor;
-    g.fillRect(-40, -40, width + 80, height + 80);
-
-    g.fillStyle = 'rgba(0, 0, 0, 0.28)';
-    g.fillRect(-40, stage.groundY, width + 80, height - stage.groundY + 40);
-    g.strokeStyle = 'rgba(255, 255, 255, 0.25)';
-    g.lineWidth = 4;
-    g.beginPath();
-    g.moveTo(0, stage.groundY);
-    g.lineTo(width, stage.groundY);
-    g.stroke();
+    const focusX = (this.match.p1.x + this.match.p2.x) / 2;
+    renderStage(g, stage, width, height, this.elapsed, focusX);
 
     // 잡힌 쪽은 잡은 쪽 뒤에 그린다(입에 물린 것처럼).
     const order = drawOrder(this.match.fighters);

@@ -19,7 +19,12 @@ import { VsScene } from './VsScene';
 function fakeContext(): CanvasRenderingContext2D {
   const target: Record<string, unknown> = {};
   return new Proxy(target, {
-    get: (store, property) => (property in store ? store[property as string] : () => {}),
+    get: (store, property) => {
+      if (property in store) return store[property as string];
+      // 그라디언트·패턴처럼 객체를 돌려주는 호출은 addColorStop 등을 가진 빈 객체로.
+      if (typeof property === 'string' && /^create/.test(property)) return () => ({ addColorStop: () => {} });
+      return () => {};
+    },
     set: (store, property, value) => {
       store[property as string] = value;
       return true;
