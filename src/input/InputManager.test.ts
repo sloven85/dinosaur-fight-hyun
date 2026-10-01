@@ -229,3 +229,124 @@ describe('조작 A안 (디렉터 확정 2026-10-01)', () => {
     expect(input.isPressed(1, 'confirm')).toBe(false);
   });
 });
+
+/** 가짜 패드(표준 배치). 버튼 17개·축 4개. */
+function fakePad(index: number, mapping = 'standard', axes = 4) {
+  return {
+    index,
+    id: `Fake Pad ${index}`,
+    connected: true,
+    mapping,
+    timestamp: 0,
+    buttons: Array.from({ length: 17 }, () => ({ pressed: false, touched: false, value: 0 })),
+    axes: Array.from({ length: axes }, () => 0),
+  };
+}
+
+describe('게임패드 회귀(jk 제보 2026-10-02)', () => {
+  let pads: ReturnType<typeof fakePad>[] = [];
+  let restoreNav: (() => void) | null = null;
+  beforeEach(() => {
+    pads = [fakePad(0), fakePad(1)];
+    const original = Object.getOwnPropertyDescriptor(globalThis, 'navigator');
+    Object.defineProperty(globalThis, 'navigator', { value: { getGamepads: () => pads }, configurable: true });
+    restoreNav = () => {
+      if (original) Object.defineProperty(globalThis, 'navigator', original);
+    };
+  });
+  afterEach(() => restoreNav?.());
+
+  const press = (p: number, b: number, v = true) => {
+    pads[p].buttons[b].pressed = v;
+    pads[p].buttons[b].value = v ? 1 : 0;
+  };
+
+  it('아래 버튼으로 1P·2P 순서대로 참가하고, 버튼·십자키·스틱이 동작한다', () => {
+    const { win } = createFakeWindow();
+    const input = new InputManager(win);
+    press(0, 0);
+    input.update();
+    expect(input.padIndex(0)).toBe(0);
+    expect(input.isPressed(0, 'confirm')).toBe(true);
+    press(0, 0, false);
+    press(1, 0);
+    input.update();
+    expect(input.padIndex(1)).toBe(1);
+    press(1, 0, false);
+
+    press(0, 2); // 왼쪽 얼굴 = 약
+    press(1, 3); // 위쪽 얼굴 = 강
+    pads[0].axes[0] = 1; // 왼쪽 스틱 오른쪽
+    press(1, 13); // 2P 십자키 아래
+    input.update();
+    expect(input.isPressed(0, 'light')).toBe(true);
+    expect(input.isPressed(1, 'heavy')).toBe(true);
+    expect(input.isHeld(0, 'right')).toBe(true);
+    expect(input.isHeld(1, 'down')).toBe(true);
+    expect(input.isHeld(0, 'down')).toBe(false);
+  });
+
+  it('특수(오른쪽 얼굴 버튼)와 일시정지(Start)', () => {
+    const { win } = createFakeWindow();
+    const input = new InputManager(win);
+    press(0, 0);
+    input.update();
+    press(0, 0, false);
+    input.update();
+    press(0, 1);
+    press(0, 9);
+    input.update();
+    expect(input.isPressed(0, 'special')).toBe(true);
+    expect(input.isPressed(0, 'pause')).toBe(true);
+  });
+
+  it('십자키 두 번 탭이 press 엣지 두 번으로 들어온다(대시 입력)', () => {
+    const { win } = createFakeWindow();
+    const input = new InputManager(win);
+    press(0, 0);
+    input.update();
+    press(0, 0, false);
+    input.update();
+    const edges: boolean[] = [];
+    for (const v of [true, false, true, false]) {
+      press(0, 15, v);
+      input.update();
+      edges.push(input.isPressed(0, 'right'));
+    }
+    expect(edges).toEqual([true, false, true, false]);
+  });
+
+  it('비표준 배치: 해트 축(9)·축 6/7 십자키, 아무 얼굴 버튼으로 참가', () => {
+    pads = [fakePad(0, '', 10)];
+    const { win } = createFakeWindow();
+    const input = new InputManager(win);
+    press(0, 2);
+    input.update();
+    expect(input.padIndex(0)).toBe(0);
+    pads[0].axes[9] = -1 + (2 / 7) * 2; // 오른쪽
+    input.update();
+    expect(input.isHeld(0, 'right')).toBe(true);
+    pads[0].axes[9] = 3.28; // 손 뗌
+    pads[0].axes[7] = 1; // 축 7 아래
+    input.update();
+    expect(input.isHeld(0, 'right')).toBe(false);
+    expect(input.isHeld(0, 'down')).toBe(true);
+  });
+
+  it('브라우저가 패드를 막아 getGamepads가 예외를 던져도 키보드 입력은 계속 된다', () => {
+    Object.defineProperty(globalThis, 'navigator', {
+      value: {
+        getGamepads: () => {
+          throw new Error('SecurityError');
+        },
+      },
+      configurable: true,
+    });
+    const { win, dispatch } = createFakeWindow();
+    const input = new InputManager(win);
+    dispatch('keydown', 'KeyF');
+    expect(() => input.update()).not.toThrow();
+    expect(input.isPressed(0, 'light')).toBe(true);
+    expect(input.padBlocked).toBe(true);
+  });
+});

@@ -271,17 +271,37 @@ export class InputManager {
 
   // --- 내부 ---
 
+  /**
+   * 패드 목록. 브라우저가 패드 사용을 막으면(다른 사이트 안에 끼워 연 화면의 권한 정책 등)
+   * getGamepads가 예외를 던진다. 그 예외가 입력 갱신 전체를 멈추면 키보드까지 죽으므로
+   * 여기서 삼키고 패드 없음으로 처리한다(jk 제보 2026-10-02 '패드가 안 됨').
+   */
   private readPads(): (Gamepad | null)[] {
-    if (typeof navigator.getGamepads !== 'function') return [];
-    return Array.from(navigator.getGamepads());
+    try {
+      if (typeof navigator === 'undefined' || typeof navigator.getGamepads !== 'function') return [];
+      return Array.from(navigator.getGamepads() ?? []);
+    } catch {
+      if (!this.padBlockedWarned) {
+        this.padBlockedWarned = true;
+        console.warn('[input] 이 화면에서는 브라우저가 게임패드를 막았습니다. 게임 주소를 새 탭에서 직접 열어 주세요.');
+      }
+      this.padBlocked = true;
+      return [];
+    }
   }
+
+  /** 브라우저가 패드를 막았는지(화면 안내용). */
+  padBlocked = false;
+  private padBlockedWarned = false;
 
   private assignJoiningPads(pads: (Gamepad | null)[]): void {
     for (let index = 0; index < pads.length; index++) {
       const pad = pads[index];
       if (!pad || !pad.connected) continue;
       if (this.players.some((slot) => slot.padIndex === index)) continue;
-      if (!pad.buttons[GAMEPAD_JOIN_BUTTON]?.pressed) continue;
+      // 참가: 얼굴 버튼 4개·Start 중 아무거나(표준 배치가 아닌 패드는 아래 버튼 번호가 다르다).
+      const join = [GAMEPAD_JOIN_BUTTON, 1, 2, 3, 9].some((b) => pad.buttons[b]?.pressed);
+      if (!join) continue;
 
       const free = this.players.findIndex((slot) => slot.padIndex === null);
       if (free === -1) continue;
@@ -308,9 +328,18 @@ export class InputManager {
       }
     }
 
+    // 표준 배치가 아닌 패드(일부 블루투스·호환 패드)는 십자키를 '해트' 축 하나로 보낸다.
+    const hat = pad.mapping !== 'standard' && pad.axes.length > HAT_AXIS ? pad.axes[HAT_AXIS] : null;
     for (const direction of DIRECTIONS) {
       if (pad.buttons[GAMEPAD_DPAD[direction]]?.pressed) {
         held[direction] = true;
+      }
+      if (hat !== null && hat !== undefined && hatHas(hat, direction)) held[direction] = true;
+      // 또 다른 비표준 배치: 십자키를 축 6(좌우)·7(상하)로 보낸다.
+      if (pad.mapping !== 'standard' && pad.axes.length >= 8) {
+        const v = direction === 'left' || direction === 'right' ? pad.axes[6] : pad.axes[7];
+        const sign = direction === 'left' || direction === 'up' ? -1 : 1;
+        if ((v ?? 0) * sign > STICK_DEADZONE) held[direction] = true;
       }
       const { axis, sign } = STICK_AXIS[direction];
       const value = pad.axes[axis] ?? 0;
@@ -400,4 +429,13 @@ export class InputManager {
     this.clearSlot(slot);
     this.pause = 'gamepad-disconnected';
   };
+}
+
+/** 해트 축 번호와 값(-1 위, 시계 방향으로 2/7씩, 1.28 이상은 손 뗌). */
+const HAT_AXIS = 9;
+function hatHas(value: number, direction: 'up' | 'down' | 'left' | 'right'): boolean {
+  if (value > 1.1 || value < -1.1) return false;
+  const step = Math.round((value + 1) / (2 / 7)); // 0=위 1=오른위 2=오른 3=오른아래 4=아래 5=왼아래 6=왼 7=왼위
+  const dirs: Record<number, string[]> = { 0: ['up'], 1: ['up', 'right'], 2: ['right'], 3: ['down', 'right'], 4: ['down'], 5: ['down', 'left'], 6: ['left'], 7: ['up', 'left'] };
+  return (dirs[step] ?? []).includes(direction);
 }

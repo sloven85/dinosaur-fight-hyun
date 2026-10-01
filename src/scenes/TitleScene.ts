@@ -70,9 +70,17 @@ export class TitleScene extends BaseScene {
       g.globalAlpha = 1;
     });
 
-    drawText(g, '패드의 아래쪽 얼굴 버튼을 누르면 참가합니다', width / 2, 860, {
+    // 패드 상태 안내: 브라우저는 페이지에서 패드 버튼을 한 번 눌러야 패드를 보여 준다.
+    const input = this.context.input;
+    const seen = input.connectedPadCount;
+    const padHint = input.padBlocked
+      ? '이 화면에서는 브라우저가 패드를 막았습니다 · 게임 주소를 새 탭에서 직접 열어 주세요'
+      : seen === 0
+        ? '패드: 아직 안 보임 · 패드 아무 버튼이나 한 번 눌러 주세요'
+        : `패드 ${seen}개 보임 · 아래쪽 얼굴 버튼(A/×)을 누르면 참가합니다`;
+    drawText(g, padHint, width / 2, 860, {
       font: FONTS.body,
-      color: COLORS.textDim,
+      color: input.padBlocked ? '#ff8a7a' : COLORS.textDim,
     });
 
     const p1 = this.context.input.padIndex(0);

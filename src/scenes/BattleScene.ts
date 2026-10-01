@@ -124,6 +124,14 @@ export class BattleScene extends BaseScene {
     if (import.meta.env.DEV && typeof location !== 'undefined' && location.search.includes('devko=1') && this.match.phase === 'fight') {
       this.match.p2.health = Math.min(this.match.p2.health, 1);
     }
+    // 개발 서버 전용: 확인용으로 현재 상태를 창에 노출(배포 빌드에는 없음).
+    if (import.meta.env.DEV && typeof window !== 'undefined') {
+      (window as unknown as { __dev?: unknown }).__dev = {
+        p1: { x: this.match.p1.x, y: this.match.p1.y, state: this.match.p1.state, dash: this.match.p1.dashFrames, guard: this.match.p1.guardStance, kind: this.match.p1.attack?.move.kind ?? null, meter: this.match.p1.meter },
+        p2: { x: this.match.p2.x, state: this.match.p2.state, guard: this.match.p2.guardStance, hp: this.match.p2.health },
+        phase: this.match.phase,
+      };
+    }
     this.consumeMatchEvents(stage.groundY, settings.screenShake, settings.vibration);
     this.spawnLandingDust(stage.groundY);
     this.effects.update(dt);
