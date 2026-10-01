@@ -1,3 +1,5 @@
+import { ASSET_VERSION } from 'virtual:asset-version';
+
 /**
  * 이미지·JSON 에셋을 경로 기준으로 캐시하며 로드한다(계획서 14절 AssetLoader).
  * 없는 파일은 조용히 기록만 하고 임시 표시로 대체할 수 있게 null을 돌려준다.
@@ -11,6 +13,16 @@ export class AssetLoader {
 
   resolve(path: string): string {
     return `${this.baseUrl}${path}`;
+  }
+
+  /**
+   * 캐시 무효화용 버전 쿼리를 붙인 실제 요청 URL.
+   * 프리뷰/엣지가 같은 경로의 이미지를 1년간 캐시하므로, 파일 내용이 바뀌면
+   * 버전(vite.config.ts가 주입)이 바뀌어 새 URL로 받아 온다.
+   */
+  private assetUrl(path: string): string {
+    const separator = path.includes('?') ? '&' : '?';
+    return `${this.resolve(path)}${separator}v=${ASSET_VERSION}`;
   }
 
   image(path: string): HTMLImageElement | null {
@@ -38,7 +50,7 @@ export class AssetLoader {
         console.warn(`[assets] 이미지를 불러오지 못했습니다: ${path}`);
         resolve(null);
       };
-      img.src = this.resolve(path);
+      img.src = this.assetUrl(path);
     });
 
     this.pending.set(path, promise);
@@ -47,7 +59,7 @@ export class AssetLoader {
 
   async loadJson<T>(path: string): Promise<T | null> {
     try {
-      const response = await fetch(this.resolve(path));
+      const response = await fetch(this.assetUrl(path));
       if (!response.ok) throw new Error(`${response.status}`);
       return (await response.json()) as T;
     } catch (error) {
