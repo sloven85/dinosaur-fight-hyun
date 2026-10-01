@@ -163,6 +163,15 @@ export class Fighter {
   private inputUp = false;
   private inputUpHeld = false;
   private inputDown = false;
+  /** 대시(jk 요청 2026-10-02): 같은 방향을 두 번 누르면 앞 대시 / 뒤 백스텝. */
+  dashFrames = 0;
+  dashDir: 1 | -1 = 1;
+  /** 방금 대시가 앞(상대 쪽)인지. 연출(잔상·먼지)용. */
+  dashForward = true;
+  private lastTapDir: -1 | 0 | 1 = 0;
+  private lastTapAge = 999;
+  private prevLeftHeld = false;
+  private prevRightHeld = false;
   /** 도약 돌진 전진 잔여 프레임과 프레임당 이동량. */
   private leapFrames = 0;
   private leapPerFrame = 0;
@@ -566,6 +575,10 @@ export class Fighter {
     if (this.state === 'attack' && visual && visual.ghost > 0.01) {
       this.ghosts.push({ x: this.x, y: this.y, facing: this.facing, visual: { ...visual }, alpha: 0.55 * visual.ghost });
       if (this.ghosts.length > GHOST_LENGTH) this.ghosts.shift();
+    } else if (this.dashFrames > 0 && this.dashFrames % 2 === 0) {
+      // 대시 잔상: 몸 그대로 옅게.
+      this.ghosts.push({ x: this.x, y: this.y, facing: this.facing, visual: { rot: this.dashForward ? 0.08 : -0.06, sx: 1.06, sy: 0.95, ghost: 1, sink: 0, parts: null, overlays: [] }, alpha: 0.4 });
+      if (this.ghosts.length > GHOST_LENGTH) this.ghosts.shift();
     }
   }
 
@@ -617,6 +630,7 @@ export class Fighter {
     this.airTumble = 0;
     this.stunFrames = 0;
     this.guardFrames = 0;
+    this.dashFrames = 0;
     this.scriptVisual = null;
     this.ghosts = [];
   }
@@ -639,11 +653,42 @@ export class Fighter {
     this.inputUp = input.isPressed(player, 'up');
     this.inputUpHeld = input.isHeld(player, 'up');
     this.inputDown = input.isHeld(player, 'down');
+    this.readDashTap();
 
     if (input.isPressed(player, 'special')) this.bufferAttack('special');
     else if (input.isPressed(player, 'heavy')) this.bufferAttack('heavy');
     else if (input.isPressed(player, 'light')) this.bufferAttack('light');
   }
+
+  /** 좌·우를 새로 누른 순간을 기록하고, 같은 방향을 DASH_TAP_WINDOW 안에 두 번 누르면 대시를 시작한다. */
+  private readDashTap(): void {
+    const tapLeft = this.inputLeft && !this.prevLeftHeld;
+    const tapRight = this.inputRight && !this.prevRightHeld;
+    this.prevLeftHeld = this.inputLeft;
+    this.prevRightHeld = this.inputRight;
+    this.lastTapAge += 1;
+    const tap: -1 | 0 | 1 = tapRight ? 1 : tapLeft ? -1 : 0;
+    if (tap === 0) return;
+    if (tap === this.lastTapDir && this.lastTapAge <= DASH_TAP_WINDOW) {
+      this.lastTapDir = 0;
+      this.startDash(tap);
+      return;
+    }
+    this.lastTapDir = tap;
+    this.lastTapAge = 0;
+  }
+
+  private startDash(dir: 1 | -1): void {
+    if (!this.onGround || this.dashFrames > 0) return;
+    if (this.state !== 'idle' && this.state !== 'walk') return;
+    const toward = this.opponent ? Math.sign(this.opponent.x - this.x) || this.facing : this.facing;
+    this.dashForward = dir === toward;
+    this.dashDir = dir;
+    this.dashFrames = this.dashForward ? DASH_FRAMES : BACKSTEP_FRAMES;
+    this.dashTotal = this.dashFrames;
+  }
+
+  dashTotal = DASH_FRAMES;
 
   private bufferAttack(kind: AttackKind): void {
     this.bufferedAttack = kind;
@@ -671,6 +716,8 @@ export class Fighter {
     }
 
     const move = this.moves[kind];
+    // 대시 중 공격: 대시는 끝내고 남은 기세는 기술 내딛기에 맡긴다.
+    this.dashFrames = 0;
     this.attack = { move, attackId: nextAttackId++, frame: 0, hitTargets: new Set() };
     if (move.script) {
       const opp = this.opponent;
@@ -738,6 +785,22 @@ export class Fighter {
     const speed = BASE_MOVE_SPEED * this.data.speedScale * FIXED_DT;
 
     if (this.onGround) {
+      if (this.dashFrames > 0) {
+        // 대시: 처음엔 빠르게, 끝으로 갈수록 감속. 대시 중에도 공격·점프로 바로 이어갈 수 있다.
+        const t = this.dashFrames / this.dashTotal;
+        const mult = this.dashForward ? DASH_SPEED_MULT : BACKSTEP_SPEED_MULT;
+        this.x += this.dashDir * BASE_MOVE_SPEED * mult * (0.35 + 0.65 * t) * FIXED_DT;
+        this.dashFrames -= 1;
+        this.state = 'walk';
+        if (this.inputUp) {
+          this.dashFrames = 0;
+          this.vy = JUMP_VELOCITY;
+          this.onGround = false;
+          this.state = 'jump';
+          this.airAttackUsed = false;
+        }
+        return;
+      }
       if (this.inputDown) {
         this.state = 'crouch';
         return;
@@ -789,6 +852,13 @@ export class Fighter {
     }
   }
 }
+
+/** 대시 입력 간격(프레임, 약 0.23초)·길이·속도 배율. 4세도 되도록 간격은 넉넉하게. */
+const DASH_TAP_WINDOW = 14;
+const DASH_FRAMES = 18;
+const DASH_SPEED_MULT = 4;
+const BACKSTEP_FRAMES = 12;
+const BACKSTEP_SPEED_MULT = 2.6;
 
 function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value));

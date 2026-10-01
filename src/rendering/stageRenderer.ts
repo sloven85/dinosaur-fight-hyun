@@ -23,6 +23,32 @@ export function setStageLoader(next: AssetLoader): void {
   loader = next;
 }
 
+/**
+ * 경기장 그림 미리 불러오기(jk 2026-10-02: '배경 로딩에 시차'). 제목 화면에서 4곳 전부를,
+ * 경기장 선택에서 고른 곳을 먼저 받아 두고, 녹인 겹(fadedLayer)도 미리 만들어 둔다.
+ */
+export function preloadStages(next: AssetLoader, stages: readonly StageData[]): Promise<void> {
+  loader = next;
+  return Promise.all(
+    stages.map(async (stage) => {
+      const paths = stage.layerPaths as Partial<Record<LayerName, string>>;
+      const [sky, mid, ground] = await Promise.all(
+        (['sky', 'mid', 'ground'] as const).map(async (l) => {
+          const p = paths[l];
+          if (!p) return null;
+          const img = await next.loadImage(p);
+          images.set(p, img);
+          return img;
+        }),
+      );
+      if (mid) fadedLayer(mid, `${stage.id}:mid`, 0, 0.35, 1);
+      if (ground) fadedLayer(ground, `${stage.id}:ground`, 0.38, 0.12, stage.groundBrightness ?? 1);
+      void sky;
+    }),
+  ).then(() => undefined);
+}
+
+
 function layerImage(path: string | undefined): HTMLImageElement | null {
   if (!path || !loader) return null;
   const cached = images.get(path);

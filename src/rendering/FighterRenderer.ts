@@ -141,6 +141,18 @@ interface SpriteChoice {
   isPose: boolean;
   /** rig의 마스터 배율을 적용할지. 초상 대체일 때는 원본 크기로 그린다. */
   fromRig: boolean;
+  /** 마스터 배율에 더 곱할 값(웅크린 방어 그림이 서 있을 때보다 커 보이지 않게). */
+  fit?: number;
+}
+
+/**
+ * 방어 그림은 마스터와 같은 픽셀 배율로 그려졌지만, 웅크린 자세가 서 있는 키보다 커지는 종이 있다
+ * (안킬로 931 > 734px). 막을 때마다 몸이 커졌다 작아지는 것처럼 보여(jk 2026-10-02)
+ * 서 있는 실루엣의 키·폭을 넘지 않게 줄인다.
+ */
+export function guardFit(master: { w: number; h: number } | undefined, pose: { w: number; h: number } | undefined): number {
+  if (!master || !pose || pose.h <= 0 || pose.w <= 0) return 1;
+  return Math.min(1, (master.h * 0.98) / pose.h, (master.w * 1.04) / pose.w);
 }
 
 /**
@@ -243,7 +255,7 @@ function drawBody(
 
   // 아트는 화면 키의 약 2.7배로 그려져 있어 실측 높이 기준으로 축소해 그린다.
   const scale = choice.fromRig
-    ? spriteScale(fighter.data.displayHeight, fighter.assets.rig?.master.box)
+    ? spriteScale(fighter.data.displayHeight, fighter.assets.rig?.master.box) * (choice.fit ?? 1)
     : 1;
   const size = spriteSize(choice.image);
   const destW = (size?.width ?? 0) * scale;
@@ -392,7 +404,8 @@ function selectSprite(fighter: Fighter): SpriteChoice | null {
       const entry = rig.poses[poseName];
       const image = poses[poseName];
       if (entry?.usable && image) {
-        return { image, rootX: entry.rootX, rootY: entry.rootY, isPose: true, fromRig: true };
+        const fit = poseName === 'guard' ? guardFit(rig.master.box ?? undefined, entry.box ?? undefined) : 1;
+        return { image, rootX: entry.rootX, rootY: entry.rootY, isPose: true, fromRig: true, fit };
       }
     }
     if (rig.master.usable && master) {
@@ -502,6 +515,18 @@ function drawGuardShield(g: CanvasRenderingContext2D, fighter: Fighter, feetY: n
 function applyMasterTransform(g: CanvasRenderingContext2D, fighter: Fighter, time: number): void {
   if (fighter.guardStance) {
     applyGuardTransform(g, fighter);
+    return;
+  }
+  if (fighter.dashFrames > 0) {
+    // 대시: 앞으로 숙여 쭉 늘어나고(앞), 뒤로 젖혀 살짝 뜬다(백스텝).
+    const t = fighter.dashFrames / fighter.dashTotal;
+    if (fighter.dashForward) {
+      tiltAboutMiddle(g, fighter, 0.12 * t);
+      g.scale(1 + 0.1 * t, 1 - 0.06 * t);
+    } else {
+      g.translate(0, -Math.sin(Math.PI * (1 - t)) * 26);
+      tiltAboutMiddle(g, fighter, -0.08 * t);
+    }
     return;
   }
   switch (fighter.state) {

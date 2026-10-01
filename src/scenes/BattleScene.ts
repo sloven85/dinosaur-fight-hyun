@@ -176,6 +176,10 @@ export class BattleScene extends BaseScene {
 
   private spawnLandingDust(groundY: number): void {
     for (const fighter of this.match.fighters) {
+      // 대시 출발·도중 발밑 먼지.
+      if (fighter.dashFrames > 0 && fighter.dashFrames % 4 === 0) {
+        this.effects.spawnDust(fighter.x - fighter.dashDir * fighter.bodyWidth * 0.3, groundY, 2, 0.7);
+      }
       if (!fighter.landedThisStep) continue;
       fighter.landedThisStep = false;
       this.effects.spawnDust(fighter.x, groundY, 5, 0.8);

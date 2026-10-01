@@ -101,7 +101,8 @@
       "alternatePalette": {
         "skin": "#347DAB"
       },
-      "description": "넓은 사거리의 균형형"
+      "description": "넓은 사거리의 균형형",
+      "partsPath": "assets/characters/spinosaurus/parts/rig"
     },
     {
       "id": "ankylosaurus",
@@ -233,7 +234,8 @@
       "alternatePalette": {
         "skin": "#627AB2"
       },
-      "description": "긴 발톱으로 멀리서 견제하는 리치형"
+      "description": "긴 발톱으로 멀리서 견제하는 리치형",
+      "partsPath": "assets/characters/therizinosaurus/parts/rig"
     },
     {
       "id": "dilophosaurus",
@@ -258,7 +260,8 @@
       "alternatePalette": {
         "skin": "#719C8D"
       },
-      "description": "볏으로 교란하는 트릭형"
+      "description": "볏으로 교란하는 트릭형",
+      "partsPath": "assets/characters/dilophosaurus/parts/rig"
     },
     {
       "id": "brachiosaurus",
@@ -283,7 +286,8 @@
       "alternatePalette": {
         "skin": "#6395C6"
       },
-      "description": "거대한 발구르기의 파워형"
+      "description": "거대한 발구르기의 파워형",
+      "partsPath": "assets/characters/brachiosaurus/parts/rig"
     },
     {
       "id": "pteranodon",
@@ -312,7 +316,8 @@
         "glide": true
       },
       "description": "낮은 활공과 급강하의 익룡 게스트",
-      "cardNote": "익룡 게스트"
+      "cardNote": "익룡 게스트",
+      "partsPath": "assets/characters/pteranodon/parts/rig"
     }
   ]
 }

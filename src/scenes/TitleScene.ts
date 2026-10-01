@@ -1,4 +1,6 @@
 import type { GameContext } from '../core/GameContext';
+import { STAGES } from '../data';
+import { preloadStages } from '../rendering/stageRenderer';
 import { BaseScene } from './BaseScene';
 import { ModeScene } from './ModeScene';
 import { SettingsScene } from './SettingsScene';
@@ -20,6 +22,9 @@ export class TitleScene extends BaseScene {
     super.enter(context);
     this.elapsed = 0;
     context.audio.playBgm('title');
+    // 경기장 배경·썸네일을 미리 받아 둔다(대전 시작 때 배경이 늦게 뜨지 않게).
+    void preloadStages(context.assets, STAGES);
+    void context.assets.loadImages(STAGES.map((s) => s.thumbnailPath));
   }
 
   private get options(): TitleOption[] {

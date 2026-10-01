@@ -1,6 +1,7 @@
 import { getCharacter, getStage } from '../data';
 import type { GameContext } from '../core/GameContext';
 import { loadCharacterAssets, type CharacterAssets } from '../rendering/CharacterAssets';
+import { preloadStages } from '../rendering/stageRenderer';
 import { BaseScene } from './BaseScene';
 import { BattleScene } from './BattleScene';
 import { drawText, fillRoundRect } from '../ui/draw';
@@ -29,9 +30,10 @@ export class VsScene extends BaseScene {
 
   private async preload(context: GameContext): Promise<void> {
     const [p1, p2] = context.session.characters;
-    const loaded = await Promise.all([
-      loadCharacterAssets(context.assets, p1),
-      loadCharacterAssets(context.assets, p2),
+    // 캐릭터와 함께 고른 경기장 배경도 이 화면에서 다 받아 둔다(대전 첫 화면부터 배경이 보이게).
+    const [loaded] = await Promise.all([
+      Promise.all([loadCharacterAssets(context.assets, p1), loadCharacterAssets(context.assets, p2)]),
+      preloadStages(context.assets, [getStage(context.session.stage)]),
     ]);
     if (this.disposed) return;
     this.characterAssets = loaded;

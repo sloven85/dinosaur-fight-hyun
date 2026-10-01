@@ -68,12 +68,12 @@
       "rootY": 1279,
       "usable": true,
       "box": {
-        "minX": 223,
-        "minY": 167,
-        "maxX": 1823,
+        "minX": 86,
+        "minY": 0,
+        "maxX": 1960,
         "maxY": 1279,
-        "w": 1601,
-        "h": 1113
+        "w": 1875,
+        "h": 1280
       },
       "sameScaleAsMaster": true
     }

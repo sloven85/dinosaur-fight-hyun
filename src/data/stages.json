@@ -3,7 +3,7 @@
     {
       "id": "jungle",
       "name": "정글",
-      "thumbnailPath": "assets/stages/jungle/thumbnail.png",
+      "thumbnailPath": "assets/stages/jungle/thumbnail.jpg",
       "layerPaths": {
         "sky": "assets/stages/jungle/sky.jpg",
         "mid": "assets/stages/jungle/mid.jpg",
@@ -17,7 +17,7 @@
     {
       "id": "volcano",
       "name": "화산 지대",
-      "thumbnailPath": "assets/stages/volcano/thumbnail.png",
+      "thumbnailPath": "assets/stages/volcano/thumbnail.jpg",
       "layerPaths": {
         "sky": "assets/stages/volcano/sky.jpg",
         "mid": "assets/stages/volcano/mid.jpg",
@@ -31,7 +31,7 @@
     {
       "id": "desert",
       "name": "사막 화석지",
-      "thumbnailPath": "assets/stages/desert/thumbnail.png",
+      "thumbnailPath": "assets/stages/desert/thumbnail.jpg",
       "layerPaths": {
         "sky": "assets/stages/desert/sky.jpg",
         "mid": "assets/stages/desert/mid.jpg",
@@ -45,7 +45,7 @@
     {
       "id": "museum",
       "name": "공룡 박물관",
-      "thumbnailPath": "assets/stages/museum/thumbnail.png",
+      "thumbnailPath": "assets/stages/museum/thumbnail.jpg",
       "layerPaths": {
         "sky": "assets/stages/museum/sky.jpg",
         "mid": "assets/stages/museum/mid.jpg",
