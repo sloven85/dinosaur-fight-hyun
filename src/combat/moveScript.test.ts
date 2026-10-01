@@ -296,3 +296,16 @@ describe('그리기 순서(마스터 판정: 돌진 중 공격자를 상대 앞�
     expect(drawOrder(match.fighters)[1]).toBe(match.p1);
   });
 });
+
+describe('마스터 지시(2026-10-01 11:28): 약공격 내딛기·멈칫', () => {
+  for (const m of MOVES.filter((move) => move.kind === 'light')) {
+    it(`${m.id}: 40px 이상 내딛었다 제자리로 돌아오고, 명중 시 멈칫 4프레임 이상`, () => {
+      const s = m.script!;
+      const xs = Array.from({ length: s.frames }, (_, f) => sampleChannel(s, 'x', f));
+      expect(Math.max(...xs)).toBeGreaterThanOrEqual(40);
+      expect(Math.abs(sampleChannel(s, 'x', s.frames))).toBeLessThan(1);
+      const hits = s.hits ?? [];
+      expect(Math.max(...hits.map((h) => h.hitstop))).toBeGreaterThanOrEqual(6);
+    });
+  }
+});

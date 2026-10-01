@@ -1,6 +1,12 @@
 import type { AssetLoader } from './AssetLoader';
 
-export const POSE_NAMES = ['heavy', 'special', 'hit', 'down', 'victory'] as const;
+/**
+ * 종별 전용 자세 슬롯. 파일은 assets/characters/<id>/poses/<이름>.png, rig.json의 poses에 등록한다.
+ * - airborne: 맞아 띄워짐·잡힘 때의 '버둥' 자세(마스터 판정 2026-10-01 추가)
+ * - down    : 넘어짐·KO 때의 '다운' 자세(옆으로 쓰러져 누움)
+ * 슬롯에 그림이 없으면 렌더러가 마스터·파츠를 ±15° 안에서 기울여 대신한다(거꾸로 뒤집기 금지).
+ */
+export const POSE_NAMES = ['heavy', 'special', 'hit', 'airborne', 'down', 'victory'] as const;
 export type PoseName = (typeof POSE_NAMES)[number];
 
 /** 실측한 스프라이트 경계(원본 캔버스 픽셀 좌표). */
@@ -31,7 +37,7 @@ export interface RigData {
   root: { x: number; y: number };
   master: { imagePath: string; usable: boolean; box: BoxData | null };
   portrait: { imagePath: string; usable: boolean };
-  poses: Record<PoseName, PoseRig>;
+  poses: Partial<Record<PoseName, PoseRig>>;
   parts: {
     sheet: string;
     extractedDir: string;

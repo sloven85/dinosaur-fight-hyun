@@ -145,7 +145,7 @@ export class Fighter {
   fallenTotal = 0;
   /** 넘어지기 시작할 때의 몸 회전(공중에서 뒤로 돌던 각도, 라디안). 연출 전용. */
   fallStartAngle = 0;
-  /** 띄워져 날아가는 동안 뒤로 도는 각도(라디안, 음수 = 뒤로). 연출 전용. */
+  /** 띄워져 날아가는 동안의 경과 프레임(0 = 날아가는 중 아님). 연출 전용. */
   airTumble = 0;
   stunFrames = 0;
   /** 스크립트 기술의 보이는 모양. 스크립트 기술이 아니면 null. */
@@ -374,7 +374,8 @@ export class Fighter {
         if (!this.onGround) {
           // 띄워진 동안은 착지할 때까지 경직이 이어진다. 넘어질 예정이면 뒤로 돌며 날아간다.
           this.x += this.vx * dt;
-          if (this.pendingKnockdown > 0) this.airTumble = Math.max(-Math.PI * 0.85, this.airTumble - 0.1);
+          // 연출용 공중 경과(렌더러가 ±15° 안의 젖힘·허우적으로 바꾼다).
+          this.airTumble += 1;
           break;
         }
         this.hitstunFrames -= 1;
@@ -515,7 +516,7 @@ export class Fighter {
     this.vx = 0;
     this.fallenFrames = frames;
     this.fallenTotal = frames;
-    this.fallStartAngle = this.airTumble;
+    this.fallStartAngle = this.airTumble > 0 ? -0.2 : 0;
     this.airTumble = 0;
     this.pendingKnockdown = 0;
     this.landedThisStep = true;

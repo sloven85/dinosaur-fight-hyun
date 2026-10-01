@@ -40,6 +40,7 @@
       "color": "#B78A40",
       "accentColor": "#E0CFA0",
       "rigPath": "assets/characters/triceratops/rig.json",
+      "partsPath": "assets/characters/triceratops/parts/rig",
       "portraitPath": "assets/characters/triceratops/portrait.png",
       "moves": {
         "light": "triceratops_light",
@@ -168,6 +169,7 @@
       "color": "#A64837",
       "accentColor": "#C97A4A",
       "rigPath": "assets/characters/carnotaurus/rig.json",
+      "partsPath": "assets/characters/carnotaurus/parts/rig",
       "portraitPath": "assets/characters/carnotaurus/portrait.png",
       "moves": {
         "light": "carnotaurus_light",
@@ -193,6 +195,7 @@
       "color": "#8F8270",
       "accentColor": "#D9CFB4",
       "rigPath": "assets/characters/pachycephalosaurus/rig.json",
+      "partsPath": "assets/characters/pachycephalosaurus/parts/rig",
       "portraitPath": "assets/characters/pachycephalosaurus/portrait.png",
       "moves": {
         "light": "pachycephalosaurus_light",

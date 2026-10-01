@@ -91,3 +91,74 @@ describe('파츠 리그 렌더링 통합', () => {
     }
   });
 });
+
+describe('맞는 쪽 자세(마스터 판정: 뒤집기 금지·버둥·다운 슬롯)', () => {
+  /** 회전을 기록하는 가짜 컨텍스트. */
+  function rotationContext() {
+    const rotations: number[] = [];
+    const drawn: unknown[] = [];
+    const store: Record<string, unknown> = {
+      rotate: (r: number) => rotations.push(r),
+      drawImage: (image: unknown) => drawn.push(image),
+    };
+    const g = new Proxy(store, {
+      get: (s, k) => (k in s ? s[k as string] : () => {}),
+      set: (s, k, v) => ((s[k as string] = v), true),
+    }) as unknown as CanvasRenderingContext2D;
+    return { g, rotations, drawn };
+  }
+
+  it('띄워짐·잡힘·넘어짐·다운 어느 상태에서도 그림 회전이 ±15°를 넘지 않는다', () => {
+    const limit = (15 * Math.PI) / 180 + 1e-9;
+    for (const state of ['hit', 'held', 'fallen', 'down'] as const) {
+      for (let frame = 0; frame < 60; frame += 3) {
+        const f = new Fighter(0, 'tyrannosaurus', 600, 1, { ...assets(), poses: {} });
+        f.state = state;
+        f.airTumble = state === 'hit' ? frame + 1 : 0;
+        f.fallenTotal = 60;
+        f.fallenFrames = 60 - frame;
+        f.heldRot = 0.6;
+        const { g, rotations } = rotationContext();
+        renderFighter(g, f, 900, frame / 60);
+        for (const r of rotations) expect(Math.abs(r)).toBeLessThanOrEqual(limit);
+      }
+    }
+  });
+
+  it('파츠 종은 띄워짐·잡힘 때 파츠로 버둥댄다(전용 그림이 오기 전)', () => {
+    for (const state of ['held', 'hit'] as const) {
+      const f = new Fighter(0, 'tyrannosaurus', 600, 1, { ...assets(), poses: {} });
+      f.state = state;
+      f.airTumble = state === 'hit' ? 10 : 0;
+      const { g, drawn } = rotationContext();
+      renderFighter(g, f, 900, 0.3);
+      expect(drawn.filter((d) => (d as { part?: string }).part)).toHaveLength(9);
+    }
+  });
+
+  it("전용 '버둥'·'다운' 그림이 있으면 그 그림을 쓴다", () => {
+    const base = assets();
+    const rig = JSON.parse(JSON.stringify(base.rig)) as RigData;
+    const entry = { imagePath: 'x.png', rootX: 1024, rootY: 1280, usable: true, box: null };
+    rig.poses.airborne = entry;
+    rig.poses.down = entry;
+    const a = {
+      ...base,
+      rig,
+      poses: { airborne: { pose: 'airborne' } as unknown as HTMLImageElement, down: { pose: 'down' } as unknown as HTMLImageElement },
+    };
+    const air = new Fighter(0, 'tyrannosaurus', 600, 1, a);
+    air.state = 'held';
+    let rec = rotationContext();
+    renderFighter(rec.g, air, 900, 0);
+    expect(rec.drawn).toContainEqual({ pose: 'airborne' });
+
+    const down = new Fighter(0, 'tyrannosaurus', 600, 1, a);
+    down.state = 'fallen';
+    down.fallenTotal = 50;
+    down.fallenFrames = 30;
+    rec = rotationContext();
+    renderFighter(rec.g, down, 900, 0);
+    expect(rec.drawn).toContainEqual({ pose: 'down' });
+  });
+});

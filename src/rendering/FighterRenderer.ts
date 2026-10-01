@@ -1,7 +1,7 @@
 import type { Fighter, ScriptVisual } from '../combat/Fighter';
 import { emotionFor, type Emotion } from '../combat/emotion';
 import { spriteScale, type PoseName } from './rig';
-import { fallPose, flailPartAngles } from './fallMotion';
+import { airborneTilt, clampTilt, fallPose, flailPartAngles } from './fallMotion';
 import { applyMotion, attackMotion, drawAttackTrail, type MotionFrame } from './attackMotion';
 import type { PartsAssets } from './CharacterAssets';
 import type { AssetLoader } from './AssetLoader';
@@ -178,8 +178,8 @@ export function renderFighter(
   const feetY = groundY + fighter.y;
   if (fighter.state === 'stun') drawStunStars(g, fighter, feetY, time);
   if (fighter.state === 'fallen' && fallPoseOf(fighter).dizzy) {
-    // 누운 몸 위(배 쪽)에 별이 돈다.
-    drawStunStars(g, fighter, feetY + fighter.data.displayHeight * 0.55, time);
+    // 털썩 주저앉은 몸의 머리 위에 별이 돈다(주저앉은 높이 ≈ 키의 62%).
+    drawStunStars(g, fighter, feetY + fighter.data.displayHeight * 0.32, time, fighter.facing * fighter.bodyFront * 0.55);
   }
   if (fighter.state === 'down' || fighter.state === 'victory' || fighter.state === 'fallen') return;
   drawNameTag(g, fighter, feetY);
@@ -346,14 +346,15 @@ function drawBody(
 function applyScriptVisual(g: CanvasRenderingContext2D, fighter: Fighter, visual: ScriptVisual): void {
   const pivotY = -fighter.data.displayHeight * 0.45;
   g.translate(0, pivotY);
-  g.rotate(visual.rot);
+  // 그림 통째 회전은 ±15°까지(마스터 판정 2026-10-01). 큰 동작은 이동·늘이기·파츠로 만든다.
+  g.rotate(clampTilt(visual.rot));
   g.scale(visual.sx, visual.sy);
   g.translate(0, -pivotY);
 }
 
 /** 짧은 기절: 머리 위에서 별 3개가 돈다. */
-function drawStunStars(g: CanvasRenderingContext2D, fighter: Fighter, feetY: number, time: number): void {
-  const cx = fighter.x;
+function drawStunStars(g: CanvasRenderingContext2D, fighter: Fighter, feetY: number, time: number, offsetX = 0): void {
+  const cx = fighter.x + offsetX;
   const cy = feetY - fighter.data.displayHeight - 10;
   g.save();
   g.fillStyle = '#ffe066';
@@ -375,6 +376,10 @@ function drawStunStars(g: CanvasRenderingContext2D, fighter: Fighter, feetY: num
     g.stroke();
   }
   g.restore();
+}
+
+function hasPose(fighter: Fighter, name: PoseName): boolean {
+  return !!fighter.assets.rig?.poses[name]?.usable && !!fighter.assets.poses[name];
 }
 
 function selectSprite(fighter: Fighter): SpriteChoice | null {
@@ -408,11 +413,18 @@ function selectSprite(fighter: Fighter): SpriteChoice | null {
   return null;
 }
 
+/** 띄워짐(공중 피격)·잡힘인지. 전용 '버둥' 자세를 쓰는 상태. */
+function isAirborneHit(fighter: Fighter): boolean {
+  return fighter.state === 'held' || (fighter.state === 'hit' && fighter.airTumble > 0);
+}
+
 function poseForState(fighter: Fighter): PoseName | null {
+  if (isAirborneHit(fighter)) return hasPose(fighter, 'airborne') ? 'airborne' : 'hit';
   switch (fighter.state) {
     case 'hit':
-    case 'held':
       return 'hit';
+    case 'fallen':
+      return hasPose(fighter, 'down') ? 'down' : null;
     case 'down':
       return 'down';
     case 'victory':
@@ -447,14 +459,12 @@ function applyMasterTransform(g: CanvasRenderingContext2D, fighter: Fighter, tim
       // 공격 동작은 attackMotion이 기술·종별로 따로 건다(예전의 '몸통 밀어 넣기' 폴백 대체).
       break;
     case 'hit':
-      if (fighter.airTumble !== 0) applyAirTumble(g, fighter);
+      if (fighter.airTumble > 0) applyAirTumble(g, fighter);
       else g.rotate(-0.09);
       break;
     case 'held':
-      // 물려서 들린 채 흔들린다(잡은 쪽 스크립트가 기울기를 정한다).
-      g.translate(0, -fighter.data.displayHeight * 0.4);
-      g.rotate(-0.25 + fighter.heldRot);
-      g.translate(0, fighter.data.displayHeight * 0.4);
+      // 물려서 들린 채 흔들린다(잡은 쪽 스크립트가 기울기를 정한다). 통째 회전은 ±15°까지.
+      tiltAboutMiddle(g, fighter, clampTilt(-0.15 + fighter.heldRot));
       break;
     case 'stun':
       g.rotate(Math.sin(time * 9) * 0.06);
@@ -464,16 +474,17 @@ function applyMasterTransform(g: CanvasRenderingContext2D, fighter: Fighter, tim
       const h = fighter.data.displayHeight;
       const pose = fallPoseOf(fighter);
       g.translate(0, pose.dy - h * 0.5);
-      g.rotate(pose.rot);
+      g.rotate(clampTilt(pose.rot));
       g.scale(pose.sx, pose.sy);
       g.translate(0, h * 0.5);
       break;
     }
-    case 'down':
-      // 다운 전용 포즈가 없을 때는 발을 축으로 눕힌다.
-      g.rotate(-1.25);
-      g.translate(-fighter.data.displayHeight * 0.35, 0);
+    case 'down': {
+      // 다운 전용 그림이 없을 때: 뒤로 15° 기울여 털썩 주저앉힌다(뒤집기·눕히기 회전 금지).
+      tiltAboutMiddle(g, fighter, -clampTilt(Math.PI));
+      g.scale(1.12, 0.62);
       break;
+    }
     case 'victory':
       g.translate(0, Math.sin(time * 6) * -10);
       break;
@@ -485,20 +496,29 @@ function fallPoseOf(fighter: Fighter) {
   return fallPose(elapsed, fighter.fallenTotal, fighter.fallStartAngle, fighter.data.displayHeight);
 }
 
-/** 띄워져 넘어질 예정이면 공중에서 뒤로 돌며 날아간다. */
+/** 몸 가운데를 축으로 기울인다. 그림 통째 회전은 반드시 이 함수(±15° 제한)를 거친다. */
+function tiltAboutMiddle(g: CanvasRenderingContext2D, fighter: Fighter, rad: number): void {
+  const h = fighter.data.displayHeight * 0.5;
+  g.translate(0, -h);
+  g.rotate(clampTilt(rad));
+  g.translate(0, h);
+}
+
+/** 띄워져 날아가는 동안: 뒤로 젖힌 채 흔들흔들(±15°), 살짝 늘어난다. */
 function applyAirTumble(g: CanvasRenderingContext2D, fighter: Fighter): void {
-  const h = fighter.data.displayHeight;
-  g.translate(0, -h * 0.5);
-  g.rotate(fighter.airTumble);
-  g.translate(0, h * 0.5);
+  tiltAboutMiddle(g, fighter, airborneTilt(fighter.airTumble));
+  const wobble = Math.sin(fighter.airTumble * 0.6) * 0.04;
+  g.scale(0.96 + wobble, 1.05 - wobble);
 }
 
 function applyPoseTransform(g: CanvasRenderingContext2D, fighter: Fighter, time: number): void {
-  if (fighter.state === 'hit' && fighter.airTumble !== 0) applyAirTumble(g, fighter);
-  if (fighter.state === 'held') {
-    g.translate(0, -fighter.data.displayHeight * 0.4);
-    g.rotate(fighter.heldRot);
-    g.translate(0, fighter.data.displayHeight * 0.4);
+  if (fighter.state === 'hit' && fighter.airTumble > 0) applyAirTumble(g, fighter);
+  if (fighter.state === 'held') tiltAboutMiddle(g, fighter, fighter.heldRot);
+  if (fighter.state === 'fallen') {
+    // 전용 다운 그림: 쿵·튕김·흔들흔들만 얹는다(그림 자체가 누운 자세).
+    const pose = fallPoseOf(fighter);
+    g.translate(0, pose.dy);
+    tiltAboutMiddle(g, fighter, (pose.rot - clampTilt(-Math.PI) * 0.7) * 0.5);
   }
   if (fighter.state === 'victory') {
     g.translate(0, Math.sin(time * 6) * -8);
@@ -596,12 +616,16 @@ function partAnglesFor(fighter: Fighter, time: number): Record<string, number> |
     case 'stun':
       return {};
     case 'fallen': {
+      if (hasPose(fighter, 'down')) return null;
       const pose = fallPoseOf(fighter);
       return flailPartAngles(parts.rig.drawOrder, fighter.fallenTotal - fighter.fallenFrames, pose.flail);
     }
     case 'hit':
-      // 날아가는 동안에도 허우적댄다(파츠 종만). 보통 피격은 전용 포즈.
-      if (fighter.airTumble !== 0) return flailPartAngles(parts.rig.drawOrder, Math.round(-fighter.airTumble * 40), 0.7);
+    case 'held':
+      // 띄워짐·잡힘: 전용 '버둥' 그림이 오기 전까지 파츠 다리·팔을 허우적댄다(마스터 지시 3).
+      if (hasPose(fighter, 'airborne')) return null;
+      if (fighter.state === 'held') return flailPartAngles(parts.rig.drawOrder, Math.round(time * 60), 1);
+      if (fighter.airTumble > 0) return flailPartAngles(parts.rig.drawOrder, fighter.airTumble, 0.9);
       return null;
     case 'walk': {
       const walk = motions.walk;
