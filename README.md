@@ -28,10 +28,37 @@ npm run preview  # 빌드 결과 미리보기
 npm run typecheck
 ```
 
-## 배포
+## 배포 (프롬프트 7)
 
-정적 호스팅(GitHub Pages 등)에 `dist/`를 올린다. `vite.config.ts`의 `base: './'`
-설정으로 하위 경로(`/dinosaur-fight-hyun/`)에서도 에셋이 정상 로드된다.
+정적 호스팅에 `dist/`를 올린다. `vite.config.ts`의 `base: './'`로 모든 경로가 상대 경로라
+하위 경로(예: `https://<사용자>.github.io/dinosaur-fight-hyun/`)에서도 에셋을 읽고 새로고침할 수 있다.
+에셋 URL에는 `public/assets` 내용 해시(`?v=`)가 붙어, 그림을 교체하면 캐시가 자동으로 갱신된다.
+
+### GitHub Pages 자동 배포
+
+1. 저장소 **Settings → Pages → Source**를 **GitHub Actions**로 지정한다(최초 1회).
+2. `main`에 push하면 `.github/workflows/deploy-pages.yml`이 `npm ci → npm test → npm run build` 후 `dist/`를 배포한다.
+3. 수동 실행은 Actions 탭의 **Deploy to GitHub Pages → Run workflow**.
+
+### 직접 올리기
+
+```bash
+npm ci && npm test && npm run build   # dist/ 생성
+npx vite preview                        # 로컬에서 빌드 결과 확인
+```
+
+`dist/` 안의 파일을 그대로 아무 정적 호스팅의 원하는 폴더에 복사하면 된다.
+
+### 확인한 것 / 남은 것
+
+- 확인: `dist/`를 `/dinosaur-fight-hyun/` 하위 경로에 두고 헤드리스 Chrome으로 열어 제목→대전 진행, 새로고침 후 재실행까지 에셋 404 없음.
+- 미확인: 실제 GitHub Pages URL 배포(Pages 설정·main 머지 필요), 배포 URL에서의 패드·전체화면·소리, 오프라인 재접속.
+- 오프라인 재접속은 지원하지 않는다(서비스워커 캐시 미구현). 열린 탭에서는 첫 로딩 뒤 서버 통신 없이 로컬 대전이 가능하다.
+
+### 버전
+
+- 앱 `package.json` 0.1.0 · 기준 문서 《다이노 파이터즈 제작 계획서 v1.0 (2026-09-30)》
+- 에셋 출처: 캐릭터 그림은 다이노 아티스트 제작본(2026-09-30). 음원·경기장 배경·이펙트 이미지는 아직 없다(무음·단색·도형 대체).
 
 ## 폴더 구조 (계획서 14절)
 
@@ -110,7 +137,7 @@ src/
 - [x] 프롬프트 4 — 캐릭터 12종·경기장 데이터와 선택 흐름 (경기장 배경 아트는 아직 단색 임시)
 - [x] 프롬프트 5 — CPU와 어린이 설정 (난이도·도움 설정 저장)
 - [x] 프롬프트 6 — 연출·어른 설정 실제 반영 (먼지·별·충격파·화면 흔들림·감정 3단계·사운드 훅·설정 화면)
-- [ ] 프롬프트 7 — 배포와 인수
+- [x] 프롬프트 7 — 배포 준비 (GitHub Pages 워크플로·하위 경로 검증. 실제 Pages URL은 미배포)
 
 ## 에셋
 
