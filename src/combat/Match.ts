@@ -29,7 +29,8 @@ import { emptyAssets, type CharacterAssets } from '../rendering/CharacterAssets'
 import { Fighter, NULL_INPUT, type FighterInput } from './Fighter';
 import { rectsOverlap, type AttackKind, type MoveData, type Rect } from './types';
 import { pilotChargePreparing } from './chargePilot';
-import { contactPose, supportsContact, findContact, react, sweptRectContact, circleBounds, type ContactPose, type Contact, type BodyRegion } from './partContact';
+import { contactPose, supportsContact, integratedBite, findContact, react, sweptRectContact, circleBounds, type ContactPose, type Contact, type BodyRegion } from './partContact';
+import { applyAffine } from '../rendering/partRig';
 
 /** 맞을 때 최소로 밀려나는 거리(px). 넉백이 0인 다단히트(벨로키 왕복 등)도 조금씩 밀린다. */
 const MIN_PUSH: Record<string, number> = { light: 40, heavy: 70, special: 100 };
@@ -410,7 +411,9 @@ export class Match {
     const oldA = this.previousFacing.get(attacker) === attacker.facing ? this.previousPoses.get(attacker) ?? a : a;
     const oldB = this.previousFacing.get(defender) === defender.facing ? this.previousPoses.get(defender) ?? b : b;
     if (!rectsOverlap(circleBounds([...a.weapon, ...oldA.weapon]), circleBounds([...b.hurt, ...oldB.hurt]))) return false;
-    const contact = findContact(a.weapon, b.hurt, oldA.weapon, oldB.hurt, attacker.facing);
+    const contact = integratedBite(attacker)
+      ? findContact(a.weapon, b.hurt, a.weapon, b.hurt, attacker.facing)
+      : findContact(a.weapon, b.hurt, oldA.weapon, oldB.hurt, attacker.facing);
     if (!contact) return false;
     this.contacts.set(defender, contact);
     return true;
@@ -521,6 +524,18 @@ export class Match {
         continue;
       }
       const hold = holder.holdOffset();
+      if (integratedBite(holder) && target.biteAnchor) {
+        const anchor = target.biteAnchor;
+        const mouth = contactPose(holder).mouth;
+        const m = contactPose(target).matrices[anchor.part];
+        const [x, y] = applyAffine(m, anchor.x, anchor.y);
+        // Preserve the captured point's offset: no snap on acquisition, no center/radius re-fit.
+        target.x += mouth.x + anchor.dx - x;
+        target.y += mouth.y + anchor.dy - y;
+        target.onGround = target.y >= 0;
+        target.vy = 0;
+        continue;
+      }
       if (supportsContact(holder) && supportsContact(target)) {
         // Carry from the actual jaw/horn, not the master silhouette's front edge.
         target.heldRot = hold.rot;
@@ -602,8 +617,16 @@ export class Match {
           defender.scriptVisual = null;
           defender.state = 'held';
           defender.heldBy = attacker;
+          if (integratedBite(attacker)) {
+            const c = this.contacts.get(defender)!;
+            const pose = contactPose(defender), m = pose.matrices[c.part];
+            const dx = c.x - m[4], dy = c.y - m[5], det = m[0] * m[3] - m[1] * m[2];
+            const mouth = contactPose(attacker).mouth;
+            defender.biteAnchor = { part: c.part, x: (m[3] * dx - m[2] * dy) / det,
+              y: (-m[1] * dx + m[0] * dy) / det, dx: c.x - mouth.x, dy: c.y - mouth.y };
+          }
           attacker.holding = defender;
-          if (grab.success !== undefined) attack.frame = grab.success;
+          if (grab.success !== undefined && !integratedBite(attacker)) attack.frame = grab.success;
           attacker.applyScriptFrame();
           this.updateHeld();
           this.pushFx(attacker, 'dust', 1);

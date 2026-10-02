@@ -12,6 +12,7 @@ export interface ContactPose {
   hurt: HurtCircle[];
   weapon: Circle[];
   bounds: Rect;
+  mouth: Circle;
 }
 export interface Spring { value: number; velocity: number }
 export type Reaction = Record<BodyRegion, Spring>;
@@ -83,13 +84,13 @@ export function contactPose(f: Fighter): ContactPose {
   angles.tailbase = clamp((angles.tailbase ?? 0) + f.reaction.tail.value, 16);
   angles.tailtip = clamp(angles.tailtip ?? 0, 20);
   for (const name of rig.drawOrder.filter(n => n.includes('leg'))) {
-    angles[name] = clamp((angles[name] ?? 0) + f.reaction.leg.value * (name.includes('near') ? 1 : -0.6), 12);
+    angles[name] = rig.hitPivot ? (angles[name] ?? 0) : clamp((angles[name] ?? 0) + f.reaction.leg.value * (name.includes('near') ? 1 : -0.6), 12);
   }
   const placed = partTransforms(rig, angles);
   const visual = f.scriptVisual;
   const rot = clamp(visual?.rot ?? (f.state === 'held' ? f.heldRot : 0), Math.PI / 12);
   const sx = visual?.sx ?? 1;
-  const sy = (visual?.sy ?? 1) * (f.state === 'crouch' ? 0.78 : 1) * (1 - Math.abs(f.reaction.leg.value) * 0.012);
+  const sy = (visual?.sy ?? 1) * (f.state === 'crouch' ? 0.78 : 1) * (rig.hitPivot ? 1 : 1 - Math.abs(f.reaction.leg.value) * 0.012);
   const pivot = -f.data.displayHeight * 0.45;
   const c = Math.cos(rot), s = Math.sin(rot);
   const body = multiply(translate(f.x, f.y), multiply([f.facing, 0, 0, 1, 0, 0],
@@ -100,7 +101,15 @@ export function contactPose(f: Fighter): ContactPose {
 
   // Grounded leg endpoints stay planted while hips follow the torso. A bounded affine bend
   // replaces rigid leg rotation (this one-piece art has no knee); hip attachment remains exact.
-  if (f.onGround && f.state !== 'held') {
+  if (rig.hitPivot) {
+    for (const name of rig.drawOrder.filter(n => n.includes('leg'))) {
+      const angle = f.reaction.leg.value * (name.includes('near') ? 1 : -0.6);
+      const p = rig.parts[name];
+      // Sparse author table: a missing sign uses the supplied opposite foot endpoint.
+      const foot = rig.hitPivot[name + (angle >= 0 ? '+' : '-')] ?? rig.hitPivot[name + (angle >= 0 ? '-' : '+')];
+      if (foot) matrices[name] = rotateAtTransformedPoint(matrices[name], foot.x - p.offsetX, foot.y - p.offsetY, angle * f.facing);
+    }
+  } else if (f.onGround && f.state !== 'held') {
     for (const name of rig.drawOrder.filter(n => n.includes('leg'))) {
       const p = rig.parts[name];
       const m = matrices[name];
@@ -122,10 +131,23 @@ export function contactPose(f: Fighter): ContactPose {
   };
   const local = f.data.id === 'tyrannosaurus' ? TREX : TRIKE;
   const hurt = local.map(([part, region, x, y, r]) => ({ ...circle(part, x, y, r), part, region }));
-  const weapon = f.data.id === 'tyrannosaurus'
+  const upper = circle('head', 1810, 405, 14), lower = circle('jaw', 1810, 430, 14);
+  const mouth = { x: (upper.x + lower.x) / 2, y: (upper.y + lower.y) / 2, r: Math.max(4, Math.min(12, Math.hypot(upper.x - lower.x, upper.y - lower.y) / 2)) };
+  const weapon = integratedBite(f) ? [mouth] : f.data.id === 'tyrannosaurus'
     ? [circle('jaw', 1845, 490, 65), circle('head', 1880, 385, 60)]
     : [circle('head', 1920, 600, 20), circle('head', 1810, 650, 14), circle('head', 1850, 860, 12)];
-  return { matrices, hurt, weapon, bounds: circleBounds(hurt) };
+  return { matrices, hurt, weapon, mouth, bounds: circleBounds(hurt) };
+}
+
+export function integratedBite(f: Fighter): boolean {
+  return supportsContact(f) && f.data.id === 'tyrannosaurus' && !!f.assets.parts?.rig.parts.backing && f.attack?.move.kind !== 'special';
+}
+
+/** Artist's rest-stage foot coordinate must first pass through the full base pose. */
+export function rotateAtTransformedPoint(m: Affine, x: number, y: number, degrees: number): Affine {
+  const [px, py] = applyAffine(m, x, y);
+  const a = -degrees * Math.PI / 180, c = Math.cos(a), s = Math.sin(a);
+  return multiply(translate(px, py), multiply([c, s, -s, c, 0, 0], multiply(translate(-px, -py), m)));
 }
 
 export function circleBounds(cs: Circle[]): Rect {

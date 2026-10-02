@@ -111,6 +111,36 @@ The unclamped range fixture scans1200..1900 in10px steps; last hit1590/first mis
 also matched against original script. Normal arena clamps prevent this root distance,
 so the range video explicitly labels the no-wall fixture, not normal gameplay.
 
+## Approved v3 integration and bite readability
+
+The default contact comparison now loads `parts/integrated-v3` for both species,
+without replacing the main game's assets. The v3 archive contains triceratops only;
+T-rex comes from the artist-specified `trex/` in the hit-range v1 archive, including
+backing and mouth-v2 once. The v1 archive's triceratops is NOT loaded.
+
+Triceratops reactions rotate each leg around its directional `hitPivot`, transformed
+by the complete base-pose matrix first. The mirrored facing reverses world rotation.
+These final matrices drive both drawing and hurt regions. No body-lowering substitute
+or affine planted-foot bend is applied to this v3 rig. The delivered table omits two
+negative-sign pivots; those fall back to the supplied positive endpoint for that leg.
+This is an explicit limitation, not a claim of zero foot pixel error.
+
+Pilot T-rex light: open at4, insert through8, close/damage9..11; reopen15, insert20,
+close/damage21..23; recover by36, total38. Damage remains5+6. Heavy: open10..16,
+capture17..22, close to-6, head oscillates +/-8 through the existing six damage events,
+release94. Held point is stored in target-part local coordinates with initial mouth
+offset, so acquisition does not recenter the entire target. The old success jump to30
+is disabled for this bite to avoid a discontinuity. Heavy total remains20 (14+6).
+Only the small region between upper/lower mouth landmarks can acquire a bite; the
+forehead circle and stale sweep are not used. Mouth clamps after composition at-26.
+
+Tests use both directions: light/heavy normal hit at540 root gap, miss at700, exact
+total damage, no acquisition position jump, forehead-only rejection, inherited back
+layers, transformed directional foot anchors, and v3's approved close charge. The
+comparison's left pane retains legacy combat logic with the same newly approved art;
+it is not a byte-for-byte historical screenshot of the old art. Normal game defaults,
+T-rex roar, inputs and art for the other ten species are unchanged.
+
 Chrome checks cover all six probes, both real light attacks, mirror, fake two-pad
 movement, simultaneous light, jump, crouch guard and Start pause. Physical controllers,
 TV/speakers and human game feel are NOT TESTED. Existing art still has visible cutout

@@ -11,7 +11,7 @@ export async function startContactLab(canvas: HTMLCanvasElement): Promise<void> 
   document.body.innerHTML = `<main style="max-width:1500px;margin:auto;color:#e9f2ff;font:16px system-ui;padding:12px">
     <h2>2D 접촉 비교판 · 티라노 / 트리케라</h2>
     <p>왼쪽: 기존 전신 판정 · 오른쪽: 파츠 판정 + 제한 스프링 | 효과·카메라 흔들림·소리 OFF</p>
-    <p><a href="/contact-lab.html" style="color:#7de">접촉 검수판(기존 아트)</a> · <a href="/contact-lab.html?mouthV2=1" style="color:#7de">별도 티라노 입속 v2 시험판</a></p>
+    <p><a href="/contact-lab.html" style="color:#7de">v3 통합 · 입 기반 물기</a> · <a href="/contact-lab.html?mouthV2=1" style="color:#7de">이전 입속 v2 시험판</a></p>
     <div id="controls" style="display:flex;gap:10px;flex-wrap:wrap">
       <button id="reset">대전 초기화</button><button id="swap">공수 교환</button>
       <button id="mirror">좌우 반전</button><button id="boxes">판정 표시 ON/OFF</button>
@@ -29,7 +29,7 @@ export async function startContactLab(canvas: HTMLCanvasElement): Promise<void> 
   const loader = new AssetLoader();
   const mouthV2 = new URLSearchParams(location.search).has('mouthV2');
   const assets = await Promise.all(['tyrannosaurus', 'triceratops'].map(id => loadCharacterAssets(loader, id,
-    mouthV2 && id === 'tyrannosaurus' ? 'assets/characters/tyrannosaurus/parts/mouth-v2' : undefined)));
+    mouthV2 && id === 'tyrannosaurus' ? 'assets/characters/tyrannosaurus/parts/mouth-v2' : `assets/characters/${id}/parts/integrated-v3`)));
   if (assets.some(a => !a.parts || !a.rig || !a.master)) throw new Error('파일럿 에셋 로드 실패');
   const input = new InputManager();
   let matches: Match[] = [], swapped = false, mirrored = false, debug = true, paused = false;

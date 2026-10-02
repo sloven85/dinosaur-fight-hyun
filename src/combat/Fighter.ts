@@ -23,6 +23,7 @@ import type { PlayerIndex } from '../input/InputManager';
 import { emptyAssets, type CharacterAssets } from '../rendering/CharacterAssets';
 import { spriteScale } from '../rendering/rig';
 import { contactPilotMove } from './chargePilot';
+import { bitePilotMove } from './bitePilot';
 import { newReaction, stepReaction, type Contact } from './partContact';
 import {
   hasChannel,
@@ -142,6 +143,7 @@ export class Fighter {
   heldBy: Fighter | null = null;
   /** 붙잡힌 동안 보이는 기울기(라디안). */
   heldRot = 0;
+  biteAnchor: { part: string; x: number; y: number; dx: number; dy: number } | null = null;
   /** 띄워졌을 때 가로 속도(px/초). */
   vx = 0;
   /** 착지하면 넘어질 프레임(띄우기·던지기 후). */
@@ -554,6 +556,7 @@ export class Fighter {
     this.holding = null;
     if (!target) return;
     target.heldBy = null;
+    target.biteAnchor = null;
     target.heldRot = 0;
     if (target.state === 'held') {
       target.state = 'hit';
@@ -630,6 +633,7 @@ export class Fighter {
   }
 
   resetForRound(x: number, facing: 1 | -1): void {
+    this.biteAnchor = null;
     this.reaction = newReaction();
     this.lastContact = null;
     this.poseTime = 0;
@@ -753,7 +757,8 @@ export class Fighter {
       return false;
     }
 
-    const move = this.partContacts ? contactPilotMove(this.moves[kind]) : this.moves[kind];
+    let move = this.partContacts ? contactPilotMove(this.moves[kind]) : this.moves[kind];
+    if (this.partContacts && this.assets.parts?.rig.parts.backing) move = bitePilotMove(move);
     // 대시 중 공격: 대시는 끝내고 남은 기세는 기술 내딛기에 맡긴다.
     this.dashFrames = 0;
     this.attack = { move, attackId: nextAttackId++, frame: 0, hitTargets: new Set() };

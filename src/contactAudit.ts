@@ -9,7 +9,7 @@ import type { AttackKind } from './combat/types';
 /** Deterministic review harness: no gameplay changes, no animation wall-clock. */
 export async function createContactAudit(mouthV2 = false) {
   const assets = await Promise.all(['tyrannosaurus', 'triceratops'].map(id => loadCharacterAssets(new AssetLoader(), id,
-    mouthV2 && id === 'tyrannosaurus' ? 'assets/characters/tyrannosaurus/parts/mouth-v2' : undefined)));
+    mouthV2 && id === 'tyrannosaurus' ? 'assets/characters/tyrannosaurus/parts/mouth-v2' : `assets/characters/${id}/parts/integrated-v3`)));
   let match: Match, frame = 0;
   let events: unknown[] = [];
   const projectileLoader = new AssetLoader();
