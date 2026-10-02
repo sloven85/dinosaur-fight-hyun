@@ -1,4 +1,5 @@
 import { getCharacter } from '../data';
+import { contactCandidate } from '../core/contactCandidate';
 import type { AssetLoader } from './AssetLoader';
 import { POSE_NAMES, loadRig, type PoseName, type RigData } from './rig';
 import type { PartMotionsData, PartRigData } from './partRig';
@@ -51,7 +52,8 @@ export async function loadCharacterAssets(loader: AssetLoader, id: string, parts
     }),
   );
 
-  const partsPath = partsOverride ?? character.partsPath;
+  const partsPath = partsOverride ?? (contactCandidate() && ['tyrannosaurus','triceratops'].includes(id)
+    ? `assets/characters/${id}/parts/integrated-v3` : character.partsPath);
   const parts = partsPath ? await loadParts(loader, partsPath) : null;
   return { id, rig, master, portrait, poses, parts };
 }

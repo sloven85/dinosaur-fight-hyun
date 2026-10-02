@@ -16,5 +16,6 @@ if (new URLSearchParams(location.search).has('contactAudit')) {
   void import('./contactLab').then(({ startContactLab }) => startContactLab(canvas));
 } else {
   const game = new Game(canvas);
+  if (import.meta.env.DEV) Object.assign(window, { __reviewGame: game });
   game.start();
 }

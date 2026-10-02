@@ -6,6 +6,7 @@ import { applyAffine } from '../rendering/partRig';
 import { contactPose, findContact } from './partContact';
 import { getMove } from '../data';
 import { bitePilotMove } from './bitePilot';
+import feet from '../data/contactFeet.json';
 
 function setup(side: 1 | -1, gap = 540) {
   const ids: [string, string] = ['tyrannosaurus','triceratops'];
@@ -25,6 +26,21 @@ describe('integrated v3',()=>{
     expect(m.p2.assets.parts!.rig.hitPivot).toBeDefined();
   });
   for(const side of [1,-1] as const) {
+    it(`missing signed feet preserve opaque contour bottom in attack and repeat-hit poses (${side})`,()=>{
+      const f=setup(side).p2;
+      for(const kind of ['light','heavy','special'] as const)for(const frame of [0,8,17,24]){
+        const m=setup(side);m.p2.meter=100;
+        m.step({isHeld:()=>false,isPressed:(p,a)=>p===1&&a===kind},1/60);
+        m.p2.attack!.frame=frame;m.p2.applyScriptFrame();f.scriptVisual=m.p2.scriptVisual;
+        f.reaction.leg.value=0;const base=contactPose(f);
+        for(const [name,points] of Object.entries(feet))for(const value of [4.375,7]){
+          f.reaction.leg.value=name.startsWith('near')?-value:value;
+          const after=contactPose(f);
+          const bottom=(matrix:number[])=>Math.max(...points.map(([x,y])=>matrix[1]*x+matrix[3]*y+matrix[5]));
+          expect(bottom(after.matrices[name])).toBeCloseTo(bottom(base.matrices[name]),8);
+        }
+      }
+    });
     it(`v3 preserves approved close charge (${side})`,()=>{
       const m=setup(side,300); m.p2.meter=100;
       const hp=m.p1.health;
@@ -46,7 +62,7 @@ describe('integrated v3',()=>{
         expect(a[0]).toBeCloseTo(b[0]);expect(a[1]).toBeCloseTo(b[1]);
       }
     });
-    for(const kind of ['light','heavy'] as const)for(const gap of [540,700])it(`${kind} ${gap}/${side} mouth-only contact, total damage and no acquisition snap`,()=>{
+    for(const kind of ['light','heavy'] as const)for(const gap of [250,300,450,540,700])it(`${kind} ${gap}/${side} mouth-only contact, total damage and no acquisition snap`,()=>{
       const m=setup(side,gap),hp=m.p2.health;const hits=[];
       let maxJump=0;
       for(let frame=0;frame<240;frame++){
@@ -66,6 +82,17 @@ describe('integrated v3',()=>{
     const f=setup(1).p1,pose=contactPose(f),head=pose.hurt.find(c=>c.part==='head')!;
     expect(pose.weapon).toHaveLength(1);
     expect(findContact(pose.weapon,[{x:head.x,y:head.y-40,r:10,part:'head',region:'head'}])).toBeNull();
+  });
+  it('close miss reproduction is outside jaws, not a body-box false negative',()=>{
+    for(const gap of [250,300,450]){
+      const m=setup(1,gap);
+      m.step({isHeld:()=>false,isPressed:(p,a)=>p===0&&a==='light'},1/60);
+      // Replay pre-fix pose at first closing frame, without the approach correction.
+      const attack=m.p1.attack!;
+      (attack as {move:typeof attack.move}).move=bitePilotMove(getMove('tyrannosaurus_light'));
+      attack.frame=9;m.p1.applyScriptFrame();
+      expect(findContact(contactPose(m.p1).weapon,contactPose(m.p2).hurt)).toBeNull();
+    }
   });
   it('bite move adaptation preserves damage events',()=>{
     for(const id of ['tyrannosaurus_light','tyrannosaurus_heavy']){

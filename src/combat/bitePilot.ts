@@ -19,3 +19,18 @@ export function bitePilotMove(move: MoveData): MoveData {
   } };
   return move;
 }
+
+/** Retract the attacker, never teleport the victim or widen the mouth.
+ * At close root gaps the jaws are already beyond the opposing head. Open and step
+ * back into biting distance before the existing close/hit windows begin.
+ */
+export function alignCloseBite(move: MoveData, gap: number): MoveData {
+  if (!move.script || !['tyrannosaurus_light','tyrannosaurus_heavy'].includes(move.id) || gap>=520) return move;
+  const amount=540-gap;
+  const ready=move.kind==='light'?8:16;
+  const recover=move.kind==='light'?23:94;
+  const end=move.kind==='light'?36:110;
+  return {...move,script:{...move.script,keys:move.script.keys.map(k=>({
+    ...k,x:(k.x??0)-amount*Math.max(0,Math.min(1,k.f/ready,(end-k.f)/(end-recover))),
+  }))}};
+}

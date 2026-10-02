@@ -24,7 +24,7 @@ import { emptyAssets, type CharacterAssets } from '../rendering/CharacterAssets'
 import { spriteScale } from '../rendering/rig';
 import { contactPilotMove } from './chargePilot';
 import { expandedPilotMove } from './expandedPilot';
-import { bitePilotMove } from './bitePilot';
+import { bitePilotMove, alignCloseBite } from './bitePilot';
 import { newReaction, stepReaction, type Contact } from './partContact';
 import {
   hasChannel,
@@ -759,7 +759,9 @@ export class Fighter {
     }
 
     let move = this.partContacts ? expandedPilotMove(contactPilotMove(this.moves[kind])) : this.moves[kind];
-    if (this.partContacts && this.assets.parts?.rig.parts.backing) move = bitePilotMove(move);
+    if (this.partContacts && this.assets.parts?.rig.parts.backing) {
+      move = alignCloseBite(bitePilotMove(move), this.opponent ? Math.abs(this.opponent.x-this.x) : 540);
+    }
     // 대시 중 공격: 대시는 끝내고 남은 기세는 기술 내딛기에 맡긴다.
     this.dashFrames = 0;
     this.attack = { move, attackId: nextAttackId++, frame: 0, hitTargets: new Set() };

@@ -12,6 +12,7 @@ export async function startContactLab(canvas: HTMLCanvasElement): Promise<void> 
   document.body.innerHTML = `<main style="max-width:1500px;margin:auto;color:#e9f2ff;font:16px system-ui;padding:12px">
     <h2>2D 접촉 비교판 · 12종 개발 검토판</h2>
     <p>종 선택 <select id="species"></select> · 기존 승인 아트 유지 / 본판 배포 아님</p>
+    <p><a href="/?contactCandidate=1" style="color:#7de">본판 반영 후보 · 선택→실제 대전→결과→다시 하기</a></p>
     <p>왼쪽: 기존 전신 판정 · 오른쪽: 파츠 판정 + 제한 스프링 | 효과·카메라 흔들림·소리 OFF</p>
     <p><a href="/contact-lab.html" style="color:#7de">v3 통합 · 입 기반 물기</a> · <a href="/contact-lab.html?mouthV2=1" style="color:#7de">이전 입속 v2 시험판</a></p>
     <div id="controls" style="display:flex;gap:10px;flex-wrap:wrap">

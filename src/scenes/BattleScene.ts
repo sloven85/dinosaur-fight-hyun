@@ -1,4 +1,5 @@
 import { MAX_METER, ROUNDS_TO_WIN, ROUND_INTRO_FRAMES } from '../core/constants';
+import { contactCandidate } from '../core/contactCandidate';
 import type { GameContext } from '../core/GameContext';
 import { getStage } from '../data';
 import { Match, SPECIAL_CUTIN_FRAMES, type Projectile } from '../combat/Match';
@@ -74,7 +75,7 @@ export class BattleScene extends BaseScene {
     this.prevPhase = '';
     this.finishFrames = 0;
     // 다시 하기를 눌러 새 경기를 시작할 때도 저장된 난이도·도움 설정을 그대로 다시 읽는다.
-    const options = { difficulty: settings.difficulty, assist: settings.assist, specialCutin: true };
+    const options = { difficulty: settings.difficulty, assist: settings.assist, specialCutin: true, partContacts: contactCandidate() };
     this.match = this.characterAssets
       ? new Match(session.mode, session.characters, this.characterAssets, options)
       : new Match(session.mode, session.characters, undefined, options);

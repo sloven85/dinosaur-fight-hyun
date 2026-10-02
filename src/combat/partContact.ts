@@ -3,6 +3,7 @@ import { applyAffine, multiply, partTransforms, walkPartAngles, type Affine } fr
 import { spriteScale } from '../rendering/rig';
 import type { Rect } from './types';
 import { CONTACT_PROFILES, weaponParts } from './contactProfiles';
+import footContours from '../data/contactFeet.json';
 
 export type BodyRegion = 'head' | 'torso' | 'leg' | 'tail';
 export interface Circle { x: number; y: number; r: number }
@@ -118,6 +119,11 @@ export function contactPose(f: Fighter): ContactPose {
     for (const name of rig.drawOrder.filter(n => n.includes('leg'))) {
       const angle = f.reaction.leg.value * (name.includes('near') ? 1 : -0.6);
       const p = rig.parts[name];
+      const contour = (footContours as Record<string,number[][]>)[name];
+      if (f.data.id === 'triceratops' && angle < 0 && !rig.hitPivot[name+'-'] && contour) {
+        matrices[name] = rotateAtSupport(matrices[name], contour, angle * f.facing);
+        continue;
+      }
       // Sparse author table: a missing sign uses the supplied opposite foot endpoint.
       const foot = rig.hitPivot[name + (angle >= 0 ? '+' : '-')] ?? rig.hitPivot[name + (angle >= 0 ? '-' : '+')];
       if (foot) matrices[name] = rotateAtTransformedPoint(matrices[name], foot.x - p.offsetX, foot.y - p.offsetY, angle * f.facing);
@@ -168,6 +174,20 @@ export function rotateAtTransformedPoint(m: Affine, x: number, y: number, degree
   const [px, py] = applyAffine(m, x, y);
   const a = -degrees * Math.PI / 180, c = Math.cos(a), s = Math.sin(a);
   return multiply(translate(px, py), multiply([c, s, -s, c, 0, 0], multiply(translate(-px, -py), m)));
+}
+
+/** Missing signed pivots: solve a support pivot on the CURRENT silhouette baseline.
+ * A rigid rotation keeps the opaque contour's bottom unchanged, including attack poses.
+ * No body lowering, angle reduction, or geometry widening is used.
+ */
+export function rotateAtSupport(m: Affine, contour: number[][], degrees: number): Affine {
+  const a=-degrees*Math.PI/180,s=Math.sin(a),c=Math.cos(a);
+  if(Math.abs(s)<1e-8)return m;
+  const points=contour.map(([x,y])=>applyAffine(m,x,y));
+  const py=Math.max(...points.map(p=>p[1]));
+  const rotatedBottom=Math.max(...points.map(([x,y])=>s*x+c*y));
+  const px=(rotatedBottom-c*py)/s;
+  return multiply(translate(px,py),multiply([c,s,-s,c,0,0],multiply(translate(-px,-py),m)));
 }
 
 export function circleBounds(cs: Circle[]): Rect {

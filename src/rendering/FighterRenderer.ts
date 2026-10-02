@@ -168,7 +168,7 @@ export function renderFighter(
   effects = true,
 ): void {
   renderShadow(g, fighter, groundY);
-  if (supportsContact(fighter)) {
+  if (supportsContact(fighter) && fighter.state !== 'down' && fighter.state !== 'victory') {
     const pose = contactPose(fighter);
     g.save();
     g.translate(0, groundY);
