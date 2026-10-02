@@ -98,6 +98,7 @@ export default defineConfig({
     allowedHosts,
   },
   build: {
+    rollupOptions: { input: { game: 'index.html', contactLab: 'contact-lab.html' } },
     target: 'es2022',
     outDir: 'dist',
     sourcemap: true,

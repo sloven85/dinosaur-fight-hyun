@@ -1,4 +1,5 @@
 import type { Fighter, ScriptVisual } from '../combat/Fighter';
+import { contactPose, supportsContact } from '../combat/partContact';
 import { emotionFor, type Emotion } from '../combat/emotion';
 import { spriteScale, type PoseName } from './rig';
 import { airborneTilt, clampTilt, fallPose, flailPartAngles } from './fallMotion';
@@ -164,11 +165,27 @@ export function renderFighter(
   fighter: Fighter,
   groundY: number,
   time: number,
+  effects = true,
 ): void {
   renderShadow(g, fighter, groundY);
+  if (supportsContact(fighter)) {
+    const pose = contactPose(fighter);
+    g.save();
+    g.translate(0, groundY);
+    for (const name of fighter.assets.parts!.rig.drawOrder) {
+      const image = fighter.assets.parts!.images[name];
+      if (!image) continue;
+      g.save();
+      g.transform(...pose.matrices[name]);
+      g.drawImage(image, 0, 0);
+      g.restore();
+    }
+    g.restore();
+    return;
+  }
 
   // 잔상(번개 왕복 등): 지난 위치에 종 보조색 실루엣을 옅게 남긴다.
-  for (const ghost of fighter.ghosts) {
+  for (const ghost of effects ? fighter.ghosts : []) {
     drawBody(g, fighter, groundY, time, {
       x: ghost.x,
       y: ghost.y,
@@ -184,8 +201,10 @@ export function renderFighter(
     facing: fighter.facing,
     visual: fighter.scriptVisual,
     ghostAlpha: 0,
+    noEffects: !effects,
   });
   if (!drawn) return;
+  if (!effects) return;
 
   const feetY = groundY + fighter.y;
   if (fighter.state === 'stun') drawStunStars(g, fighter, feetY, time);
@@ -206,6 +225,7 @@ interface BodyView {
   visual: ScriptVisual | null;
   /** 0이면 본체, 0보다 크면 이 투명도로 잔상만 그린다. */
   ghostAlpha: number;
+  noEffects?: boolean;
 }
 
 /**
@@ -265,7 +285,7 @@ function drawBody(
 
   if (ghost) {
     // 잔상은 아래 draw에서 보조색 실루엣으로만 그린다.
-  } else if (fighter.state === 'hit' || fighter.state === 'held') {
+  } else if (!view.noEffects && (fighter.state === 'hit' || fighter.state === 'held')) {
     g.filter = 'brightness(1.45) saturate(1.35)';
   } else if (fighter.invulnFrames > 0) {
     g.globalAlpha = 0.55;
@@ -358,7 +378,7 @@ function drawBody(
   }
   g.restore();
 
-  if (motion && fighter.attack) {
+  if (!view.noEffects && motion && fighter.attack) {
     drawAttackTrail(
       g,
       fighter.data.attackStyle,

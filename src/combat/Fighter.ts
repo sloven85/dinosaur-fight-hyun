@@ -22,6 +22,7 @@ import type { Action } from '../input/actions';
 import type { PlayerIndex } from '../input/InputManager';
 import { emptyAssets, type CharacterAssets } from '../rendering/CharacterAssets';
 import { spriteScale } from '../rendering/rig';
+import { newReaction, stepReaction, type Contact } from './partContact';
 import {
   hasChannel,
   sampleChannel,
@@ -99,6 +100,10 @@ export class Fighter {
   onGround = true;
   facing: 1 | -1;
   state: FighterState = 'idle';
+  partContacts = false;
+  poseTime = 0;
+  reaction = newReaction();
+  lastContact: Contact | null = null;
 
   health: number;
   /** 이번 경기의 최대 체력. 도움 설정(1P 1.5배)이 걸리면 baseHealth보다 커진다. */
@@ -397,6 +402,8 @@ export class Fighter {
     }
 
     this.updateGhosts();
+    this.poseTime += dt;
+    stepReaction(this.reaction, dt);
 
     // 붙잡힌 동안 위치는 잡은 쪽(Match)이 정한다.
     if (this.state === 'held') {
@@ -622,6 +629,9 @@ export class Fighter {
   }
 
   resetForRound(x: number, facing: 1 | -1): void {
+    this.reaction = newReaction();
+    this.lastContact = null;
+    this.poseTime = 0;
     this.x = x;
     this.y = 0;
     this.vy = 0;
