@@ -28,6 +28,7 @@ import type { PlayerIndex } from '../input/InputManager';
 import { emptyAssets, type CharacterAssets } from '../rendering/CharacterAssets';
 import { Fighter, NULL_INPUT, type FighterInput } from './Fighter';
 import { rectsOverlap, type AttackKind, type MoveData, type Rect } from './types';
+import { pilotChargePreparing } from './chargePilot';
 import { contactPose, supportsContact, findContact, react, sweptRectContact, circleBounds, type ContactPose, type Contact, type BodyRegion } from './partContact';
 
 /** 맞을 때 최소로 밀려나는 거리(px). 넉백이 0인 다단히트(벨로키 왕복 등)도 조금씩 밀린다. */
@@ -372,7 +373,7 @@ export class Match {
   private separate(): void {
     const [a, b] = this.fighters;
     // 잡기 중이거나 상대를 통과하는 기술(왕복)은 밀어내지 않는다.
-    if (a.holding || b.holding || a.activeScript?.passThrough || b.activeScript?.passThrough) return;
+    if (a.holding || b.holding || (a.activeScript?.passThrough && !pilotChargePreparing(a)) || (b.activeScript?.passThrough && !pilotChargePreparing(b))) return;
     if (a.isIntangible() || b.isIntangible()) return;
     // 넘어진 상대는 넘어갈 수 있다(쓰러진 위로 지나가기).
     if (a.state === 'fallen' || b.state === 'fallen') return;

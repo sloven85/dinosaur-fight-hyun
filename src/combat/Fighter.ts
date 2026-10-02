@@ -22,6 +22,7 @@ import type { Action } from '../input/actions';
 import type { PlayerIndex } from '../input/InputManager';
 import { emptyAssets, type CharacterAssets } from '../rendering/CharacterAssets';
 import { spriteScale } from '../rendering/rig';
+import { contactPilotMove } from './chargePilot';
 import { newReaction, stepReaction, type Contact } from './partContact';
 import {
   hasChannel,
@@ -752,7 +753,7 @@ export class Fighter {
       return false;
     }
 
-    const move = this.moves[kind];
+    const move = this.partContacts ? contactPilotMove(this.moves[kind]) : this.moves[kind];
     // 대시 중 공격: 대시는 끝내고 남은 기세는 기술 내딛기에 맡긴다.
     this.dashFrames = 0;
     this.attack = { move, attackId: nextAttackId++, frame: 0, hitTargets: new Set() };

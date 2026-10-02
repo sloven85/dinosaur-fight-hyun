@@ -89,6 +89,28 @@ head -12/0/+12 combined with jaw 0/-13/-26. Capture checks cover both facings (1
 The artist's all-six-species zero-new-holes claim is NOT adopted: the master's noted
 therizinosaurus 5171->5178 discrepancy remains the artist's follow-up. Only T-rex is loaded.
 
+## Charge startup fix (2026-10-02)
+
+Pilot-only `chargePilot.ts` inserts `xr:0` on the existing frame16 root key. Previously
+the first explicit xr key was `xr:1` at frame40, so the sampler interpolated from an
+implicit zero at frame0: frame15 had already consumed 37.5% of dashDistance. Global
+passThrough also disabled body separation during startup. Together this let the horn
+pass the close target before the active window.
+
+Now frame0..16 uses xr=0, frame17..40 interpolates to the SAME xr=1 endpoint. The x
+windup keys (-20/-10/-30), pose keys, active16..40, base damage26, reach900, total92
+and all frame40+ root positions remain unchanged. Pass-through begins at activation;
+startup uses normal pilot push separation. The source moves.json is unchanged and
+the correction applies only with partContacts=true to triceratops_special. T-rex roar,
+default game, and artwork are untouched.
+
+Regression: both directions at root gaps180/250/280/300/310/320/600/1000; no damage
+or root crossing before16, one damage event, true current-pose overlap at activation
+for close cases. Damage is 28 HP after the existing triceratops species multiplier.
+The unclamped range fixture scans1200..1900 in10px steps; last hit1590/first miss1600,
+also matched against original script. Normal arena clamps prevent this root distance,
+so the range video explicitly labels the no-wall fixture, not normal gameplay.
+
 Chrome checks cover all six probes, both real light attacks, mirror, fake two-pad
 movement, simultaneous light, jump, crouch guard and Start pause. Physical controllers,
 TV/speakers and human game feel are NOT TESTED. Existing art still has visible cutout
