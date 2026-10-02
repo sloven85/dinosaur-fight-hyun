@@ -79,7 +79,7 @@ export function contactPose(f: Fighter): ContactPose {
     if (walk) angles = walkPartAngles(walk, f.poseTime);
   }
   angles.head = clamp((angles.head ?? 0) + f.reaction.head.value, 28);
-  angles.jaw = Math.max(-28, Math.min(4, angles.jaw ?? 0));
+  angles.jaw = Math.max(-(rig.mouthOpenMax ?? 28), Math.min(4, angles.jaw ?? 0));
   angles.tailbase = clamp((angles.tailbase ?? 0) + f.reaction.tail.value, 16);
   angles.tailtip = clamp(angles.tailtip ?? 0, 20);
   for (const name of rig.drawOrder.filter(n => n.includes('leg'))) {

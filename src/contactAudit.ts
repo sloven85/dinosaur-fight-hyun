@@ -7,8 +7,9 @@ import { spriteScale } from './rendering/rig';
 import type { AttackKind } from './combat/types';
 
 /** Deterministic review harness: no gameplay changes, no animation wall-clock. */
-export async function createContactAudit() {
-  const assets = await Promise.all(['tyrannosaurus', 'triceratops'].map(id => loadCharacterAssets(new AssetLoader(), id)));
+export async function createContactAudit(mouthV2 = false) {
+  const assets = await Promise.all(['tyrannosaurus', 'triceratops'].map(id => loadCharacterAssets(new AssetLoader(), id,
+    mouthV2 && id === 'tyrannosaurus' ? 'assets/characters/tyrannosaurus/parts/mouth-v2' : undefined)));
   let match: Match, frame = 0;
   let events: unknown[] = [];
   const projectileLoader = new AssetLoader();
@@ -42,7 +43,7 @@ export async function createContactAudit() {
       g.save(); g.transform(...pose.matrices[name]); g.drawImage(f.assets.parts!.images[name], 0, 0); g.restore();
     }
   }
-  function draw(label: string, debug = true, close = false) {
+  function draw(label: string, debug = true, close = false, mouth = false) {
     g.fillStyle = '#172333'; g.fillRect(0, 0, 1920, 1080);
     g.fillStyle = '#fff'; g.font = '30px sans-serif'; g.fillText(label, 25, 45);
     g.font = '22px sans-serif';
@@ -52,8 +53,8 @@ export async function createContactAudit() {
       const scale = spriteScale(f.data.displayHeight, f.assets.rig!.master.box);
       const head = rig.parts.head;
       // Fixed crop, never track a moving joint (tracking would conceal residual motion).
-      const neckX = f.x + f.facing * (head.pivotX! - f.assets.rig!.root.x) * scale;
-      const neckY = f.y + (head.pivotY! - f.assets.rig!.root.y) * scale;
+      const neckX = f.x + f.facing * ((mouth ? 1650 : head.pivotX!) - f.assets.rig!.root.x) * scale;
+      const neckY = f.y + ((mouth ? 440 : head.pivotY!) - f.assets.rig!.root.y) * scale;
       const views = [{ x: 0, y: 130, w: 960, h: 880, cx: neckX, cy: neckY, label: '목 · 아트 원본 1px = 영상 1px' },
         { x: 960, y: 130, w: 960, h: 880, cx: f.x, cy: -90, label: '발 · 아트 원본 1px = 영상 1px' }];
       for (const v of views) {

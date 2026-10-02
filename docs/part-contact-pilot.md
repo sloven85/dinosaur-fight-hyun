@@ -76,6 +76,19 @@ projectile still reaches. Its video is labelled maximum-distance hit, NOT a miss
 Therefore the requested six-move distance-only hit/miss evidence is not fully met.
 Art seam quality and human visual acceptance remain reviewer-owned.
 
+## Separate mouth-v2 pilot
+
+`contact-lab.html?mouthV2=1` opts into the complete new T-rex PNG+rig set only.
+Normal comparison and main game keep the approved old assets, including old jaw pivot.
+No old painted head is overlaid on the v2 set. Jaw pivot comes from the new rig;
+weapon stage points use that part matrix, so the new pivot automatically changes their
+trajectory. `mouthOpenMax` clamps the negative opening angle to -26 degrees.
+The existing recursive transform resolver already computes parents independently of
+draw order; new tests explicitly cover the three back layers and inheritance for
+head -12/0/+12 combined with jaw 0/-13/-26. Capture checks cover both facings (18 poses).
+The artist's all-six-species zero-new-holes claim is NOT adopted: the master's noted
+therizinosaurus 5171->5178 discrepancy remains the artist's follow-up. Only T-rex is loaded.
+
 Chrome checks cover all six probes, both real light attacks, mirror, fake two-pad
 movement, simultaneous light, jump, crouch guard and Start pause. Physical controllers,
 TV/speakers and human game feel are NOT TESTED. Existing art still has visible cutout

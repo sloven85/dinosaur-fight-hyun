@@ -16,6 +16,7 @@ export interface PartDef {
 }
 
 export interface PartRigData {
+  mouthOpenMax?: number;
   stage: { width: number; height: number; rootX: number; rootY: number };
   drawOrder: string[];
   parts: Record<string, PartDef>;

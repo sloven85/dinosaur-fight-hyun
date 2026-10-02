@@ -29,7 +29,7 @@ export function emptyAssets(id: string): CharacterAssets {
  * 캐릭터 하나의 rig.json·마스터·초상·전용 포즈를 로드한다.
  * 파일이 없거나 깨졌으면 null로 남고 렌더러가 임시 표시로 대체한다.
  */
-export async function loadCharacterAssets(loader: AssetLoader, id: string): Promise<CharacterAssets> {
+export async function loadCharacterAssets(loader: AssetLoader, id: string, partsOverride?: string): Promise<CharacterAssets> {
   const character = getCharacter(id);
   const base = `assets/characters/${id}`;
 
@@ -51,7 +51,8 @@ export async function loadCharacterAssets(loader: AssetLoader, id: string): Prom
     }),
   );
 
-  const parts = character.partsPath ? await loadParts(loader, character.partsPath) : null;
+  const partsPath = partsOverride ?? character.partsPath;
+  const parts = partsPath ? await loadParts(loader, partsPath) : null;
   return { id, rig, master, portrait, poses, parts };
 }
 
