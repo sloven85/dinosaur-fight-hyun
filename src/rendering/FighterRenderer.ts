@@ -1,4 +1,5 @@
 import type { Fighter, ScriptVisual } from '../combat/Fighter';
+import { renderTerminalPose } from './terminalPose';
 import { contactPose, supportsContact } from '../combat/partContact';
 import { emotionFor, type Emotion } from '../combat/emotion';
 import { spriteScale, type PoseName } from './rig';
@@ -168,6 +169,7 @@ export function renderFighter(
   effects = true,
 ): void {
   renderShadow(g, fighter, groundY);
+  if ((fighter.state === 'down' || fighter.state === 'victory') && renderTerminalPose(g,fighter,groundY)) return;
   if (supportsContact(fighter) && fighter.state !== 'down' && fighter.state !== 'victory') {
     const pose = contactPose(fighter);
     g.save();

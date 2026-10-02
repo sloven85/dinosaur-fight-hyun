@@ -208,6 +208,32 @@ export class Fighter {
 
   // --- 판정 상자 ---
 
+  /** Terminal poses must never inherit an attack, hold, guard, or recoil deformation. */
+  finishRound(state: 'down' | 'victory'): void {
+    this.releaseHold();
+    this.heldBy = null; this.biteAnchor = null; this.heldRot = 0;
+    this.attack = null; this.scriptVisual = null; this.ghosts = [];
+    this.reaction = newReaction(); this.lastContact = null;
+    this.hitstunFrames = this.hitstopFrames = this.invulnFrames = this.specialFlashFrames = 0;
+    this.kbFrames = this.kbPerFrame = this.vx = this.vy = 0;
+    this.pendingKnockdown = this.fallenFrames = this.fallenTotal = this.airTumble = this.stunFrames = this.guardFrames = 0;
+    this.fallStartAngle = 0; this.dashFrames = this.leapFrames = this.leapPerFrame = 0;
+    this.bufferedAttack = null; this.bufferFrames = 0;
+    this.inputLeft = this.inputRight = this.inputUp = this.inputUpHeld = this.inputDown = false;
+    this.gliding = false; this.poseTime = 0;
+    this.y = Math.min(0, this.y); this.onGround = this.y === 0;
+    this.state = state;
+  }
+
+  /** Continue gravity after combat stops; no input or attacks run during this descent. */
+  settleAfterRound(dt: number): void {
+    if (this.state !== 'down' && this.state !== 'victory') return;
+    if (this.onGround) { this.y = 0; this.vy = 0; return; }
+    this.vy += GRAVITY * dt;
+    this.y = Math.min(0, this.y + this.vy * dt);
+    if (this.y === 0) { this.onGround = true; this.vy = 0; this.landedThisStep = true; }
+  }
+
   private get masterBox() {
     const rig = this.assets.rig;
     if (!rig || !rig.master.usable || !rig.master.box) return null;

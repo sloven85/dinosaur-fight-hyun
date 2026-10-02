@@ -270,7 +270,8 @@ export class Match {
         break;
 
       case 'roundOver':
-        if (this.phaseFrames >= ROUND_OVER_FRAMES) this.advanceAfterRound();
+        for (const fighter of this.fighters) fighter.settleAfterRound(dt);
+        if (this.phaseFrames >= ROUND_OVER_FRAMES && this.fighters.every(f=>f.onGround)) this.advanceAfterRound();
         break;
 
       case 'matchOver':
@@ -315,15 +316,15 @@ export class Match {
 
     if (winner === null) {
       // 무승부는 승수를 올리지 않고 재라운드한다(계획서 2절).
-      this.p1.state = 'down';
-      this.p2.state = 'down';
+      this.p1.finishRound('down');
+      this.p2.finishRound('down');
       this.pushKoEvent(this.p1);
       this.pushKoEvent(this.p2);
     } else {
       this.fighters[winner].roundWins += 1;
-      this.fighters[winner].state = 'victory';
+      this.fighters[winner].finishRound('victory');
       const loser = this.fighters[1 - winner];
-      loser.state = 'down';
+      loser.finishRound('down');
       // 프롬프트 6: KO 뒤 쓰러진 캐릭터에 별이 돈다.
       this.pushKoEvent(loser);
     }
