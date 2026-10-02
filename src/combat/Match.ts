@@ -676,8 +676,12 @@ export class Match {
           case 'throw': {
             const target = attacker.holding;
             if (!target) break;
+            if (supportsContact(attacker) && target.lastContact) {
+              const weapon = contactPose(attacker).weapon[0];
+              this.contacts.set(target, { ...target.lastContact, x: weapon.x, y: weapon.y });
+            }
             attacker.releaseHold();
-            if (event.behind) {
+            if (event.behind && !supportsContact(attacker)) {
               target.x = attacker.x - attacker.facing * (attacker.bodyWidth * 0.5);
             }
             const dir = event.behind ? -attacker.facing : attacker.facing;

@@ -32,6 +32,18 @@ describe('part contact pilot', () => {
     ]);
     expect(c?.region).toBe('head'); expect(c?.x).toBe(5);
   });
+  it('triceratops weapon centers stay on the approved opaque horn/beak pixels', () => {
+    const f = new Fighter(0, 'triceratops', 960, 1, pilotAssets('triceratops'));
+    f.partContacts = true;
+    const pose = contactPose(f), m = pose.matrices.head;
+    const part = f.assets.parts!.rig.parts.head;
+    const points = [[1920, 600], [1810, 650], [1850, 860]];
+    pose.weapon.forEach((c, i) => {
+      const p = applyAffine(m, points[i][0] - part.offsetX, points[i][1] - part.offsetY);
+      expect(c.x).toBeCloseTo(p[0]); expect(c.y).toBeCloseTo(p[1]);
+      expect(c.r).toBeLessThan(8);
+    });
+  });
   it('fast projectile narrow phase crosses a part but rejects rounded-corner near misses', () => {
     const old = { left: 0, right: 10, top: 0, bottom: 10 };
     const next = { ...old, left: 100, right: 110 };
@@ -74,11 +86,24 @@ describe('part contact pilot', () => {
       react(f, { region, part: region, x: 0, y: 0, direction: 1, t: 0 });
       stepReaction(f.reaction, 1 / 60);
       expect(f.reaction[region].value).not.toBe(0);
-      for (let i = 0; i < 600; i++) {
+      for (let i = 0; i < 120; i++) {
         stepReaction(f.reaction, 1 / 60);
         expect(Math.abs(f.reaction[region].value)).toBeLessThanOrEqual(REACTION_LIMITS[region]);
       }
       expect(f.reaction).toEqual(newReaction()); expect(f.health).toBe(hp);
+    }
+  });
+  for (const facing of [1, -1] as const) for (const [id, kind, hitGap, missGap] of [
+    [0, 'light', 630, 660], [0, 'heavy', 660, 690],
+    [1, 'light', 620, 650], [1, 'heavy', 540, 570],
+  ] as const) it(`observed hit/miss boundary ${id}/${kind}/${facing}`, () => {
+    for (const [gap, shouldHit] of [[hitGap, true], [missGap, false]] as const) {
+      const order: [string, string] = id === 0 ? ids : [ids[1], ids[0]];
+      const m = new Match('versus', order, [pilotAssets(order[0]), pilotAssets(order[1])], { partContacts: true });
+      m.phase = 'fight'; m.p1.x = 960 - facing * gap / 2; m.p2.x = 960 + facing * gap / 2;
+      m.p1.facing = facing; m.p2.facing = -facing as 1 | -1;
+      for (let i = 0; i < 220; i++) m.step({ isHeld: () => false, isPressed: (p, a) => i === 0 && p === 0 && a === kind }, 1 / 60);
+      expect(m.p2.health < m.p2.maxHealth).toBe(shouldHit);
     }
   });
   it('pushboxes are narrower than silhouettes, including wall separation', () => {
@@ -119,7 +144,10 @@ describe('part contact pilot', () => {
       m.p1.facing = facing; m.p2.facing = -facing as 1 | -1; m.p1.meter = 100;
       if (swapped && kind === 'heavy') { m.p1.x = 960 - facing * 205; m.p2.x = 960 + facing * 205; }
       for (let i = 0; i < 240; i++) {
+        const held = m.p1.holding;
+        const beforeX = m.p2.x;
         m.step({ isHeld: () => false, isPressed: (p, a) => i === 0 && p === 0 && a === kind }, 1 / 60);
+        if (held && !m.p1.holding) expect(Math.abs(m.p2.x - beforeX)).toBeLessThan(100);
       }
       expect(m.p2.health).toBeLessThan(m.p2.maxHealth);
       expect(m.p1.holding).toBeNull(); expect(m.p2.heldBy).toBeNull();

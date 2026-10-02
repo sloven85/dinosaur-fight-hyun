@@ -49,6 +49,33 @@ and settling, no extra damage, earliest single contact, fast sweeps, projectile 
 misses, wall separation, both species' actual light attacks and anatomical hits through
 the Match damage path. Existing InputManager fake-pad regression tests remain enabled.
 
+## Follow-up visual audit (2026-10-02)
+
+`contactAudit.ts` is a deterministic capture harness (`?contactAudit=1`). Neck/foot
+crops render at source-art pixel scale, with no camera tracking of reacting joints.
+Each regional hit runs through Match's test projectile path, followed by 150 frames
+of no input; it is explicitly separate from actual move footage. Both diagnostic and
+unmarked versions are captured. The measured six regional trials settled all spring
+values/velocities to zero by 120 frames. Raster foot sampling (alpha >128, every four
+frames) found the bottom opaque pixel at ground-1, not below ground. This is sampled
+evidence, not a universal pixel-level guarantee of every animation.
+
+Confirmed fixes: two triceratops weapon centers were in transparent pixels (nearest
+opaque art 42 and 23 source pixels away). Centers now lie on opaque horn/beak pixels,
+and radii are narrower. Throw-behind also contained a legacy root teleport after
+part-anchored carry; pilot throws now launch from the held position and retain the
+contact metadata. Existing art is unchanged.
+
+Recorded light/heavy hit vs miss starting gaps (both directions): T-rex 630/660 and
+660/690; triceratops 620/650 and 540/570. These are root gaps, not visible tip distances.
+Triceratops charge at 320 hits, 300 misses because active frames begin after the close
+target has passed the horn; this is documented existing active-window behavior, not
+silently retuned. T-rex roar has no grounded distance-only miss within the arena in
+the sweep (300..1250 at 10px increments); far starts clamp to arena bounds and the
+projectile still reaches. Its video is labelled maximum-distance hit, NOT a miss.
+Therefore the requested six-move distance-only hit/miss evidence is not fully met.
+Art seam quality and human visual acceptance remain reviewer-owned.
+
 Chrome checks cover all six probes, both real light attacks, mirror, fake two-pad
 movement, simultaneous light, jump, crouch guard and Start pause. Physical controllers,
 TV/speakers and human game feel are NOT TESTED. Existing art still has visible cutout

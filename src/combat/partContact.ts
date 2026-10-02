@@ -124,7 +124,7 @@ export function contactPose(f: Fighter): ContactPose {
   const hurt = local.map(([part, region, x, y, r]) => ({ ...circle(part, x, y, r), part, region }));
   const weapon = f.data.id === 'tyrannosaurus'
     ? [circle('jaw', 1845, 490, 65), circle('head', 1880, 385, 60)]
-    : [circle('head', 1920, 600, 36), circle('head', 1830, 700, 38), circle('head', 1880, 875, 38)];
+    : [circle('head', 1920, 600, 20), circle('head', 1810, 650, 14), circle('head', 1850, 860, 12)];
   return { matrices, hurt, weapon, bounds: circleBounds(hurt) };
 }
 
