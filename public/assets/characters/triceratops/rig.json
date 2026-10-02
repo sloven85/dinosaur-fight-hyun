@@ -50,25 +50,37 @@
     },
     "down": {
       "imagePath": "poses/down.png",
-      "rootX": 1024,
-      "rootY": 1280,
-      "usable": false,
-      "box": null
-    },
-    "victory": {
-      "imagePath": "poses/victory.png",
-      "rootX": 1023.5,
+      "rootX": 1023.0,
       "rootY": 1279,
       "usable": true,
       "box": {
-        "minX": 182,
-        "minY": 0,
-        "maxX": 1863,
-        "maxY": 1278,
-        "w": 1682,
-        "h": 1279
-      },
-      "sameScaleAsMaster": true
+        "minX": 122,
+        "minY": 556,
+        "maxX": 1924,
+        "maxY": 1279,
+        "w": 1803,
+        "h": 724,
+        "cx": 1023.0,
+        "feet": 1279,
+        "fill": 0.2231426239013672
+      }
+    },
+    "victory": {
+      "imagePath": "poses/victory.png",
+      "rootX": 1022.5,
+      "rootY": 1279,
+      "usable": true,
+      "box": {
+        "minX": 234,
+        "minY": 20,
+        "maxX": 1811,
+        "maxY": 1279,
+        "w": 1578,
+        "h": 1260,
+        "cx": 1022.5,
+        "feet": 1279,
+        "fill": 0.2777506510416667
+      }
     },
     "guard": {
       "imagePath": "poses/guard.png",

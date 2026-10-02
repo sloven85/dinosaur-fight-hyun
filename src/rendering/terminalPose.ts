@@ -20,9 +20,5 @@ export function renderTerminalPose(g: CanvasRenderingContext2D, f: Fighter, grou
   const p=terminalLayout(box,spriteScale(f.data.displayHeight,rig.master.box),f.x,groundY,f.y,f.facing);
   g.save();g.translate(p.center,p.feet);g.scale(p.facing*p.scale,p.scale);
   g.drawImage(image,-p.rootX,-p.rootY);g.restore();
-  if(state==='down'&&!usable){
-    g.save();g.fillStyle='#fff';g.font='bold 24px sans-serif';g.textAlign='center';
-    g.fillText('다운 포즈 교체 대기',p.center,p.feet-box.h*p.scale-14);g.restore();
-  }
   return true;
 }

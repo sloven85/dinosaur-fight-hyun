@@ -50,10 +50,20 @@
     },
     "down": {
       "imagePath": "poses/down.png",
-      "rootX": 1024,
-      "rootY": 1280,
-      "usable": false,
-      "box": null
+      "rootX": 1023.5,
+      "rootY": 1279,
+      "usable": true,
+      "box": {
+        "minX": 320,
+        "minY": 887,
+        "maxX": 1727,
+        "maxY": 1279,
+        "w": 1408,
+        "h": 393,
+        "cx": 1023.5,
+        "feet": 1279,
+        "fill": 0.09472211201985677
+      }
     },
     "victory": {
       "imagePath": "poses/victory.png",

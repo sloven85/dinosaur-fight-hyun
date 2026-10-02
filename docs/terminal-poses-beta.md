@@ -1,4 +1,11 @@
-# Terminal pose beta audit — engine ready, art still blocking
+# Terminal pose beta audit — approved art connected
+
+Approved integration: all12 down PNGs from reaction ZIP, four victory PNGs (brachio/spino/
+carno/dilo) from fix6, and trex/trike victory from winfix. Files are copied byte-for-byte;
+the SHA256 manifest is `terminal-art-manifest.json`. Rig paths/usability/alpha boxes/feet
+are measured from those exact PNGs. All24 terminal slots now have usable art; fallback
+labels are removed. Content-based asset version changes with PNG and rig content.
+The original audit below records the diagnosed BEFORE state, not a remaining art blocker.
 
 Source diagnosis (current approved assets): Brachiosaurus victory alpha reaches y=0;
 T-rex, Spinosaurus and Triceratops also reach the top source edge. Camera fitting cannot
@@ -32,5 +39,5 @@ Verification:
  state checks do not certify expression quality. Artist source corrections must be integrated
  and terminal evidence regenerated before the beta verdict.
 
-Remaining:11 down replacements/validation, four top-edge victory source checks, visual
-acceptance, production deployment approval. No full-art rebuild or balance gate added.
+Original art blockers above are resolved by approved PNG integration. Remaining: reviewer
+visual acceptance and production deployment approval. No full-art rebuild or balance gate added.

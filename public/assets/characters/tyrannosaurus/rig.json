@@ -97,19 +97,19 @@
     },
     "victory": {
       "imagePath": "poses/victory.png",
-      "rootX": 1020.5,
+      "rootX": 1019.5,
       "rootY": 1279,
       "usable": true,
       "box": {
-        "minX": 196,
-        "minY": 0,
-        "maxX": 1845,
+        "minX": 208,
+        "minY": 20,
+        "maxX": 1831,
         "maxY": 1279,
-        "w": 1650,
-        "h": 1280,
-        "cx": 1020.5,
+        "w": 1624,
+        "h": 1260,
+        "cx": 1019.5,
         "feet": 1279,
-        "fill": 0.2711140314737956
+        "fill": 0.26548608144124347
       }
     },
     "guard": {
