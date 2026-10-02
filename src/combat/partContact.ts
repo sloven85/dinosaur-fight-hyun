@@ -2,6 +2,7 @@ import type { Fighter } from './Fighter';
 import { applyAffine, multiply, partTransforms, walkPartAngles, type Affine } from '../rendering/partRig';
 import { spriteScale } from '../rendering/rig';
 import type { Rect } from './types';
+import { CONTACT_PROFILES, weaponParts } from './contactProfiles';
 
 export type BodyRegion = 'head' | 'torso' | 'leg' | 'tail';
 export interface Circle { x: number; y: number; r: number }
@@ -13,6 +14,8 @@ export interface ContactPose {
   weapon: Circle[];
   bounds: Rect;
   mouth: Circle;
+  /** Original-stage to world transform, also used by approved replacement art. */
+  stage: Affine;
 }
 export interface Spring { value: number; velocity: number }
 export type Reaction = Record<BodyRegion, Spring>;
@@ -46,7 +49,10 @@ export function react(f: Fighter, contact: Contact): void {
 }
 
 export const supportsContact = (f: Fighter): boolean =>
-  f.partContacts && !!f.assets.parts && !!f.assets.rig && ['tyrannosaurus', 'triceratops'].includes(f.data.id);
+  f.partContacts && !!f.assets.parts && !!f.assets.rig &&
+  (['tyrannosaurus', 'triceratops'].includes(f.data.id) || !!CONTACT_PROFILES[f.data.id]);
+
+export const expandedContact = (f: Fighter): boolean => !!CONTACT_PROFILES[f.data.id];
 
 // Hand-fitted interior circles in the original art stage, NOT image bounding rectangles/cap disks.
 // Overlap covers solid flesh; narrow horn tips are weapons, not huge rectangular hurt regions.
@@ -74,26 +80,33 @@ export function contactPose(f: Fighter): ContactPose {
   const rig = f.assets.parts!.rig;
   const master = f.assets.rig!;
   const scale = spriteScale(f.data.displayHeight, master.master.box);
+  const expanded = expandedContact(f);
   let angles: Record<string, number> = { ...(f.scriptVisual?.parts ?? {}) };
   if (!f.scriptVisual && f.state === 'walk') {
     const walk = f.assets.parts!.motions.motions.walk;
     if (walk) angles = walkPartAngles(walk, f.poseTime);
   }
-  angles.head = clamp((angles.head ?? 0) + f.reaction.head.value, 28);
-  angles.jaw = Math.max(-(rig.mouthOpenMax ?? 28), Math.min(4, angles.jaw ?? 0));
-  angles.tailbase = clamp((angles.tailbase ?? 0) + f.reaction.tail.value, 16);
-  angles.tailtip = clamp(angles.tailtip ?? 0, 20);
+  // New species keep authored attack angles: only the added reaction is bounded.
+  angles.head = expanded ? (angles.head ?? 0) + f.reaction.head.value : clamp((angles.head ?? 0) + f.reaction.head.value, 28);
+  angles.jaw = Math.max(-(rig.mouthOpenMax ?? (expanded ? 30 : 28)), Math.min(0, angles.jaw ?? 0));
+  angles.tailbase = expanded ? (angles.tailbase ?? 0) + f.reaction.tail.value : clamp((angles.tailbase ?? 0) + f.reaction.tail.value, 16);
+  if (!expanded) angles.tailtip = clamp(angles.tailtip ?? 0, 20);
+  if (rig.parts.neck2) {
+    const each = clamp(((angles.neck ?? 0) + (angles.neck2 ?? 0)) / 2, 8);
+    angles.neck = each; angles.neck2 = each; angles.head = clamp(angles.head, 18);
+  }
   for (const name of rig.drawOrder.filter(n => n.includes('leg'))) {
-    angles[name] = rig.hitPivot ? (angles[name] ?? 0) : clamp((angles[name] ?? 0) + f.reaction.leg.value * (name.includes('near') ? 1 : -0.6), 12);
+    const value = (angles[name] ?? 0) + f.reaction.leg.value * (name.includes('near') ? 1 : -0.6);
+    angles[name] = rig.hitPivot ? (angles[name] ?? 0) : expanded ? value : clamp(value, 12);
   }
   const placed = partTransforms(rig, angles);
   const visual = f.scriptVisual;
   const rot = clamp(visual?.rot ?? (f.state === 'held' ? f.heldRot : 0), Math.PI / 12);
   const sx = visual?.sx ?? 1;
-  const sy = (visual?.sy ?? 1) * (f.state === 'crouch' ? 0.78 : 1) * (rig.hitPivot ? 1 : 1 - Math.abs(f.reaction.leg.value) * 0.012);
+  const sy = (visual?.sy ?? 1) * (f.state === 'crouch' ? 0.78 : 1) * (rig.hitPivot || expanded ? 1 : 1 - Math.abs(f.reaction.leg.value) * 0.012);
   const pivot = -f.data.displayHeight * 0.45;
   const c = Math.cos(rot), s = Math.sin(rot);
-  const body = multiply(translate(f.x, f.y), multiply([f.facing, 0, 0, 1, 0, 0],
+  const body = multiply(translate(f.x, f.y + (expanded ? visual?.sink ?? 0 : 0)), multiply([f.facing, 0, 0, 1, 0, 0],
     multiply(translate(-f.reaction.torso.value, pivot), multiply([c * sx, s * sx, -s * sy, c * sy, 0, 0],
       multiply(translate(0, -pivot), [scale, 0, 0, scale, -master.root.x * scale, -master.root.y * scale])))));
   const matrices: Record<string, Affine> = {};
@@ -109,7 +122,7 @@ export function contactPose(f: Fighter): ContactPose {
       const foot = rig.hitPivot[name + (angle >= 0 ? '+' : '-')] ?? rig.hitPivot[name + (angle >= 0 ? '-' : '+')];
       if (foot) matrices[name] = rotateAtTransformedPoint(matrices[name], foot.x - p.offsetX, foot.y - p.offsetY, angle * f.facing);
     }
-  } else if (f.onGround && f.state !== 'held') {
+  } else if (!expanded && f.onGround && f.state !== 'held') {
     for (const name of rig.drawOrder.filter(n => n.includes('leg'))) {
       const p = rig.parts[name];
       const m = matrices[name];
@@ -127,16 +140,23 @@ export function contactPose(f: Fighter): ContactPose {
   const circle = (part: string, x: number, y: number, r: number): Circle => {
     const p = rig.parts[part], m = matrices[part];
     const at = applyAffine(m, x - p.offsetX, y - p.offsetY);
-    return { x: at[0], y: at[1], r: r * scale * Math.min(sx, sy) };
+    return { x: at[0], y: at[1], r: r * Math.min(Math.hypot(m[0],m[1]),Math.hypot(m[2],m[3])) };
   };
-  const local = f.data.id === 'tyrannosaurus' ? TREX : TRIKE;
-  const hurt = local.map(([part, region, x, y, r]) => ({ ...circle(part, x, y, r), part, region }));
-  const upper = circle('head', 1810, 405, 14), lower = circle('jaw', 1810, 430, 14);
+  const flying = expanded && visual?.overlays.some(o => o.hideBody);
+  if (flying) matrices.flight = body;
+  const local = flying ? CONTACT_PROFILES.pteranodon_flight : CONTACT_PROFILES[f.data.id] ?? (f.data.id === 'tyrannosaurus' ? TREX : TRIKE);
+  const hurt = local.map(([part, region, x, y, r]) => {
+    if (part === 'flight') { const [wx,wy]=applyAffine(body,x,y); return {x:wx,y:wy,r:r*scale*Math.min(Math.abs(sx),Math.abs(sy)),part,region}; }
+    return { ...circle(part, x, y, r), part, region };
+  });
+  const upper = expanded ? hurt.find(c=>c.region==='head')! : circle('head', 1810, 405, 14);
+  const lower = expanded ? upper : circle('jaw', 1810, 430, 14);
   const mouth = { x: (upper.x + lower.x) / 2, y: (upper.y + lower.y) / 2, r: Math.max(4, Math.min(12, Math.hypot(upper.x - lower.x, upper.y - lower.y) / 2)) };
-  const weapon = integratedBite(f) ? [mouth] : f.data.id === 'tyrannosaurus'
+  const selected = weaponParts(f.data.id, f.attack?.move.kind);
+  const weapon = expanded ? hurt.filter(c=>flying ? c.region===(f.attack?.move.kind==='special'?'leg':'head') : selected.includes(c.part)) : integratedBite(f) ? [mouth] : f.data.id === 'tyrannosaurus'
     ? [circle('jaw', 1845, 490, 65), circle('head', 1880, 385, 60)]
     : [circle('head', 1920, 600, 20), circle('head', 1810, 650, 14), circle('head', 1850, 860, 12)];
-  return { matrices, hurt, weapon, mouth, bounds: circleBounds(hurt) };
+  return { matrices, hurt, weapon: weapon.length ? weapon : [mouth], mouth, stage: body, bounds: circleBounds(hurt) };
 }
 
 export function integratedBite(f: Fighter): boolean {

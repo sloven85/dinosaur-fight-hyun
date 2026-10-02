@@ -1,6 +1,7 @@
 import { AssetLoader } from './rendering/AssetLoader';
 import { loadCharacterAssets } from './rendering/CharacterAssets';
-import { renderFighter } from './rendering/FighterRenderer';
+import { renderFighter, setOverlayLoader } from './rendering/FighterRenderer';
+import { CHARACTERS, MOVES } from './data';
 import { Match } from './combat/Match';
 import { NULL_INPUT } from './combat/Fighter';
 import { contactPose, type BodyRegion } from './combat/partContact';
@@ -9,7 +10,8 @@ import { InputManager } from './input/InputManager';
 /** Review surface using the real Match/InputManager/renderer; never changes the shipped defaults. */
 export async function startContactLab(canvas: HTMLCanvasElement): Promise<void> {
   document.body.innerHTML = `<main style="max-width:1500px;margin:auto;color:#e9f2ff;font:16px system-ui;padding:12px">
-    <h2>2D 접촉 비교판 · 티라노 / 트리케라</h2>
+    <h2>2D 접촉 비교판 · 12종 개발 검토판</h2>
+    <p>종 선택 <select id="species"></select> · 기존 승인 아트 유지 / 본판 배포 아님</p>
     <p>왼쪽: 기존 전신 판정 · 오른쪽: 파츠 판정 + 제한 스프링 | 효과·카메라 흔들림·소리 OFF</p>
     <p><a href="/contact-lab.html" style="color:#7de">v3 통합 · 입 기반 물기</a> · <a href="/contact-lab.html?mouthV2=1" style="color:#7de">이전 입속 v2 시험판</a></p>
     <div id="controls" style="display:flex;gap:10px;flex-wrap:wrap">
@@ -27,9 +29,17 @@ export async function startContactLab(canvas: HTMLCanvasElement): Promise<void> 
   canvas.style.cssText = 'width:100%;height:auto;display:block;border:1px solid #53647b';
   const g = canvas.getContext('2d')!;
   const loader = new AssetLoader();
+  setOverlayLoader(loader);
+  await loader.loadImages([...new Set(MOVES.flatMap(m=>(m.script?.overlays??[]).map(o=>o.sprite)))]);
   const mouthV2 = new URLSearchParams(location.search).has('mouthV2');
-  const assets = await Promise.all(['tyrannosaurus', 'triceratops'].map(id => loadCharacterAssets(loader, id,
-    mouthV2 && id === 'tyrannosaurus' ? 'assets/characters/tyrannosaurus/parts/mouth-v2' : `assets/characters/${id}/parts/integrated-v3`)));
+  const requested=new URLSearchParams(location.search).get('species') ?? 'tyrannosaurus';
+  const species=CHARACTERS.some(c=>c.id===requested)?requested:'tyrannosaurus';
+  const select=document.querySelector<HTMLSelectElement>('#species')!;
+  for(const c of CHARACTERS)select.add(new Option(c.name,c.id,c.id===species,c.id===species));
+  select.onchange=()=>{location.href=`/contact-lab.html?species=${select.value}`;};
+  const assets = await Promise.all([species, species==='triceratops'?'tyrannosaurus':'triceratops'].map(id => loadCharacterAssets(loader, id,
+    mouthV2 && id === 'tyrannosaurus' ? 'assets/characters/tyrannosaurus/parts/mouth-v2' :
+    ['tyrannosaurus','triceratops'].includes(id)?`assets/characters/${id}/parts/integrated-v3`:undefined)));
   if (assets.some(a => !a.parts || !a.rig || !a.master)) throw new Error('파일럿 에셋 로드 실패');
   const input = new InputManager();
   let matches: Match[] = [], swapped = false, mirrored = false, debug = true, paused = false;
@@ -56,7 +66,8 @@ export async function startContactLab(canvas: HTMLCanvasElement): Promise<void> 
   document.querySelector('#pause')!.addEventListener('click', () => { paused = !paused; input.resume(); });
   function beginProbe(region: BodyRegion): void {
     reset(); probe = { region, age: 0 };
-    const target = contactPose(matches[1].p2).hurt.find(c => c.region === region)!;
+    const target = contactPose(matches[1].p2).hurt.find(c => c.region === region);
+    if(!target){probe=null;logs.unshift(`${labels[region]} 파츠가 없는 종입니다.`);return;}
     const side = mirrored ? -1 : 1;
     const leg = region === 'leg';
     for (const m of matches) m.projectiles.push({ owner: 0, kind: 'light',

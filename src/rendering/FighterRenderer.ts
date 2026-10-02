@@ -172,13 +172,21 @@ export function renderFighter(
     const pose = contactPose(fighter);
     g.save();
     g.translate(0, groundY);
-    for (const name of fighter.assets.parts!.rig.drawOrder) {
+    if ((fighter.scriptVisual?.sink ?? 0)>0) { g.beginPath(); g.rect(-4000,-4000,8000,4000); g.clip(); }
+    const overlays = fighter.scriptVisual?.overlays ?? [];
+    for (const name of overlays.some(o=>o.hideBody) ? [] : fighter.assets.parts!.rig.drawOrder) {
       const image = fighter.assets.parts!.images[name];
       if (!image) continue;
       g.save();
       g.transform(...pose.matrices[name]);
       g.drawImage(image, 0, 0);
       g.restore();
+    }
+    for (const o of overlays) {
+      const image=overlayImage(o.sprite);
+      if (!image) continue;
+      const [x0,y0,x1,y1]=o.rect;
+      g.save();g.transform(...pose.stage);g.drawImage(image,x0,y0,x1-x0,y1-y0);g.restore();
     }
     g.restore();
     return;

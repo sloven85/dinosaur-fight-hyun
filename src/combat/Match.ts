@@ -29,7 +29,7 @@ import { emptyAssets, type CharacterAssets } from '../rendering/CharacterAssets'
 import { Fighter, NULL_INPUT, type FighterInput } from './Fighter';
 import { rectsOverlap, type AttackKind, type MoveData, type Rect } from './types';
 import { pilotChargePreparing } from './chargePilot';
-import { contactPose, supportsContact, integratedBite, findContact, react, sweptRectContact, circleBounds, type ContactPose, type Contact, type BodyRegion } from './partContact';
+import { contactPose, supportsContact, expandedContact, integratedBite, findContact, react, rectContact, sweptRectContact, circleBounds, type ContactPose, type Contact, type BodyRegion } from './partContact';
 import { applyAffine } from '../rendering/partRig';
 
 /** 맞을 때 최소로 밀려나는 거리(px). 넉백이 0인 다단히트(벨로키 왕복 등)도 조금씩 밀린다. */
@@ -405,11 +405,23 @@ export class Match {
   pushWidth(f: Fighter): number { return supportsContact(f) ? f.data.displayHeight * 0.42 : f.bodyWidth; }
 
   /** AABB candidate rejection only; a part sweep is always required for a pilot hit. */
-  private touching(attacker: Fighter, defender: Fighter, legacy: Rect): boolean {
+  private touching(attacker: Fighter, defender: Fighter, legacy: Rect, groundArea = false): boolean {
     if (!supportsContact(attacker) || !supportsContact(defender)) return rectsOverlap(legacy, defender.hurtbox());
     const a = contactPose(attacker), b = contactPose(defender);
-    const oldA = this.previousFacing.get(attacker) === attacker.facing ? this.previousPoses.get(attacker) ?? a : a;
-    const oldB = this.previousFacing.get(defender) === defender.facing ? this.previousPoses.get(defender) ?? b : b;
+    // Quakes are authored ground areas, not foot-to-body strikes. Preserve their range.
+    if (groundArea) {
+      const contact = rectContact(legacy, b.hurt, attacker.facing);
+      if (contact) this.contacts.set(defender, contact);
+      return !!contact;
+    }
+    const previousA = this.previousFacing.get(attacker) === attacker.facing ? this.previousPoses.get(attacker) ?? a : a;
+    const previousB = this.previousFacing.get(defender) === defender.facing ? this.previousPoses.get(defender) ?? b : b;
+    // Replacement-flight art and instantaneous sx flips aren't continuous swept motion.
+    const continuous = (old: ContactPose, now: ContactPose): boolean =>
+      old.hurt.length === now.hurt.length && old.hurt[0]?.part === now.hurt[0]?.part &&
+      Math.sign(old.stage[0]*old.stage[3]-old.stage[1]*old.stage[2]) === Math.sign(now.stage[0]*now.stage[3]-now.stage[1]*now.stage[2]);
+    const oldA = continuous(previousA,a) && previousA.weapon.length===a.weapon.length ? previousA : a;
+    const oldB = continuous(previousB,b) ? previousB : b;
     if (!rectsOverlap(circleBounds([...a.weapon, ...oldA.weapon]), circleBounds([...b.hurt, ...oldB.hurt]))) return false;
     const contact = integratedBite(attacker)
       ? findContact(a.weapon, b.hurt, a.weapon, b.hurt, attacker.facing)
@@ -435,7 +447,8 @@ export class Match {
       const hitboxes = attacker.activeHitboxes();
       if (hitboxes.length === 0) continue;
       const hurtbox = defender.hurtbox();
-      if (!hitboxes.some((box) => rectsOverlap(box, hurtbox))) continue;
+      if (!hitboxes.some((box) => supportsContact(attacker) && supportsContact(defender)
+        ? this.touching(attacker, defender, box) : rectsOverlap(box, hurtbox))) continue;
 
       attacker.attack.hitTargets.add(defender.player);
       events.push({
@@ -536,7 +549,7 @@ export class Match {
         target.vy = 0;
         continue;
       }
-      if (supportsContact(holder) && supportsContact(target)) {
+      if (supportsContact(holder) && supportsContact(target) && !expandedContact(holder)) {
         // Carry from the actual jaw/horn, not the master silhouette's front edge.
         target.heldRot = hold.rot;
         const weapon = contactPose(holder).weapon[0];
@@ -656,7 +669,7 @@ export class Match {
         }
         if (!hit.box || !this.canBeTouched(defender, hit.otg) || defender.state === 'held') return;
         if (hit.groundOnly && !defender.onGround) return;
-        if (!this.touching(attacker, defender, this.scriptBoxRect(attacker, hit.box))) return;
+        if (!this.touching(attacker, defender, this.scriptBoxRect(attacker, hit.box), !!hit.groundOnly)) return;
         run.landed.add(index);
         const guarded = !hit.unguardable && defender.isGuarding(attacker, hit.level ?? 'mid');
         // 밀려나는 방향은 '공격자에게서 멀어지는 쪽'(뒤돌아 꼬리로 칠 때도 맞다).
@@ -691,7 +704,7 @@ export class Match {
               spec: event,
               facing: run.startFacing,
             });
-            if (supportsContact(attacker) && event.at !== 'opponent') {
+            if (supportsContact(attacker) && !expandedContact(attacker) && event.at !== 'opponent') {
               const mouth = contactPose(attacker).weapon[0];
               const projectile = this.projectiles[this.projectiles.length - 1];
               projectile.x = mouth.x; projectile.y = mouth.y;

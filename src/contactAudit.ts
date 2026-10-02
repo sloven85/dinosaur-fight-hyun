@@ -5,15 +5,24 @@ import { NULL_INPUT } from './combat/Fighter';
 import { contactPose, type BodyRegion } from './combat/partContact';
 import { spriteScale } from './rendering/rig';
 import type { AttackKind } from './combat/types';
+import { CHARACTERS, MOVES } from './data';
+import { renderFighter, setOverlayLoader } from './rendering/FighterRenderer';
 
 /** Deterministic review harness: no gameplay changes, no animation wall-clock. */
 export async function createContactAudit(mouthV2 = false) {
-  const assets = await Promise.all(['tyrannosaurus', 'triceratops'].map(id => loadCharacterAssets(new AssetLoader(), id,
-    mouthV2 && id === 'tyrannosaurus' ? 'assets/characters/tyrannosaurus/parts/mouth-v2' : `assets/characters/${id}/parts/integrated-v3`)));
+  const requested=new URLSearchParams(location.search).get('species')??'tyrannosaurus';
+  const species=CHARACTERS.some(c=>c.id===requested)?requested:'tyrannosaurus';
+  const assets = await Promise.all([species,species==='triceratops'?'tyrannosaurus':'triceratops'].map(id => loadCharacterAssets(new AssetLoader(), id,
+    mouthV2 && id === 'tyrannosaurus' ? 'assets/characters/tyrannosaurus/parts/mouth-v2' :
+    ['tyrannosaurus','triceratops'].includes(id)?`assets/characters/${id}/parts/integrated-v3`:undefined)));
   let match: Match, frame = 0;
   let events: unknown[] = [];
   const projectileLoader = new AssetLoader();
-  await projectileLoader.loadImages(['assets/effects/trex_shockwave.png']);
+  setOverlayLoader(projectileLoader);
+  await projectileLoader.loadImages([...new Set(MOVES.flatMap(m=>[
+    ...(m.script?.overlays??[]).map(o=>o.sprite),
+    ...(m.script?.events??[]).flatMap(e=>e.type==='projectile'&&e.sprite?[e.sprite]:[]),
+  ]))]);
   function reset(id: number, facing: 1 | -1 = 1, gap = 600) {
     const a = assets[id], b = assets[1 - id];
     match = new Match('versus', [a.id, b.id], [a, b], { partContacts: true });
@@ -38,10 +47,7 @@ export async function createContactAudit(mouthV2 = false) {
     tick();
   }
   function drawParts(player: number) {
-    const f = match.fighters[player], pose = contactPose(f);
-    for (const name of f.assets.parts!.rig.drawOrder) {
-      g.save(); g.transform(...pose.matrices[name]); g.drawImage(f.assets.parts!.images[name], 0, 0); g.restore();
-    }
+    renderFighter(g,match.fighters[player],0,frame/60,false);
   }
   function draw(label: string, debug = true, close = false, mouth = false) {
     g.fillStyle = '#172333'; g.fillRect(0, 0, 1920, 1080);
@@ -97,6 +103,6 @@ export async function createContactAudit(mouthV2 = false) {
     for (let y = 850; y < 960; y++) for (let x = 0; x < 1920; x++) if (pixels[(y * 1920 + x) * 4 + 3] > 128) bottom = Math.max(bottom, y);
     return bottom - 900;
   }
-  return { reset, tick, draw, regionHit, footDepth, canvas, match: () => match, events: () => events,
+  return { reset, tick, draw, regionHit, footDepth, canvas, pose: (player:0|1)=>contactPose(match.fighters[player]), match: () => match, events: () => events,
     summary: () => ({ frame, hp: match.p2.health, reactions: match.p2.reaction, events }) };
 }
