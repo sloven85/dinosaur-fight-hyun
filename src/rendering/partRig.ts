@@ -16,6 +16,8 @@ export interface PartDef {
 }
 
 export interface PartRigData {
+  mouthOpenMax?: number;
+  hitPivot?: Record<string, { x: number; y: number }>;
   stage: { width: number; height: number; rootX: number; rootY: number };
   drawOrder: string[];
   parts: Record<string, PartDef>;

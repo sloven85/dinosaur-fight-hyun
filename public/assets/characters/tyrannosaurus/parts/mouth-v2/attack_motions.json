@@ -1,0 +1,73 @@
+{
+ "note": "Tyrannosaurus attack motion profiles (degrees, +ve=clockwise on screen; root=stage-px offset)",
+ "motions": {
+  "idle": {
+   "angles": {},
+   "root": [
+    0,
+    0
+   ]
+  },
+  "walk": {
+   "angles": {
+    "nearleg": 12,
+    "farleg": -4,
+    "neararm": -5,
+    "fararm": 4,
+    "tailbase": -3,
+    "head": 2
+   },
+   "root": [
+    0,
+    0
+   ]
+  },
+  "light": {
+   "angles": {
+    "head": 7,
+    "jaw": -12,
+    "neararm": -4,
+    "fararm": 3,
+    "tailbase": -2,
+    "nearleg": 2,
+    "farleg": -2
+   },
+   "root": [
+    14,
+    0
+   ]
+  },
+  "strong": {
+   "angles": {
+    "head": 14,
+    "jaw": -17,
+    "neararm": -7,
+    "fararm": 5,
+    "tailbase": -4,
+    "tailtip": -2,
+    "nearleg": 5,
+    "farleg": -4
+   },
+   "root": [
+    30,
+    0
+   ]
+  },
+  "special": {
+   "angles": {
+    "head": 10,
+    "jaw": -15,
+    "tailbase": 8,
+    "tailtip": 6,
+    "neararm": 7,
+    "fararm": -5,
+    "nearleg": -5,
+    "farleg": 3
+   },
+   "root": [
+    90,
+    -4
+   ]
+  }
+ }
+}

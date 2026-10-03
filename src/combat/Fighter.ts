@@ -22,6 +22,10 @@ import type { Action } from '../input/actions';
 import type { PlayerIndex } from '../input/InputManager';
 import { emptyAssets, type CharacterAssets } from '../rendering/CharacterAssets';
 import { spriteScale } from '../rendering/rig';
+import { contactPilotMove } from './chargePilot';
+import { expandedPilotMove } from './expandedPilot';
+import { bitePilotMove, alignCloseBite } from './bitePilot';
+import { newReaction, stepReaction, type Contact } from './partContact';
 import {
   hasChannel,
   sampleChannel,
@@ -99,6 +103,10 @@ export class Fighter {
   onGround = true;
   facing: 1 | -1;
   state: FighterState = 'idle';
+  partContacts = false;
+  poseTime = 0;
+  reaction = newReaction();
+  lastContact: Contact | null = null;
 
   health: number;
   /** 이번 경기의 최대 체력. 도움 설정(1P 1.5배)이 걸리면 baseHealth보다 커진다. */
@@ -136,6 +144,7 @@ export class Fighter {
   heldBy: Fighter | null = null;
   /** 붙잡힌 동안 보이는 기울기(라디안). */
   heldRot = 0;
+  biteAnchor: { part: string; x: number; y: number; dx: number; dy: number } | null = null;
   /** 띄워졌을 때 가로 속도(px/초). */
   vx = 0;
   /** 착지하면 넘어질 프레임(띄우기·던지기 후). */
@@ -198,6 +207,32 @@ export class Fighter {
   }
 
   // --- 판정 상자 ---
+
+  /** Terminal poses must never inherit an attack, hold, guard, or recoil deformation. */
+  finishRound(state: 'down' | 'victory'): void {
+    this.releaseHold();
+    this.heldBy = null; this.biteAnchor = null; this.heldRot = 0;
+    this.attack = null; this.scriptVisual = null; this.ghosts = [];
+    this.reaction = newReaction(); this.lastContact = null;
+    this.hitstunFrames = this.hitstopFrames = this.invulnFrames = this.specialFlashFrames = 0;
+    this.kbFrames = this.kbPerFrame = this.vx = this.vy = 0;
+    this.pendingKnockdown = this.fallenFrames = this.fallenTotal = this.airTumble = this.stunFrames = this.guardFrames = 0;
+    this.fallStartAngle = 0; this.dashFrames = this.leapFrames = this.leapPerFrame = 0;
+    this.bufferedAttack = null; this.bufferFrames = 0;
+    this.inputLeft = this.inputRight = this.inputUp = this.inputUpHeld = this.inputDown = false;
+    this.gliding = false; this.poseTime = 0;
+    this.y = Math.min(0, this.y); this.onGround = this.y === 0;
+    this.state = state;
+  }
+
+  /** Continue gravity after combat stops; no input or attacks run during this descent. */
+  settleAfterRound(dt: number): void {
+    if (this.state !== 'down' && this.state !== 'victory') return;
+    if (this.onGround) { this.y = 0; this.vy = 0; return; }
+    this.vy += GRAVITY * dt;
+    this.y = Math.min(0, this.y + this.vy * dt);
+    if (this.y === 0) { this.onGround = true; this.vy = 0; this.landedThisStep = true; }
+  }
 
   private get masterBox() {
     const rig = this.assets.rig;
@@ -397,6 +432,8 @@ export class Fighter {
     }
 
     this.updateGhosts();
+    this.poseTime += dt;
+    stepReaction(this.reaction, dt);
 
     // 붙잡힌 동안 위치는 잡은 쪽(Match)이 정한다.
     if (this.state === 'held') {
@@ -546,6 +583,7 @@ export class Fighter {
     this.holding = null;
     if (!target) return;
     target.heldBy = null;
+    target.biteAnchor = null;
     target.heldRot = 0;
     if (target.state === 'held') {
       target.state = 'hit';
@@ -622,6 +660,10 @@ export class Fighter {
   }
 
   resetForRound(x: number, facing: 1 | -1): void {
+    this.biteAnchor = null;
+    this.reaction = newReaction();
+    this.lastContact = null;
+    this.poseTime = 0;
     this.x = x;
     this.y = 0;
     this.vy = 0;
@@ -742,7 +784,10 @@ export class Fighter {
       return false;
     }
 
-    const move = this.moves[kind];
+    let move = this.partContacts ? expandedPilotMove(contactPilotMove(this.moves[kind])) : this.moves[kind];
+    if (this.partContacts && this.assets.parts?.rig.parts.backing) {
+      move = alignCloseBite(bitePilotMove(move), this.opponent ? Math.abs(this.opponent.x-this.x) : 540);
+    }
     // 대시 중 공격: 대시는 끝내고 남은 기세는 기술 내딛기에 맡긴다.
     this.dashFrames = 0;
     this.attack = { move, attackId: nextAttackId++, frame: 0, hitTargets: new Set() };

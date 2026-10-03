@@ -1,0 +1,236 @@
+[
+  {
+    "id": "tyrannosaurus",
+    "state": "down",
+    "archive": "5153320_2_dino_reaction_poses.zip",
+    "entry": "trex_down_2048x1536.png",
+    "sha256": "20967f1a6407d8715d1ef78a096b959284110ed4524d8c8b98cc27769079f2c7",
+    "box": [
+      30,
+      764,
+      2025,
+      1280
+    ]
+  },
+  {
+    "id": "tyrannosaurus",
+    "state": "victory",
+    "archive": "5238146_0_dino_win_fix_v1.zip",
+    "entry": "trex_victory_2048x1536.png",
+    "sha256": "5aaf74e3a7c8cd0e60dd255dd4041f925da03ce5cf52e12285038cb0a4302310",
+    "box": [
+      208,
+      20,
+      1832,
+      1280
+    ]
+  },
+  {
+    "id": "triceratops",
+    "state": "down",
+    "archive": "5153320_2_dino_reaction_poses.zip",
+    "entry": "trike_down_2048x1536.png",
+    "sha256": "8297128ed137d4cad589c80d187aeffa55bedb772158b525d2ec2b638387ddb2",
+    "box": [
+      122,
+      556,
+      1925,
+      1280
+    ]
+  },
+  {
+    "id": "triceratops",
+    "state": "victory",
+    "archive": "5238146_0_dino_win_fix_v1.zip",
+    "entry": "trike_win_2048x1536.png",
+    "sha256": "db6d17bbd03a5b2db39e708c90f280319a8562120c5f2028cfa87a8987c7e97d",
+    "box": [
+      234,
+      20,
+      1812,
+      1280
+    ]
+  },
+  {
+    "id": "velociraptor",
+    "state": "down",
+    "archive": "5153320_2_dino_reaction_poses.zip",
+    "entry": "velo_down_2048x1536.png",
+    "sha256": "4396a517c1edc1ee03ceda28f32452c5dab2051a6a50228b9ebd3ee97484acef",
+    "box": [
+      344,
+      852,
+      1703,
+      1280
+    ]
+  },
+  {
+    "id": "spinosaurus",
+    "state": "down",
+    "archive": "5153320_2_dino_reaction_poses.zip",
+    "entry": "spino_down_2048x1536.png",
+    "sha256": "c16967d08f9890354386aa217fd1ee5fbae02c7f12d73a9d0c73d6b858e89f1d",
+    "box": [
+      72,
+      688,
+      1975,
+      1280
+    ]
+  },
+  {
+    "id": "spinosaurus",
+    "state": "victory",
+    "archive": "5168871_1_dino_v2_poses_fix6.zip",
+    "entry": "spino_win_2048x1536.png",
+    "sha256": "506ec3799bfd9b786070a60dbcd46768c4d1c5a3c8488de742cdc4a87dbd778e",
+    "box": [
+      20,
+      177,
+      2028,
+      1281
+    ]
+  },
+  {
+    "id": "ankylosaurus",
+    "state": "down",
+    "archive": "5153320_2_dino_reaction_poses.zip",
+    "entry": "anky_down_2048x1536.png",
+    "sha256": "9a9c27d0cbd2e48a485a9dfaee5764b651b02136061beb81446ec035615dad9c",
+    "box": [
+      72,
+      736,
+      1976,
+      1280
+    ]
+  },
+  {
+    "id": "stegosaurus",
+    "state": "down",
+    "archive": "5153320_2_dino_reaction_poses.zip",
+    "entry": "stego_down_2048x1536.png",
+    "sha256": "65c677f775644110f86f5f1d9d18bf31b53e10d1b53f493f4b82da129f09bfba",
+    "box": [
+      70,
+      436,
+      1977,
+      1280
+    ]
+  },
+  {
+    "id": "carnotaurus",
+    "state": "down",
+    "archive": "5153320_2_dino_reaction_poses.zip",
+    "entry": "carno_down_2048x1536.png",
+    "sha256": "37b37ee179067fb1829d7ba3310b5e912d933f406b72c2705a87e553b0c81c40",
+    "box": [
+      249,
+      824,
+      1799,
+      1280
+    ]
+  },
+  {
+    "id": "carnotaurus",
+    "state": "victory",
+    "archive": "5168871_1_dino_v2_poses_fix6.zip",
+    "entry": "carno_win_2048x1536.png",
+    "sha256": "c72d1c1bda0f3b03f494c5025395b74010c969dee60e8ac423d4696a74c65d12",
+    "box": [
+      236,
+      72,
+      1811,
+      1281
+    ]
+  },
+  {
+    "id": "pachycephalosaurus",
+    "state": "down",
+    "archive": "5153320_2_dino_reaction_poses.zip",
+    "entry": "pachy_down_2048x1536.png",
+    "sha256": "fda1dc33f1526a9d93c4a98ef9be27d31f2f9dde72d4d662c2754e30e4851d0a",
+    "box": [
+      281,
+      887,
+      1767,
+      1280
+    ]
+  },
+  {
+    "id": "therizinosaurus",
+    "state": "down",
+    "archive": "5153320_2_dino_reaction_poses.zip",
+    "entry": "theri_down_2048x1536.png",
+    "sha256": "efc9d764bba8f4955f06de4f9741d905ec560de9911aabd82658b34cde5ba696",
+    "box": [
+      320,
+      887,
+      1728,
+      1280
+    ]
+  },
+  {
+    "id": "dilophosaurus",
+    "state": "down",
+    "archive": "5153320_2_dino_reaction_poses.zip",
+    "entry": "dilo_down_2048x1536.png",
+    "sha256": "ea2f4802334e54ab57c271e511de385e9c68cf11420514b2fd5a794ac93ac0c9",
+    "box": [
+      359,
+      987,
+      1689,
+      1280
+    ]
+  },
+  {
+    "id": "dilophosaurus",
+    "state": "victory",
+    "archive": "5168871_1_dino_v2_poses_fix6.zip",
+    "entry": "dilo_win_2048x1536.png",
+    "sha256": "4f32d9f3716aeb4812f14c3eb827d23c5a4829580b9f333098749c7eebbdccef",
+    "box": [
+      354,
+      172,
+      1695,
+      1281
+    ]
+  },
+  {
+    "id": "brachiosaurus",
+    "state": "down",
+    "archive": "5153320_2_dino_reaction_poses.zip",
+    "entry": "brachio_down_2048x1536.png",
+    "sha256": "0eae91769ee717c2af1c5b961b7b9cd6bbe6215d70087ee4e272f61eb5655112",
+    "box": [
+      239,
+      823,
+      1808,
+      1280
+    ]
+  },
+  {
+    "id": "brachiosaurus",
+    "state": "victory",
+    "archive": "5168871_1_dino_v2_poses_fix6.zip",
+    "entry": "brachio_win_2048x1536.png",
+    "sha256": "623bb58e15bd5f0135deece2ce1f18336abf13e7f56755abea44c4cf975db9f7",
+    "box": [
+      304,
+      141,
+      1743,
+      1281
+    ]
+  },
+  {
+    "id": "pteranodon",
+    "state": "down",
+    "archive": "5153320_2_dino_reaction_poses.zip",
+    "entry": "ptera_down_2048x1536.png",
+    "sha256": "c2fad49804f977f258ac844d4c6cfeec95752e8a11add968b2e390b976a79bd9",
+    "box": [
+      682,
+      1061,
+      1365,
+      1280
+    ]
+  }
+]

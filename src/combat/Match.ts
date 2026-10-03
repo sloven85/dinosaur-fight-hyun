@@ -28,6 +28,9 @@ import type { PlayerIndex } from '../input/InputManager';
 import { emptyAssets, type CharacterAssets } from '../rendering/CharacterAssets';
 import { Fighter, NULL_INPUT, type FighterInput } from './Fighter';
 import { rectsOverlap, type AttackKind, type MoveData, type Rect } from './types';
+import { pilotChargePreparing } from './chargePilot';
+import { contactPose, supportsContact, expandedContact, integratedBite, findContact, react, rectContact, sweptRectContact, circleBounds, type ContactPose, type Contact, type BodyRegion } from './partContact';
+import { applyAffine } from '../rendering/partRig';
 
 /** 맞을 때 최소로 밀려나는 거리(px). 넉백이 0인 다단히트(벨로키 왕복 등)도 조금씩 밀린다. */
 const MIN_PUSH: Record<string, number> = { light: 40, heavy: 70, special: 100 };
@@ -80,6 +83,8 @@ export interface MatchEvent {
   player: PlayerIndex;
   /** 때린 쪽 종 id(종별 타격 불꽃 색, 특수기 컷인). */
   attackerId?: string;
+  region?: BodyRegion;
+  part?: string;
 }
 
 /** 특수기 컷인 동안 경기를 멈추는 프레임(0.6초). */
@@ -92,6 +97,8 @@ export interface MatchOptions {
   random?: () => number;
   /** 특수기 컷인 동안 경기를 멈출지(화면에서만 켠다. 규칙 테스트는 끈 채로 프레임을 센다). */
   specialCutin?: boolean;
+  /** Opt-in two-species pilot; production/legacy behavior stays unchanged until review. */
+  partContacts?: boolean;
 }
 
 interface HitEvent {
@@ -126,6 +133,9 @@ export class Match {
   private readonly cpu: AIController | null;
   /** 아직 화면이 소비하지 않은 연출 이벤트. */
   private events: MatchEvent[] = [];
+  private previousPoses = new Map<Fighter, ContactPose>();
+  private previousFacing = new Map<Fighter, number>();
+  private contacts = new Map<Fighter, Contact>();
   /** 남은 특수기 컷인 프레임(0이면 없음)과 발동한 쪽. */
   cutinFrames = 0;
   cutinPlayer: PlayerIndex = 0;
@@ -153,6 +163,7 @@ export class Match {
       new Fighter(1, characterIds[1], START_X_P2, -1, assets[1]),
     ];
     this.fighters[0].opponent = this.fighters[1];
+    for (const fighter of this.fighters) fighter.partContacts = options.partContacts === true;
     this.fighters[1].opponent = this.fighters[0];
     // 동일 캐릭터일 때만 2P에 보조색을 적용해 구분한다.
     this.fighters[1].useAlternatePalette = this.mirrorMatch;
@@ -224,6 +235,12 @@ export class Match {
         break;
 
       case 'fight':
+        this.contacts.clear();
+        this.previousPoses.clear();
+        for (const fighter of this.fighters) if (supportsContact(fighter)) {
+          this.previousPoses.set(fighter, contactPose(fighter));
+          this.previousFacing.set(fighter, fighter.facing);
+        }
         // 특수기 컷인: 화면이 어두워지고 초상이 지나가는 동안 경기를 멈춘다.
         if (this.cutinFrames > 0) {
           this.cutinFrames -= 1;
@@ -253,7 +270,8 @@ export class Match {
         break;
 
       case 'roundOver':
-        if (this.phaseFrames >= ROUND_OVER_FRAMES) this.advanceAfterRound();
+        for (const fighter of this.fighters) fighter.settleAfterRound(dt);
+        if (this.phaseFrames >= ROUND_OVER_FRAMES && this.fighters.every(f=>f.onGround)) this.advanceAfterRound();
         break;
 
       case 'matchOver':
@@ -298,15 +316,15 @@ export class Match {
 
     if (winner === null) {
       // 무승부는 승수를 올리지 않고 재라운드한다(계획서 2절).
-      this.p1.state = 'down';
-      this.p2.state = 'down';
+      this.p1.finishRound('down');
+      this.p2.finishRound('down');
       this.pushKoEvent(this.p1);
       this.pushKoEvent(this.p2);
     } else {
       this.fighters[winner].roundWins += 1;
-      this.fighters[winner].state = 'victory';
+      this.fighters[winner].finishRound('victory');
       const loser = this.fighters[1 - winner];
-      loser.state = 'down';
+      loser.finishRound('down');
       // 프롬프트 6: KO 뒤 쓰러진 캐릭터에 별이 돈다.
       this.pushKoEvent(loser);
     }
@@ -357,11 +375,11 @@ export class Match {
   private separate(): void {
     const [a, b] = this.fighters;
     // 잡기 중이거나 상대를 통과하는 기술(왕복)은 밀어내지 않는다.
-    if (a.holding || b.holding || a.activeScript?.passThrough || b.activeScript?.passThrough) return;
+    if (a.holding || b.holding || (a.activeScript?.passThrough && !pilotChargePreparing(a)) || (b.activeScript?.passThrough && !pilotChargePreparing(b))) return;
     if (a.isIntangible() || b.isIntangible()) return;
     // 넘어진 상대는 넘어갈 수 있다(쓰러진 위로 지나가기).
     if (a.state === 'fallen' || b.state === 'fallen') return;
-    const minGap = (a.bodyWidth + b.bodyWidth) / 2;
+    const minGap = (this.pushWidth(a) + this.pushWidth(b)) / 2;
     const gap = Math.abs(a.x - b.x);
     if (gap >= minGap) return;
 
@@ -375,6 +393,43 @@ export class Match {
     }
     a.clampToArena();
     b.clampToArena();
+    // Transfer unresolved separation to the free fighter when the other is against a wall.
+    const remaining = supportsContact(a) && supportsContact(b) ? minGap - Math.abs(a.x - b.x) : 0;
+    if (remaining > 0.01) {
+      const sign = a.x <= b.x ? -1 : 1;
+      a.x += sign * remaining; a.clampToArena();
+      const rest = minGap - Math.abs(a.x - b.x);
+      if (rest > 0) { b.x -= sign * rest; b.clampToArena(); }
+    }
+  }
+
+  pushWidth(f: Fighter): number { return supportsContact(f) ? f.data.displayHeight * 0.42 : f.bodyWidth; }
+
+  /** AABB candidate rejection only; a part sweep is always required for a pilot hit. */
+  private touching(attacker: Fighter, defender: Fighter, legacy: Rect, groundArea = false): boolean {
+    if (!supportsContact(attacker) || !supportsContact(defender)) return rectsOverlap(legacy, defender.hurtbox());
+    const a = contactPose(attacker), b = contactPose(defender);
+    // Quakes are authored ground areas, not foot-to-body strikes. Preserve their range.
+    if (groundArea) {
+      const contact = rectContact(legacy, b.hurt, attacker.facing);
+      if (contact) this.contacts.set(defender, contact);
+      return !!contact;
+    }
+    const previousA = this.previousFacing.get(attacker) === attacker.facing ? this.previousPoses.get(attacker) ?? a : a;
+    const previousB = this.previousFacing.get(defender) === defender.facing ? this.previousPoses.get(defender) ?? b : b;
+    // Replacement-flight art and instantaneous sx flips aren't continuous swept motion.
+    const continuous = (old: ContactPose, now: ContactPose): boolean =>
+      old.hurt.length === now.hurt.length && old.hurt[0]?.part === now.hurt[0]?.part &&
+      Math.sign(old.stage[0]*old.stage[3]-old.stage[1]*old.stage[2]) === Math.sign(now.stage[0]*now.stage[3]-now.stage[1]*now.stage[2]);
+    const oldA = continuous(previousA,a) && previousA.weapon.length===a.weapon.length ? previousA : a;
+    const oldB = continuous(previousB,b) ? previousB : b;
+    if (!rectsOverlap(circleBounds([...a.weapon, ...oldA.weapon]), circleBounds([...b.hurt, ...oldB.hurt]))) return false;
+    const contact = integratedBite(attacker)
+      ? findContact(a.weapon, b.hurt, a.weapon, b.hurt, attacker.facing)
+      : findContact(a.weapon, b.hurt, oldA.weapon, oldB.hurt, attacker.facing);
+    if (!contact) return false;
+    this.contacts.set(defender, contact);
+    return true;
   }
 
   /** 동일 틱의 양쪽 타격을 모아 함께 해결한다(계획서 16절 프롬프트 2). */
@@ -393,7 +448,8 @@ export class Match {
       const hitboxes = attacker.activeHitboxes();
       if (hitboxes.length === 0) continue;
       const hurtbox = defender.hurtbox();
-      if (!hitboxes.some((box) => rectsOverlap(box, hurtbox))) continue;
+      if (!hitboxes.some((box) => supportsContact(attacker) && supportsContact(defender)
+        ? this.touching(attacker, defender, box) : rectsOverlap(box, hurtbox))) continue;
 
       attacker.attack.hitTargets.add(defender.player);
       events.push({
@@ -482,6 +538,32 @@ export class Match {
         continue;
       }
       const hold = holder.holdOffset();
+      if (integratedBite(holder) && target.biteAnchor) {
+        const anchor = target.biteAnchor;
+        const mouth = contactPose(holder).mouth;
+        const m = contactPose(target).matrices[anchor.part];
+        const [x, y] = applyAffine(m, anchor.x, anchor.y);
+        // Preserve the captured point's offset: no snap on acquisition, no center/radius re-fit.
+        target.x += mouth.x + anchor.dx - x;
+        target.y += mouth.y + anchor.dy - y;
+        target.onGround = target.y >= 0;
+        target.vy = 0;
+        continue;
+      }
+      if (supportsContact(holder) && supportsContact(target) && !expandedContact(holder)) {
+        // Carry from the actual jaw/horn, not the master silhouette's front edge.
+        target.heldRot = hold.rot;
+        const weapon = contactPose(holder).weapon[0];
+        const regions = contactPose(target).hurt;
+        const anchor = regions.find(c => c.part === target.lastContact?.part) ?? regions[0];
+        const dx = weapon.x - anchor.x, dy = weapon.y - anchor.y;
+        const length = Math.hypot(dx, dy) || 1;
+        target.x += dx - dx / length * anchor.r;
+        target.y = Math.min(0, target.y + dy - dy / length * anchor.r);
+        target.onGround = target.y >= 0;
+        target.vy = 0;
+        continue;
+      }
       target.x = holder.x + holder.facing * (holder.bodyFront + hold.x);
       target.y = Math.min(0, holder.y + hold.y);
       target.onGround = target.y >= 0;
@@ -539,8 +621,9 @@ export class Match {
         const touch =
           this.canBeTouched(defender) &&
           defender.state !== 'held' &&
-          rectsOverlap(this.scriptBoxRect(attacker, grab.box), defender.hurtbox());
+          this.touching(attacker, defender, this.scriptBoxRect(attacker, grab.box));
         if (touch) {
+          if (supportsContact(defender)) defender.lastContact = this.contacts.get(defender) ?? null;
           run.grabResolved = true;
           run.grabbed = true;
           defender.releaseHold();
@@ -548,8 +631,16 @@ export class Match {
           defender.scriptVisual = null;
           defender.state = 'held';
           defender.heldBy = attacker;
+          if (integratedBite(attacker)) {
+            const c = this.contacts.get(defender)!;
+            const pose = contactPose(defender), m = pose.matrices[c.part];
+            const dx = c.x - m[4], dy = c.y - m[5], det = m[0] * m[3] - m[1] * m[2];
+            const mouth = contactPose(attacker).mouth;
+            defender.biteAnchor = { part: c.part, x: (m[3] * dx - m[2] * dy) / det,
+              y: (-m[1] * dx + m[0] * dy) / det, dx: c.x - mouth.x, dy: c.y - mouth.y };
+          }
           attacker.holding = defender;
-          if (grab.success !== undefined) attack.frame = grab.success;
+          if (grab.success !== undefined && !integratedBite(attacker)) attack.frame = grab.success;
           attacker.applyScriptFrame();
           this.updateHeld();
           this.pushFx(attacker, 'dust', 1);
@@ -568,6 +659,10 @@ export class Match {
         if (run.landed.has(index) || f < hit.from || f > hit.to) return;
         if (hit.target === 'held') {
           if (attacker.holding === defender) {
+            if (supportsContact(attacker) && defender.lastContact) {
+              const weapon = contactPose(attacker).weapon[0];
+              this.contacts.set(defender, { ...defender.lastContact, x: weapon.x, y: weapon.y, direction: attacker.facing });
+            }
             run.landed.add(index);
             this.applyDamage(attacker, defender, hit, attack.move.kind, false, attacker.facing, true);
           }
@@ -575,11 +670,11 @@ export class Match {
         }
         if (!hit.box || !this.canBeTouched(defender, hit.otg) || defender.state === 'held') return;
         if (hit.groundOnly && !defender.onGround) return;
-        if (!rectsOverlap(this.scriptBoxRect(attacker, hit.box), defender.hurtbox())) return;
+        if (!this.touching(attacker, defender, this.scriptBoxRect(attacker, hit.box), !!hit.groundOnly)) return;
         run.landed.add(index);
         const guarded = !hit.unguardable && defender.isGuarding(attacker, hit.level ?? 'mid');
         // 밀려나는 방향은 '공격자에게서 멀어지는 쪽'(뒤돌아 꼬리로 칠 때도 맞다).
-        const away: 1 | -1 = defender.x >= attacker.x ? 1 : -1;
+        const away: 1 | -1 = this.contacts.get(defender)?.direction ?? (defender.x >= attacker.x ? 1 : -1);
         this.applyDamage(attacker, defender, hit, attack.move.kind, guarded, away, false);
       });
 
@@ -610,12 +705,21 @@ export class Match {
               spec: event,
               facing: run.startFacing,
             });
+            if (supportsContact(attacker) && !expandedContact(attacker) && event.at !== 'opponent') {
+              const mouth = contactPose(attacker).weapon[0];
+              const projectile = this.projectiles[this.projectiles.length - 1];
+              projectile.x = mouth.x; projectile.y = mouth.y;
+            }
             break;
           case 'throw': {
             const target = attacker.holding;
             if (!target) break;
+            if (supportsContact(attacker) && target.lastContact) {
+              const weapon = contactPose(attacker).weapon[0];
+              this.contacts.set(target, { ...target.lastContact, x: weapon.x, y: weapon.y });
+            }
             attacker.releaseHold();
-            if (event.behind) {
+            if (event.behind && !supportsContact(attacker)) {
               target.x = attacker.x - attacker.facing * (attacker.bodyWidth * 0.5);
             }
             const dir = event.behind ? -attacker.facing : attacker.facing;
@@ -664,6 +768,7 @@ export class Match {
   private stepProjectiles(dt: number): void {
     const alive: Projectile[] = [];
     for (const p of this.projectiles) {
+      const previousX = p.x, previousY = p.y;
       p.life -= dt;
       p.vy += p.gravity * dt;
       p.x += p.vx * dt;
@@ -683,14 +788,20 @@ export class Match {
         top: p.y - (p.spec.h * grow) / 2,
         bottom: p.y + (p.spec.h * grow) / 2,
       };
+      const regions = supportsContact(target) ? contactPose(target).hurt : null;
+      const projectileContact = regions ? sweptRectContact({
+        left: box.left + previousX - p.x, right: box.right + previousX - p.x,
+        top: box.top + previousY - p.y, bottom: box.bottom + previousY - p.y,
+      }, box, regions, this.previousPoses.get(target)?.hurt ?? regions, p.facing) : null;
       if (
         !p.spec.harmless &&
         !p.spent &&
         this.canBeTouched(target, p.spec.otg) &&
         target.state !== 'held' &&
         !(p.spec.groundOnly && !target.onGround) &&
-        rectsOverlap(box, target.hurtbox())
+        (regions ? !!projectileContact : rectsOverlap(box, target.hurtbox()))
       ) {
+        if (projectileContact) this.contacts.set(target, projectileContact);
         const guarded = !p.spec.unguardable && target.isGuarding(owner, p.spec.level ?? 'mid');
         this.applyDamage(owner, target, p.spec, p.kind, guarded, p.facing, false, p.x, p.attackId);
         if (!p.spec.pierce) continue;
@@ -717,6 +828,8 @@ export class Match {
     sourceAttackId?: number,
   ): void {
     if (!held && this.counterHit(attacker, defender)) return;
+    const contact = this.contacts.get(defender);
+    if (contact && !guarded && supportsContact(defender)) react(defender, contact);
     let damage = hit.damage * attacker.data.damageScale;
     if (guarded) damage *= moveKind === 'special' ? GUARD_DAMAGE_SPECIAL_RATIO : 0;
     damage = Math.round(damage);
@@ -759,7 +872,7 @@ export class Match {
         const push = Math.max(hit.knockback, MIN_PUSH[hit.fx ?? moveKind] ?? 40);
         defender.kbPerFrame = (direction * push) / KNOCKBACK_FRAMES;
         defender.kbFrames = hit.launch ? 0 : KNOCKBACK_FRAMES;
-        if (!hit.launch && !attacker.holding && attacker.onGround) {
+        if (!supportsContact(attacker) && !hit.launch && !attacker.holding && attacker.onGround) {
           const follow = direction * push * FOLLOW_RATIO;
           // 스크립트 기술은 위치를 시작점 기준으로 다시 계산하므로 시작점을 옮겨 따라 들어가게 한다.
           if (attacker.attack?.script) attacker.attack.script.startX += follow;
@@ -795,10 +908,13 @@ export class Match {
     direction: 1 | -1,
     atX?: number,
   ): void {
+    const contact = this.contacts.get(defender);
     this.events.push({
       type: guarded ? 'guard' : 'hit',
-      x: atX ?? (attacker.x + defender.x) / 2,
-      y: defender.y - defender.bodyHeight * 0.55,
+      x: contact?.x ?? atX ?? (attacker.x + defender.x) / 2,
+      y: contact?.y ?? defender.y - defender.bodyHeight * 0.55,
+      region: contact?.region,
+      part: contact?.part,
       direction,
       kind,
       player: defender.player,
