@@ -207,9 +207,11 @@ export class Fighter {
   }
 
   // --- 판정 상자 ---
+  groundOffset = 0;
 
   /** Terminal poses must never inherit an attack, hold, guard, or recoil deformation. */
   finishRound(state: 'down' | 'victory'): void {
+    this.groundOffset = 0;
     this.releaseHold();
     this.heldBy = null; this.biteAnchor = null; this.heldRot = 0;
     this.attack = null; this.scriptVisual = null; this.ghosts = [];

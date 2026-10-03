@@ -31,6 +31,7 @@ import { rectsOverlap, type AttackKind, type MoveData, type Rect } from './types
 import { pilotChargePreparing } from './chargePilot';
 import { contactPose, supportsContact, expandedContact, integratedBite, findContact, react, rectContact, sweptRectContact, circleBounds, type ContactPose, type Contact, type BodyRegion } from './partContact';
 import { applyAffine } from '../rendering/partRig';
+import { updateGroundSupport } from './groundSupport';
 
 /** 맞을 때 최소로 밀려나는 거리(px). 넉백이 0인 다단히트(벨로키 왕복 등)도 조금씩 밀린다. */
 const MIN_PUSH: Record<string, number> = { light: 40, heavy: 70, special: 100 };
@@ -251,6 +252,7 @@ export class Match {
         for (const fighter of this.fighters) {
           const wasAttacking = fighter.attack?.attackId;
           fighter.step(this.inputFor(fighter.player, input), dt);
+          if(supportsContact(fighter))updateGroundSupport(fighter,contactPose(fighter,false).matrices);
           if (fighter.attack && fighter.attack.attackId !== wasAttacking && fighter.attack.move.kind === 'special') {
             if (this.specialCutin) this.cutinFrames = SPECIAL_CUTIN_FRAMES;
             this.cutinPlayer = fighter.player;

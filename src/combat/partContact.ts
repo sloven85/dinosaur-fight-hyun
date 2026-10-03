@@ -4,6 +4,7 @@ import { spriteScale } from '../rendering/rig';
 import type { Rect } from './types';
 import { CONTACT_PROFILES, weaponParts } from './contactProfiles';
 import footContours from '../data/contactFeet.json';
+import { canGroundSupport, supportBottom } from './groundSupport';
 
 export type BodyRegion = 'head' | 'torso' | 'leg' | 'tail';
 export interface Circle { x: number; y: number; r: number }
@@ -77,7 +78,7 @@ const translate = (x: number, y: number): Affine => [1, 0, 0, 1, x, y];
 const clamp = (v: number, n: number): number => Math.max(-n, Math.min(n, v));
 
 /** Single authoritative pose used by both canvas drawing and collision at simulation time. */
-export function contactPose(f: Fighter): ContactPose {
+export function contactPose(f: Fighter, withSupport = true): ContactPose {
   const rig = f.assets.parts!.rig;
   const master = f.assets.rig!;
   const scale = spriteScale(f.data.displayHeight, master.master.box);
@@ -143,6 +144,12 @@ export function contactPose(f: Fighter): ContactPose {
       m[2] += cx; m[3] += cy; m[4] -= cx * py; m[5] -= cy * py;
     }
   }
+  // A retained offset must never push a newly switched pose farther from the floor.
+  const desired=canGroundSupport(f)?-supportBottom(f.data.id,matrices):0;
+  const groundOffset=withSupport&&canGroundSupport(f)&&desired*f.groundOffset>0
+    ? Math.sign(desired)*Math.min(Math.abs(desired),Math.abs(f.groundOffset)) : 0;
+  for(const m of Object.values(matrices))m[5]+=groundOffset;
+  body[5]+=groundOffset;
   const circle = (part: string, x: number, y: number, r: number): Circle => {
     const p = rig.parts[part], m = matrices[part];
     const at = applyAffine(m, x - p.offsetX, y - p.offsetY);
