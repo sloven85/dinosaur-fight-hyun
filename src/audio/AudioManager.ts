@@ -163,6 +163,11 @@ export class AudioManager {
     }
   }
 
+  /** Review surface calls this before combat, avoiding first-impact pool allocation. */
+  warmSfx(): void {
+    for(const [id,base] of this.elements)if(trackById(id)?.kind==='sfx')this.sfxElement(id,base);
+  }
+
   playBgm(id: string): void {
     this.currentBgmId = id;
     if (!this.unlocked) return;

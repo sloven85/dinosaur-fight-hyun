@@ -31,6 +31,7 @@ import { rectsOverlap, type AttackKind, type MoveData, type Rect } from './types
 import { pilotChargePreparing } from './chargePilot';
 import { contactPose, supportsContact, expandedContact, integratedBite, findContact, react, rectContact, sweptRectContact, circleBounds, type ContactPose, type Contact, type BodyRegion } from './partContact';
 import { applyAffine } from '../rendering/partRig';
+import { impactStop } from './impactTiming';
 
 /** 맞을 때 최소로 밀려나는 거리(px). 넉백이 0인 다단히트(벨로키 왕복 등)도 조금씩 밀린다. */
 const MIN_PUSH: Record<string, number> = { light: 40, heavy: 70, special: 100 };
@@ -99,6 +100,7 @@ export interface MatchOptions {
   specialCutin?: boolean;
   /** Opt-in two-species pilot; production/legacy behavior stays unchanged until review. */
   partContacts?: boolean;
+  impactTiming?: boolean;
 }
 
 interface HitEvent {
@@ -140,6 +142,7 @@ export class Match {
   cutinFrames = 0;
   cutinPlayer: PlayerIndex = 0;
   private readonly specialCutin: boolean;
+  private readonly impactTiming: boolean;
   /** 지금 날아가는 투사체. */
   projectiles: Projectile[] = [];
 
@@ -155,6 +158,7 @@ export class Match {
     this.mirrorMatch = characterIds[0] === characterIds[1];
     this.difficulty = options.difficulty ?? 'easy';
     this.specialCutin = options.specialCutin === true;
+    this.impactTiming = options.impactTiming === true;
     // 계획서 2절: 도움 설정은 1P 체력 1.5배 + CPU 공격 빈도 감소. 기본값은 꺼짐.
     this.assistActive = this.mode === 'cpu' && options.assist === true;
 
@@ -164,6 +168,7 @@ export class Match {
     ];
     this.fighters[0].opponent = this.fighters[1];
     for (const fighter of this.fighters) fighter.partContacts = options.partContacts === true;
+    for (const fighter of this.fighters) fighter.impactTiming = this.impactTiming;
     this.fighters[1].opponent = this.fighters[0];
     // 동일 캐릭터일 때만 2P에 보조색을 적용해 구분한다.
     this.fighters[1].useAlternatePalette = this.mirrorMatch;
@@ -828,8 +833,17 @@ export class Match {
     sourceAttackId?: number,
   ): void {
     if (!held && this.counterHit(attacker, defender)) return;
+    if(this.impactTiming) hit={...hit,hitstop:impactStop(attacker.data.id,moveKind,hit.hitstop,guarded,held)};
     const contact = this.contacts.get(defender);
-    if (contact && !guarded && supportsContact(defender)) react(defender, contact);
+    if (contact && !guarded && supportsContact(defender)) {
+      react(defender, contact);
+      // Freeze the first recoil pose on the damage frame, not the untouched pose.
+      if(this.impactTiming&&!held){
+        const spring=defender.reaction[contact.region];
+        const amount=moveKind==='light'?1:2;
+        spring.value=Math.max(-3,Math.min(3,spring.value-contact.direction*defender.facing*amount));
+      }
+    }
     let damage = hit.damage * attacker.data.damageScale;
     if (guarded) damage *= moveKind === 'special' ? GUARD_DAMAGE_SPECIAL_RATIO : 0;
     damage = Math.round(damage);

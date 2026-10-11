@@ -207,9 +207,14 @@ export class Fighter {
   }
 
   // --- 판정 상자 ---
+  impactTiming = false;
+  private frozenAttack: AttackKind | null = null;
+  private frozenAge = 0;
 
   /** Terminal poses must never inherit an attack, hold, guard, or recoil deformation. */
   finishRound(state: 'down' | 'victory'): void {
+    this.frozenAttack = null;
+    this.frozenAge = 0;
     this.releaseHold();
     this.heldBy = null; this.biteAnchor = null; this.heldRot = 0;
     this.attack = null; this.scriptVisual = null; this.ghosts = [];
@@ -427,6 +432,14 @@ export class Fighter {
     if (this.state === 'down' || this.state === 'victory') return;
 
     if (this.hitstopFrames > 0) {
+      if (this.impactTiming) {
+        for (const kind of ['light', 'heavy', 'special'] as const) {
+          if (input.isPressed(this.player, kind)) {
+            this.frozenAttack = kind;
+            this.frozenAge = 0;
+          }
+        }
+      }
       this.hitstopFrames -= 1;
       return;
     }
@@ -445,6 +458,12 @@ export class Fighter {
     if (this.specialFlashFrames > 0) this.specialFlashFrames -= 1;
 
     this.readInput(input);
+    if (this.impactTiming && this.frozenAttack) {
+      if (this.canAct()) {
+        this.bufferAttack(this.frozenAttack);
+        this.frozenAttack = null;
+      } else if (++this.frozenAge > 120) this.frozenAttack = null;
+    }
     this.tickBuffer();
 
     if (this.kbFrames > 0) {
@@ -689,6 +708,8 @@ export class Fighter {
     this.bufferedAttack = null;
     this.bufferFrames = 0;
     this.holding = null;
+    this.frozenAttack = null;
+    this.frozenAge = 0;
     this.heldBy = null;
     this.heldRot = 0;
     this.vx = 0;
@@ -724,6 +745,11 @@ export class Fighter {
     this.inputDown = input.isHeld(player, 'down');
     this.readDashTap();
 
+    // A newer press supersedes an older press saved during hitstop.
+    if (this.impactTiming && ['light', 'heavy', 'special'].some(kind => input.isPressed(player, kind as AttackKind))) {
+      this.frozenAttack = null;
+      this.frozenAge = 0;
+    }
     if (input.isPressed(player, 'special')) this.bufferAttack('special');
     else if (input.isPressed(player, 'heavy')) this.bufferAttack('heavy');
     else if (input.isPressed(player, 'light')) this.bufferAttack('light');
