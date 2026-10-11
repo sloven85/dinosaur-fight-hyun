@@ -444,6 +444,12 @@ export class Fighter {
       return;
     }
 
+    // Count only non-stop frames, including held frames. A later hitstop pauses
+    // this age but never renews an old press; only a new press starts a new age.
+    if (this.impactTiming && this.frozenAttack && ++this.frozenAge > 8) {
+      this.frozenAttack = null;
+    }
+
     this.updateGhosts();
     this.poseTime += dt;
     stepReaction(this.reaction, dt);
@@ -462,7 +468,7 @@ export class Fighter {
       if (this.canAct()) {
         this.bufferAttack(this.frozenAttack);
         this.frozenAttack = null;
-      } else if (++this.frozenAge > 120) this.frozenAttack = null;
+      }
     }
     this.tickBuffer();
 

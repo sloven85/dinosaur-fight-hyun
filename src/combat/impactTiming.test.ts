@@ -15,7 +15,7 @@ describe('impact timing review',()=>{
   expect(impactStop('ankylosaurus','heavy',12,true,false)).toBe(3);
  });
  it('one press during stop is retained once and never becomes auto-repeat',()=>{
-  const f=new Fighter(0,'tyrannosaurus',500,1);f.impactTiming=true;f.hitstopFrames=4;f.state='hit';f.hitstunFrames=16;
+   const f=new Fighter(0,'tyrannosaurus',500,1);f.impactTiming=true;f.hitstopFrames=4;f.state='hit';f.hitstunFrames=6;
   f.step({isHeld:()=>false,isPressed:(_,k)=>k==='light'},1/60);
   let previous=0,starts=0;
   for(let i=0;i<200;i++){f.step(NULL_INPUT,1/60);const id=f.attack?.attackId??0;if(id&&id!==previous)starts++;previous=id;}
@@ -27,11 +27,54 @@ describe('impact timing review',()=>{
   f.step({isHeld:()=>false,isPressed:(_,k)=>k==='heavy'},1/60);
   expect(f.attack?.move.kind).toBe('heavy');
  });
+ for (const recovery of [8,9]) it(`only actionable non-stop frame ${recovery} within eight consumes`,()=>{
+  const f=new Fighter(0,'tyrannosaurus',500,1);f.impactTiming=true;f.hitstopFrames=1;f.state='hit';f.hitstunFrames=recovery-1;
+  f.step({isHeld:()=>false,isPressed:(_,k)=>k==='light'},1/60);
+  for(let i=0;i<recovery;i++)f.step(NULL_INPUT,1/60);
+  expect(f.attack?.move.kind??null).toBe(recovery===8?'light':null);
+ });
+ for(const state of ['hit','held'] as const) it(`expires during long ${state} without delayed attack`,()=>{
+  const f=new Fighter(0,'tyrannosaurus',500,1);f.impactTiming=true;f.hitstopFrames=1;f.state=state;f.hitstunFrames=30;
+  f.step({isHeld:()=>false,isPressed:(_,k)=>k==='light'},1/60);
+  for(let i=0;i<40;i++)f.step(NULL_INPUT,1/60);
+  f.state='idle';f.step(NULL_INPUT,1/60);expect(f.attack).toBeNull();
+ });
+ it('another hitstop pauses but does not restart old input age',()=>{
+  const f=new Fighter(0,'tyrannosaurus',500,1);f.impactTiming=true;f.hitstopFrames=1;f.state='hit';f.hitstunFrames=8;
+  f.step({isHeld:()=>false,isPressed:(_,k)=>k==='light'},1/60);
+  for(let i=0;i<7;i++)f.step(NULL_INPUT,1/60);
+  f.hitstopFrames=10;for(let i=0;i<10;i++)f.step(NULL_INPUT,1/60);
+  f.step(NULL_INPUT,1/60);f.step(NULL_INPUT,1/60);expect(f.attack).toBeNull();
+ });
+ it('latest press just before expiry replaces the old input',()=>{
+  const f=new Fighter(0,'tyrannosaurus',500,1);f.impactTiming=true;f.hitstopFrames=1;f.state='hit';f.hitstunFrames=8;
+  f.step({isHeld:()=>false,isPressed:(_,k)=>k==='light'},1/60);
+  for(let i=0;i<7;i++)f.step(NULL_INPUT,1/60);
+  f.hitstopFrames=1;f.step({isHeld:()=>false,isPressed:(_,k)=>k==='heavy'},1/60);
+  f.step(NULL_INPUT,1/60);f.step(NULL_INPUT,1/60);expect(f.attack?.move.kind).toBe('heavy');
+ });
+ it('holding a button never renews or repeats a press',()=>{
+  const f=new Fighter(0,'tyrannosaurus',500,1);f.impactTiming=true;f.hitstopFrames=1;
+  f.step({isHeld:()=>true,isPressed:(_,k)=>k==='light'},1/60);
+  let starts=0,previous=0;
+  for(let i=0;i<240;i++){f.step({isHeld:(_,k)=>k==='light',isPressed:()=>false},1/60);const id=f.attack?.attackId??0;if(id&&id!==previous)starts++;previous=id;}
+  expect(starts).toBe(1);
+ });
  it('round reset clears the saved press',()=>{
   const f=new Fighter(0,'tyrannosaurus',500,1);f.impactTiming=true;f.hitstopFrames=1;
   f.step({isHeld:()=>false,isPressed:(_,k)=>k==='light'},1/60);
   f.resetForRound(500,1);f.step(NULL_INPUT,1/60);
   expect(f.attack).toBeNull();
+ });
+ it('standing guard produces guard events, distinct from a crouching miss',()=>{
+  const m=new Match('versus',['tyrannosaurus','triceratops'],[load('tyrannosaurus'),load('triceratops')],{partContacts:true,impactTiming:true});
+  m.phase='fight';m.p1.x=500;m.p2.x=800;const hp=m.p2.health;const events=[];
+  for(let i=0;i<150;i++){
+   m.step({isHeld:(p,k)=>p===1&&k==='right',isPressed:(p,k)=>p===0&&i===0&&k==='light'},1/60);
+   events.push(...m.consumeEvents());
+  }
+  expect(events.filter(e=>e.type==='guard')).toHaveLength(2);
+  expect(events.some(e=>e.type==='hit')).toBe(false);expect(m.p2.health).toBe(hp);
  });
  it('repeated light input does not leave permanent stop or stun after input ceases',()=>{
   const m=new Match('versus',['tyrannosaurus','triceratops'],[load('tyrannosaurus'),load('triceratops')],{partContacts:true,impactTiming:true});

@@ -101,7 +101,8 @@ export async function startContactLab(canvas: HTMLCanvasElement): Promise<void> 
       for (const e of m.consumeEvents()) if (e.type === 'hit' || e.type === 'guard') {
         const candidate=m===matches[1];const now=performance.now();
         const sfx=candidate&&sfxIdForEvent(e)==='light'?'light_review':sfxIdForEvent(e);
-        if(candidate&&sound)audio.playSfx(sfx);
+        // Review-only headroom for overlapping impacts; public audio is unchanged.
+        if(candidate&&sound)audio.playSfx(sfx, 0.25);
         telemetry.push({tick,candidate,event:e,scriptFrame:m.p1.attack?.frame,stop:m.p1.hitstopFrames,stun:m.p2.hitstunFrames,push:m.p2.kbPerFrame*m.p2.kbFrames,sfx,eventMs:now,audioRequestMs:candidate&&sound?performance.now():null});
         logs.unshift(`${m.p1.partContacts ? '이후' : '이전'}: ${e.region ? labels[e.region] : '전신'} (${e.x.toFixed(1)}, ${e.y.toFixed(1)}) ${e.type}`);
       }
