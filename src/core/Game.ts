@@ -45,6 +45,7 @@ export class Game {
     this.audio = new AudioManager(this.assets.resolve(''), undefined, new Set(AUDIO_FILES));
     this.audio.setVolume(this.settings.value.volume);
     this.audio.preload();
+    this.audio.warmSfx();
     this.installAudioUnlock();
     this.scenes = new SceneManager(this.input, createSession(), this.assets, this.settings, this.audio);
     this.scenes.change(new TitleScene());

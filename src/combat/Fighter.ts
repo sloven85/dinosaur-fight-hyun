@@ -207,9 +207,23 @@ export class Fighter {
   }
 
   // --- 판정 상자 ---
+  impactTiming = false;
+  private frozenAttack: AttackKind | null = null;
+  private frozenAge = 0;
+
+  /** Public-art recoil is visual only: never move roots, hitboxes, or held attachments. */
+  startImpactRecoil(kind: AttackKind, direction: 1 | -1): void {
+    if (!this.impactTiming || this.partContacts) return;
+    const spring = this.reaction.torso;
+    const sign = -direction * this.facing;
+    spring.value = Math.max(-3, Math.min(3, spring.value + sign * (kind === 'light' ? 1 : 2)));
+    spring.velocity = Math.max(-220, Math.min(220, spring.velocity + sign * 200));
+  }
 
   /** Terminal poses must never inherit an attack, hold, guard, or recoil deformation. */
   finishRound(state: 'down' | 'victory'): void {
+    this.frozenAttack = null;
+    this.frozenAge = 0;
     this.releaseHold();
     this.heldBy = null; this.biteAnchor = null; this.heldRot = 0;
     this.attack = null; this.scriptVisual = null; this.ghosts = [];
@@ -427,8 +441,22 @@ export class Fighter {
     if (this.state === 'down' || this.state === 'victory') return;
 
     if (this.hitstopFrames > 0) {
+      if (this.impactTiming) {
+        for (const kind of ['light', 'heavy', 'special'] as const) {
+          if (input.isPressed(this.player, kind)) {
+            this.frozenAttack = kind;
+            this.frozenAge = 0;
+          }
+        }
+      }
       this.hitstopFrames -= 1;
       return;
+    }
+
+    // Count only non-stop frames, including held frames. A later hitstop pauses
+    // this age but never renews an old press; only a new press starts a new age.
+    if (this.impactTiming && this.frozenAttack && ++this.frozenAge > 8) {
+      this.frozenAttack = null;
     }
 
     this.updateGhosts();
@@ -445,6 +473,12 @@ export class Fighter {
     if (this.specialFlashFrames > 0) this.specialFlashFrames -= 1;
 
     this.readInput(input);
+    if (this.impactTiming && this.frozenAttack) {
+      if (this.canAct()) {
+        this.bufferAttack(this.frozenAttack);
+        this.frozenAttack = null;
+      }
+    }
     this.tickBuffer();
 
     if (this.kbFrames > 0) {
@@ -689,6 +723,8 @@ export class Fighter {
     this.bufferedAttack = null;
     this.bufferFrames = 0;
     this.holding = null;
+    this.frozenAttack = null;
+    this.frozenAge = 0;
     this.heldBy = null;
     this.heldRot = 0;
     this.vx = 0;
@@ -724,6 +760,11 @@ export class Fighter {
     this.inputDown = input.isHeld(player, 'down');
     this.readDashTap();
 
+    // A newer press supersedes an older press saved during hitstop.
+    if (this.impactTiming && ['light', 'heavy', 'special'].some(kind => input.isPressed(player, kind as AttackKind))) {
+      this.frozenAttack = null;
+      this.frozenAge = 0;
+    }
     if (input.isPressed(player, 'special')) this.bufferAttack('special');
     else if (input.isPressed(player, 'heavy')) this.bufferAttack('heavy');
     else if (input.isPressed(player, 'light')) this.bufferAttack('light');

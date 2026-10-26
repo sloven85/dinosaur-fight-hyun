@@ -56,6 +56,19 @@ function collectFactory(): { created: FakeAudio[]; factory: (src: string) => Fak
 }
 
 describe('사운드 매니저 (프롬프트 6)', () => {
+  it('review gain applies to all three pooled voices without changing the default', () => {
+    const { created, factory } = collectFactory();
+    const audio = new AudioManager('./', factory);
+    audio.preload();
+    for (const element of created) element.emit('loadeddata');
+    audio.unlock();
+    for (let i = 0; i < 3; i++) audio.playSfx('heavy', 0.25);
+    const played = created.filter(element => element.playCalls > 0);
+    expect(played).toHaveLength(3);
+    for (const element of played) expect(element.volume).toBe(0.2);
+    audio.playSfx('heavy');
+    expect(played[0].volume).toBe(0.8);
+  });
   it('음원이 없으면(null 팩토리) 무음으로 진행하고 예외를 던지지 않는다', () => {
     const audio = new AudioManager('./', () => null);
     audio.preload();

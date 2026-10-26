@@ -32,6 +32,7 @@ export const AUDIO_TRACKS: readonly AudioTrack[] = [
   { id: 'cancel', path: 'assets/audio/sfx/ui_cancel.mp3', kind: 'sfx' },
   { id: 'countdown', path: 'assets/audio/sfx/round_start.mp3', kind: 'sfx' },
   { id: 'light', path: 'assets/audio/sfx/hit_light.mp3', kind: 'sfx' },
+  { id: 'light_review', path: 'assets/audio/sfx/hit_light_review.mp3', kind: 'sfx' },
   { id: 'heavy', path: 'assets/audio/sfx/hit_heavy.mp3', kind: 'sfx' },
   { id: 'guard', path: 'assets/audio/sfx/hit_block.mp3', kind: 'sfx' },
   { id: 'special', path: 'assets/audio/sfx/hit_heavy.mp3', kind: 'sfx' },

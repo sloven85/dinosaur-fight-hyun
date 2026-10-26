@@ -75,7 +75,7 @@ export class BattleScene extends BaseScene {
     this.prevPhase = '';
     this.finishFrames = 0;
     // 다시 하기를 눌러 새 경기를 시작할 때도 저장된 난이도·도움 설정을 그대로 다시 읽는다.
-    const options = { difficulty: settings.difficulty, assist: settings.assist, specialCutin: true, partContacts: contactCandidate() };
+    const options = { difficulty: settings.difficulty, assist: settings.assist, specialCutin: true, partContacts: contactCandidate(), impactTiming: true };
     this.match = this.characterAssets
       ? new Match(session.mode, session.characters, this.characterAssets, options)
       : new Match(session.mode, session.characters, undefined, options);
@@ -219,7 +219,8 @@ export class BattleScene extends BaseScene {
         direction: event.direction,
         attackerId: event.attackerId,
       });
-      this.context.audio.playSfx(sfxIdForEvent(event));
+      const sfx = sfxIdForEvent(event);
+      this.context.audio.playSfx(sfx === 'light' ? 'light_review' : sfx, 0.25);
 
       if (vibration) {
         const special = event.kind === 'special';

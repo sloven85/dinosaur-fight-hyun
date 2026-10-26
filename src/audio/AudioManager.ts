@@ -147,12 +147,12 @@ export class AudioManager {
     return element;
   }
 
-  playSfx(id: string): void {
+  playSfx(id: string, gain = 1): void {
     if (!this.unlocked) return;
     const base = this.elements.get(id);
     if (!base || !this.readyIds.has(id)) return;
     const element = this.sfxElement(id, base);
-    element.volume = this.volumeValue;
+    element.volume = this.volumeValue * Math.min(1, Math.max(0, gain));
     try {
       element.currentTime = 0;
       void Promise.resolve(element.play()).catch(() => {
@@ -161,6 +161,11 @@ export class AudioManager {
     } catch {
       // 재생 실패는 게임 진행을 막지 않는다.
     }
+  }
+
+  /** Allocate pooled voices before combat, avoiding first-impact allocation. */
+  warmSfx(): void {
+    for(const [id,base] of this.elements)if(trackById(id)?.kind==='sfx')this.sfxElement(id,base);
   }
 
   playBgm(id: string): void {

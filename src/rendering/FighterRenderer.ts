@@ -277,6 +277,7 @@ function drawBody(
   const groundLine = canvasYOf(g, groundY);
   g.translate(view.x, feetY);
   if (view.facing === -1) g.scale(-1, 1);
+  applyImpactRecoil(g, fighter);
 
   // 기술별·종별 공격 동작(포즈가 없으면 궤적 전체, 전용 포즈면 약하게 더한다).
   // 파츠 리그가 있는 종도 몸 전체 이동·기울기는 여기서 한 번만 건다. 파츠는 부위 회전만 맡는다
@@ -401,6 +402,13 @@ function drawBody(
 
   g.restore();
   return true;
+}
+
+/** Existing-art recoil only; no ground/geometry/attachment changes. */
+export function applyImpactRecoil(g: CanvasRenderingContext2D, fighter: Fighter): void {
+  if (!fighter.impactTiming || fighter.partContacts || fighter.state === 'held' ||
+      fighter.state === 'down' || fighter.state === 'victory') return;
+  g.translate(-fighter.reaction.torso.value, 0);
 }
 
 /** 스크립트 기술의 기울기·늘이기. 몸 가운데(허리 높이)를 축으로 건다. */

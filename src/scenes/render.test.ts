@@ -1,4 +1,5 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
+import type { Match, MatchEvent } from '../combat/Match';
 import { AudioManager } from '../audio/AudioManager';
 import type { GameContext } from '../core/GameContext';
 import { createSession } from '../core/session';
@@ -82,6 +83,26 @@ const W = 1920;
 const H = 1080;
 
 describe('화면 렌더 스모크 (프롬프트 6)', () => {
+  it('public battle and restart enable timing without enabling contact; impact audio uses reviewed gain', () => {
+    const context = makeContext();
+    const play = vi.spyOn(context.audio, 'playSfx');
+    for (let restart = 0; restart < 2; restart++) {
+      const scene = new BattleScene(); scene.enter(context);
+      const internals = scene as unknown as { match: Match; consumeMatchEvents(y: number, shake: boolean, vibration: boolean): void };
+      expect(internals.match.fighters.every(f => f.impactTiming && !f.partContacts)).toBe(true);
+      const base = { x: 500, y: -100, direction: 1, kind: 'light', player: 1 } as const;
+      vi.spyOn(internals.match, 'consumeEvents').mockReturnValue([
+        { ...base, type: 'hit' }, { ...base, type: 'guard' },
+      ] as MatchEvent[]);
+      internals.consumeMatchEvents(880, false, false);
+      expect(play).toHaveBeenCalledWith('light_review', 0.25);
+      expect(play).toHaveBeenCalledWith('guard', 0.25);
+      play.mockClear();
+      vi.spyOn(internals.match, 'consumeEvents').mockReturnValue([]);
+      internals.consumeMatchEvents(880, false, false);
+      expect(play).not.toHaveBeenCalled();
+    }
+  });
   it('모든 화면이 예외 없이 그려진다', () => {
     const context = makeContext();
     const g = fakeContext();
