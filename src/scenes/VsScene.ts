@@ -4,18 +4,26 @@ import { loadCharacterAssets, type CharacterAssets } from '../rendering/Characte
 import { preloadStages } from '../rendering/stageRenderer';
 import { BaseScene } from './BaseScene';
 import { BattleScene } from './BattleScene';
+import { CharacterSelectScene } from './CharacterSelectScene';
 import { drawText, fillRoundRect } from '../ui/draw';
 import { COLORS, FONTS } from '../ui/theme';
 
 const HOLD_SECONDS = 2.2;
 const VS_BG = 'assets/ui/vs_bg.jpg';
-const LOAD_TIMEOUT_SECONDS = 10;
+const SLOW_LOAD_SECONDS = 10;
+
+/** Match must never receive an empty sprite set after a slow or failed load. */
+function hasDisplayableSprite(assets: CharacterAssets): boolean {
+  return !!(assets.rig?.master.usable && assets.master) ||
+    !!(assets.portrait && assets.rig?.portrait.usable !== false);
+}
 
 /** VS 화면. 이 사이에 두 캐릭터의 스프라이트를 미리 불러온다(계획서 14절 AssetLoader). */
 export class VsScene extends BaseScene {
   private elapsed = 0;
   private characterAssets: [CharacterAssets, CharacterAssets] | null = null;
   private disposed = false;
+  private loadFailed = false;
 
   enter(context: GameContext): void {
     super.enter(context);
@@ -23,6 +31,7 @@ export class VsScene extends BaseScene {
     this.elapsed = 0;
     this.characterAssets = null;
     this.disposed = false;
+    this.loadFailed = false;
     void this.preload(context);
   }
 
@@ -33,17 +42,38 @@ export class VsScene extends BaseScene {
   private async preload(context: GameContext): Promise<void> {
     const [p1, p2] = context.session.characters;
     // 캐릭터와 함께 고른 경기장 배경도 이 화면에서 다 받아 둔다(대전 첫 화면부터 배경이 보이게).
-    const [loaded] = await Promise.all([
-      Promise.all([loadCharacterAssets(context.assets, p1), loadCharacterAssets(context.assets, p2)]),
-      preloadStages(context.assets, [getStage(context.session.stage)]),
-    ]);
-    if (this.disposed) return;
-    this.characterAssets = loaded;
+    try {
+      const [loaded] = await Promise.all([
+        Promise.all([loadCharacterAssets(context.assets, p1), loadCharacterAssets(context.assets, p2)]),
+        preloadStages(context.assets, [getStage(context.session.stage)]),
+      ]);
+      if (this.disposed) return;
+      if (!loaded.every(hasDisplayableSprite)) {
+        this.loadFailed = true;
+        return;
+      }
+      this.characterAssets = loaded;
+    } catch {
+      if (!this.disposed) this.loadFailed = true;
+    }
   }
 
   protected tick(dt: number): void {
     this.elapsed += dt;
-    if (!this.characterAssets && this.elapsed < LOAD_TIMEOUT_SECONDS) return;
+    if (this.context.input.anyPressed('cancel')) {
+      this.context.setScene(new CharacterSelectScene());
+      return;
+    }
+    if (this.loadFailed) {
+      if (this.context.input.anyPressed('confirm')) {
+        this.loadFailed = false;
+        this.elapsed = 0;
+        void this.preload(this.context);
+      }
+      return;
+    }
+    // Elapsed time is only a status hint, never permission to discard pending assets.
+    if (!this.characterAssets) return;
 
     const canSkip = this.elapsed > 0.4 && this.context.input.anyPressed('confirm');
     if (this.elapsed >= HOLD_SECONDS || canSkip) {
@@ -80,7 +110,12 @@ export class VsScene extends BaseScene {
     g.restore();
     drawText(g, stage.name, width / 2, 920, { font: FONTS.heading, color: COLORS.text });
 
-    const label = this.characterAssets ? '확인 버튼으로 바로 시작' : '캐릭터 준비 중…';
+    const label = this.loadFailed
+      ? '캐릭터를 불러오지 못했습니다 · 확인: 다시 시도 · 취소: 캐릭터 선택'
+      : this.characterAssets ? '확인 버튼으로 바로 시작'
+      : this.elapsed >= SLOW_LOAD_SECONDS
+        ? '로딩이 늦어지고 있습니다 · 준비가 끝나면 시작합니다 · 취소: 캐릭터 선택'
+        : '캐릭터 준비 중… · 취소: 캐릭터 선택';
     drawText(g, label, width / 2, 1000, { font: FONTS.small, color: COLORS.textDim });
   }
 
