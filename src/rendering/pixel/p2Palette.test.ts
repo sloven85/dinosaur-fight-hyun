@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { Match } from '../../combat/Match';
 import { getMove } from '../../data';
 import { parseSpriteManifest, spriteSheetFor, type SpriteAssets } from './SpeciesSprite';
-import { PLAYER_COLORS, RING_RADIUS_Y, drawGroundRing, drawHeadMarker } from './PlayerMarker';
+import { HEAD_MARKER_SIZE, PLAYER_COLORS, RING_H, RING_W, drawGroundRing, drawHeadMarker, markerShapeFor } from './PlayerMarker';
 
 /**
  * 동종 미러 1P/2P 구분 (jk 확정 2026-10-29).
@@ -140,10 +140,13 @@ describe('2P 팔레트 시트(포장 단계 산출물)', () => {
         expect(to).toEqual(from);   // 외곽선·무채색은 손대지 않는다
         continue;
       }
-      // 명도는 그대로 — 실루엣 판독이 1P와 같아야 한다.
-      expect(Math.abs(a.l - b.l)).toBeLessThan(0.08);
-      // 채도는 떨어지지 않는다(하한 유지).
-      expect(b.s).toBeGreaterThan(a.s * 0.45);
+      // 명도: 올려도 +0.05까지, 내리지 않는다 — 실루엣 판독이 1P와 같아야 한다.
+      expect(b.l - a.l).toBeLessThanOrEqual(0.05 + 0.02);
+      expect(b.l - a.l).toBeGreaterThanOrEqual(-0.02);
+      // 채도: 올려도 min(0.50, 1P×1.5)까지, 내리지 않는다.
+      const satCap = Math.max(a.s, Math.min(0.5, a.s * 1.5));
+      expect(b.s).toBeLessThanOrEqual(satCap + 0.02);
+      expect(b.s).toBeGreaterThanOrEqual(a.s - 0.02);
       if (family === 'shift') expect(hueGap(a.h, b.h)).toBeGreaterThanOrEqual(60);
     }
   });
@@ -203,9 +206,11 @@ describe('동종 미러 — 판정·타점·실루엣은 같고 색만 다르다
     expect(frame.anchor.y + frame.h).toBeLessThanOrEqual(298 + 400);
   });
 
-  it('표식 색은 1P·2P가 다르고 발밑 링·머리 마커 둘 다 있다', () => {
+  it('표식 색·모양이 1P·2P에서 다르다', () => {
     expect(PLAYER_COLORS.p1).not.toBe(PLAYER_COLORS.p2);
-    expect(RING_RADIUS_Y).toBeGreaterThan(0);
+    expect(markerShapeFor(false)).not.toBe(markerShapeFor(true));
+    expect(markerShapeFor(false)).toBe('triangle');
+    expect(markerShapeFor(true)).toBe('diamond');
   });
 });
 
@@ -223,8 +228,8 @@ describe('표식은 아트 격자에만 놓인다', () => {
   it.each([1, 2, 4, 6])('배율 %i에서 링·마커 좌표가 모두 배율의 배수', (scale) => {
     const { g, rects } = recorder();
     // 일부러 격자에 맞지 않는 좌표를 준다 — 그려지는 쪽이 스스로 격자에 맞춰야 한다.
-    drawGroundRing(g, 643.7, 899.4, 201.3, PLAYER_COLORS.p2, scale);
-    drawHeadMarker(g, { left: 400, top: 300, right: 900, bottom: 900 }, 1, PLAYER_COLORS.p1, scale);
+    drawGroundRing(g, 643.7, 899.4, PLAYER_COLORS.p2, scale);
+    drawHeadMarker(g, { left: 400, top: 300, right: 900, bottom: 900 }, 1, PLAYER_COLORS.p1, scale, 'triangle');
     expect(rects.length).toBeGreaterThan(3);
     for (const [x, y, w, h] of rects) {
       expect(x % scale).toBe(0);
@@ -234,11 +239,29 @@ describe('표식은 아트 격자에만 놓인다', () => {
     }
   });
 
-  it('머리 마커는 4아트px 정사각형', () => {
+  it('링은 72×10아트px이고 위쪽이 접지선에 닿는다', () => {
     const { g, rects } = recorder();
-    drawHeadMarker(g, { left: 0, top: 400, right: 100, bottom: 900 }, 1, PLAYER_COLORS.p1, 4);
-    expect(rects).toHaveLength(1);
-    expect(rects[0][2]).toBe(16);
-    expect(rects[0][3]).toBe(16);
+    drawGroundRing(g, 640, 900, PLAYER_COLORS.p2, 4);
+    const xs = rects.map((r) => r[0]);
+    const ys = rects.map((r) => r[1]);
+    expect(Math.min(...xs)).toBeGreaterThanOrEqual(640 - (RING_W / 2) * 4);
+    expect(Math.max(...xs)).toBeLessThanOrEqual(640 + (RING_W / 2) * 4);
+    expect(Math.min(...ys)).toBe(900);                       // 위쪽 = 접지선
+    expect(Math.max(...ys)).toBe(900 + RING_H * 4);
+  });
+
+  it('머리 마커는 4아트px 상자 안에 그린다', () => {
+    const { g, rects } = recorder();
+    drawHeadMarker(g, { left: 0, top: 400, right: 100, bottom: 900 }, 1, PLAYER_COLORS.p1, 4, 'triangle');
+    // 4×4 아트px 상자 안의 픽셀만 찍는다(삼각 10칸).
+    expect(rects).toHaveLength(10);
+    const xs = rects.map((r) => r[0] / 4);
+    const ys = rects.map((r) => r[1] / 4);
+    expect(Math.max(...xs) - Math.min(...xs)).toBeLessThan(HEAD_MARKER_SIZE);
+    expect(Math.max(...ys) - Math.min(...ys)).toBeLessThan(HEAD_MARKER_SIZE);
+    for (const [, , w, h] of rects) {
+      expect(w).toBe(4);
+      expect(h).toBe(4);
+    }
   });
 });

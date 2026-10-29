@@ -23,9 +23,13 @@ import sys
 from PIL import Image
 
 HUE_SHIFT = 62.0        # 몸통 계열 색상 이동(≥60°)
-SAT_FLOOR = 0.45        # 2P 채도 하한 — 원본 채도가 낮으면 색상차가 눈에 안 보이므로 끌어올린다
+# 채도·명도 상한(마스터 확정 2026-10-29): 2P 채도 ≤ min(0.50, 1P×1.5), 명도차 ≤ +0.05.
+# 저채도 종은 색으로 안 갈라져도 마커가 구분을 보장한다 — 억지로 올리지 않는다.
+SAT_MAX = 0.50
+SAT_GAIN = 1.5
+LIGHT_MAX_DELTA = 0.05
 CREAM_HUE = 50.0        # 배·크림 계열 목표 색상
-CREAM_LIFT = 0.06       # 배 계열 명도 보정(연노랑)
+CREAM_LIFT = 0.04       # 배 계열 명도 보정(연노랑) — 상한 +0.05 안에서 반올림 여유를 둔다
 CREAM_SAT = 1.10
 DARK_KEEP = 0.20        # 이보다 어두우면(외곽선) 그대로
 NEUTRAL_KEEP = 0.10     # 이보다 채도가 낮으면(무채색) 그대로
@@ -42,6 +46,13 @@ def hsl_to_rgb(h, l, s):
     return tuple(max(0, min(255, round(c * 255))) for c in (r, g, b))
 
 
+def sat_for(s):
+    """2P 채도: 원본이 이미 진하면 그대로, 낮으면 상한(min(0.50, 1P×1.5))까지만 올린다."""
+    if s >= SAT_MAX:
+        return s
+    return min(SAT_MAX, s * SAT_GAIN)
+
+
 def map_color(rgb, body_hue=None):
     """1P 색 → 2P 색.
 
@@ -54,9 +65,10 @@ def map_color(rgb, body_hue=None):
         return rgb, 'keep'
     green_body = body_hue is not None and 80.0 <= body_hue <= 200.0
     if green_body and 15.0 <= h <= 80.0 and l >= 0.55 and s <= 0.65:
-        return hsl_to_rgb(CREAM_HUE, min(0.94, l + CREAM_LIFT), min(1.0, s * CREAM_SAT)), 'cream'
-    # 명도는 그대로 두고 색상만 옮긴다. 원본 채도가 0.45보다 낮으면 0.45까지 올려 색 차이를 눈에 보이게 한다.
-    return hsl_to_rgb(h + HUE_SHIFT, l, max(s, SAT_FLOOR)), 'shift'
+        return hsl_to_rgb(CREAM_HUE, min(0.94, l + CREAM_LIFT), sat_for(s)), 'cream'
+    # 명도는 그대로(상한 +0.05는 넘지 않는다는 뜻이지 목표가 아니다), 색상만 +62°.
+    # 채도는 올리지도 내리지도 않는다(상한·하한 규칙).
+    return hsl_to_rgb(h + HUE_SHIFT, l, sat_for(s)), 'shift'
 
 
 def hue_gap(a, b):
@@ -98,6 +110,18 @@ def build_one(path, check_only=False):
         body_gap = hue_gap(rgb_to_hsl(body)[0], rgb_to_hsl(body_to)[0])
         if body_gap < 60.0 and not check_only:
             sys.exit(f'{path}: 몸통 대표색 색상차 {body_gap:.1f}° < 60°')
+    # 채도·명도 상한 위반은 조용히 넘기지 않는다.
+    for rgb, (to, family) in mapping.items():
+        if family == 'keep':
+            continue
+        _, la, sa = rgb_to_hsl(rgb)
+        _, lb, sb = rgb_to_hsl(to)
+        # 8bit 반올림 오차(±0.01)는 규칙 위반이 아니다. 올리지도 내리지도 않는다.
+        upper = max(sa, min(SAT_MAX, sa * SAT_GAIN))
+        if sb > upper + 0.02 or sb < sa - 0.02:
+            sys.exit(f'{path}: 2P 채도 위반 {rgb} s={sa:.2f} -> {to} s={sb:.2f} (허용 {sa:.2f}~{upper:.2f})')
+        if lb - la > LIGHT_MAX_DELTA + 0.02:
+            sys.exit(f'{path}: 2P 명도 상승 위반 {rgb} l={la:.2f} -> {to} l={lb:.2f}')
 
     if not check_only:
         out.save(path.replace('sheet.png', 'sheet_p2.png'))

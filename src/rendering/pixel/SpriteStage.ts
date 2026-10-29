@@ -7,7 +7,7 @@ import {
   ART_CLIPS, SPRITE_STATES, STATE_LABELS, SpriteClock, drawSpriteFrame, sampleFighter,
   parseSpriteManifest, type SpriteAssets, type SpriteState,
 } from './SpeciesSprite';
-import { PLAYER_COLORS, drawGroundRing, drawHeadMarker } from './PlayerMarker';
+import { PLAYER_COLORS, drawGroundRing, drawHeadMarker, markerShapeFor } from './PlayerMarker';
 
 const ROOT = 'dev-art/species/';
 
@@ -291,7 +291,8 @@ export class SpriteStage {
     const scale = this.scaleFor(g);
     const color = fighter.useAlternatePalette ? PLAYER_COLORS.p2 : PLAYER_COLORS.p1;
     // 표식은 캐릭터 뒤(링)·앞(머리 마커)에 둔다. 미러가 아니면 그리지 않는다.
-    if (this.mirror) drawGroundRing(g, fighter.x, feetY + scale, (frame.w * scale) / 3, color, scale);
+    // 링 72×10아트px, 위쪽을 접지선(=feetY)에 맞추고 두 발 중앙에 둔다.
+    if (this.mirror) drawGroundRing(g, fighter.x, feetY, color, scale);
     // 2P는 포장 단계에서 뽑아 둔 팔레트 시트로 같은 프레임을 그린다(모양·크기 동일).
     drawSpriteFrame(g, assets, frame, fighter.x, feetY, fighter.facing, scale, fighter.useAlternatePalette);
     if (this.mirror) {
@@ -301,7 +302,7 @@ export class SpriteStage {
         right: fighter.x + (frame.w - frame.anchor.x) * scale,
         bottom: feetY + (frame.h - frame.anchor.y) * scale,
       };
-      drawHeadMarker(g, box, fighter.facing, color, scale);
+      drawHeadMarker(g, box, fighter.facing, color, scale, markerShapeFor(fighter.useAlternatePalette));
     }
     return true;
   }
