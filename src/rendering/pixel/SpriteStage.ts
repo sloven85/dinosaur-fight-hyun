@@ -11,9 +11,8 @@ import { PLAYER_COLORS, drawGroundRing, drawHeadMarker, markerShapeFor } from '.
 
 const ROOT = 'dev-art/species/';
 
-export function spriteStageEnabled(dev: boolean, search: string): boolean {
-  return dev && new URLSearchParams(search).get('pixelStage') === '1';
-}
+// 켜는 조건은 pilotFlag에 있다(BattleScene이 무거운 이 모듈을 정적으로 끌어오지 않게).
+export { spriteStageEnabled } from './pilotFlag';
 
 interface IndexEntry { character: string; frames: number; sheet: [number, number] }
 interface SpeciesIndex { version: number; cell: [number, number]; footY: number; anchorX: number; scale: number; species: Record<string, IndexEntry> }

@@ -16,6 +16,7 @@ import { ResultScene } from './ResultScene';
 import { drawText, fillRoundRect } from '../ui/draw';
 import { COLORS, FONTS } from '../ui/theme';
 import type { PixelPilot } from '../rendering/pixel/PixelPilot';
+import { DOT_PILOT_BUILD } from '../rendering/pixel/pilotFlag';
 import type { SpriteStage } from '../rendering/pixel/SpriteStage';
 
 const HUD_BAR_W = 700;
@@ -78,8 +79,13 @@ export class BattleScene extends BaseScene {
         if (!this.disposed) this.pixelPilot = new PixelPilot(context.assets);
       });
     }
-    // 12종 도트 스프라이트 비교판(?pixelStage=1). 공개 빌드에는 포함되지 않는다.
-    if (import.meta.env.DEV && typeof location !== 'undefined' && new URLSearchParams(location.search).get('pixelStage') === '1') {
+    // 12종 도트 재생기. 파일럿 빌드에서는 기본, 개발 서버에서는 ?pixelStage=1.
+    // 두 상수 모두 빌드 시 값으로 인라인되므로, 공개 베타 빌드에서는 이 분기와
+    // SpriteStage 청크가 통째로 빠진다(조건을 함수 호출로 감싸면 청크가 남는다).
+    const dotView = DOT_PILOT_BUILD ||
+      (import.meta.env.DEV && typeof location !== 'undefined' &&
+        new URLSearchParams(location.search).get('pixelStage') === '1');
+    if (dotView) {
       void import('../rendering/pixel/SpriteStage').then(({ SpriteStage }) => {
         if (!this.disposed) this.spriteStage = new SpriteStage(context.assets);
       });

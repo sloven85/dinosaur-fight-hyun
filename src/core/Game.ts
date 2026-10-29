@@ -49,7 +49,14 @@ export class Game {
     this.installAudioUnlock();
     this.scenes = new SceneManager(this.input, createSession(), this.assets, this.settings, this.audio);
     this.scenes.change(new TitleScene());
-    if (import.meta.env.DEV && new URLSearchParams(location.search).get('pixelPilot') !== '1') {
+    if ((import.meta.env as Record<string, string | undefined>).VITE_DOT_PILOT === '1') {
+      // 파일럿 배포 표식: 지금 화면이 최종본이 아니라는 사실을 항상 보이게 둔다.
+      const badge = document.createElement('div');
+      badge.textContent = '도트 파일럿 · 12종/UI 미완';
+      badge.style.cssText = 'position:fixed;top:10px;left:10px;z-index:30;color:#fff;background:#B3261E;'
+        + 'padding:8px 12px;border-radius:6px;font:600 14px/1.3 system-ui;letter-spacing:.2px';
+      document.body.append(badge);
+    } else if (import.meta.env.DEV && new URLSearchParams(location.search).get('pixelPilot') !== '1') {
       const pilot = document.createElement('a');
       pilot.href = '?pixelPilot=1';
       pilot.textContent = '개발용 티라노 도트 비교판 열기';
