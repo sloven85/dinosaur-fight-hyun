@@ -15,6 +15,7 @@ import { BaseScene } from './BaseScene';
 import { ResultScene } from './ResultScene';
 import { drawText, fillRoundRect } from '../ui/draw';
 import { COLORS, FONTS } from '../ui/theme';
+import type { PixelPilot } from '../rendering/pixel/PixelPilot';
 
 const HUD_BAR_W = 700;
 const HUD_BAR_H = 42;
@@ -60,6 +61,8 @@ export class BattleScene extends BaseScene {
   private announcedFight = 0;
   private finishX = 960;
   private finishY = 600;
+  private pixelPilot: PixelPilot | null = null;
+  private disposed = false;
 
   constructor(private readonly characterAssets: [CharacterAssets, CharacterAssets] | null = null) {
     super();
@@ -67,6 +70,12 @@ export class BattleScene extends BaseScene {
 
   enter(context: GameContext): void {
     super.enter(context);
+    this.disposed = false;
+    if (import.meta.env.DEV && typeof location !== 'undefined' && new URLSearchParams(location.search).get('pixelPilot') === '1') {
+      void import('../rendering/pixel/PixelPilot').then(({ PixelPilot }) => {
+        if (!this.disposed) this.pixelPilot = new PixelPilot(context.assets);
+      });
+    }
     const { session, settings } = context;
     this.elapsed = 0;
     this.effects.clear();
@@ -92,6 +101,9 @@ export class BattleScene extends BaseScene {
   }
 
   exit(): void {
+    this.disposed = true;
+    this.pixelPilot?.dispose();
+    this.pixelPilot = null;
     this.context.audio.stopBgm();
   }
 
@@ -102,6 +114,10 @@ export class BattleScene extends BaseScene {
     this.elapsed += dt;
 
     if (input.consumeDebugToggle()) this.debugBoxes = !this.debugBoxes;
+    if (this.pixelPilot && !this.pixelPilot.effects) {
+      this.shakeFrames = this.flashFrames = this.finishFrames = this.koFrames = 0;
+      this.effects.clear();
+    }
 
     // 마무리 한 방: 0.15초 멈추고 화면을 살짝 확대한다(그동안 경기는 멈춘다).
     if (this.finishFrames > FINISH_ZOOM_FRAMES) {
@@ -120,7 +136,9 @@ export class BattleScene extends BaseScene {
       }
     }
 
+    const pixelFrozen = this.match.fighters.map(f => f.hitstopFrames > 0 || this.match.cutinFrames > 0);
     this.match.step(input, dt);
+    this.pixelPilot?.step(this.match, pixelFrozen);
     // 개발 서버 전용: ?devko=1이면 2P 체력을 1로(KO 연출 확인용). 배포 빌드에는 들어가지 않는다.
     if (import.meta.env.DEV && typeof location !== 'undefined' && location.search.includes('devko=1') && this.match.phase === 'fight') {
       this.match.p2.health = Math.min(this.match.p2.health, 1);
@@ -134,7 +152,7 @@ export class BattleScene extends BaseScene {
       };
     }
     this.consumeMatchEvents(stage.groundY, settings.screenShake, settings.vibration);
-    this.spawnLandingDust(stage.groundY);
+    if (!this.pixelPilot || this.pixelPilot.effects) this.spawnLandingDust(stage.groundY);
     this.effects.update(dt);
     if (this.shakeFrames > 0) this.shakeFrames -= 1;
     if (this.flashFrames > 0) this.flashFrames -= 1;
@@ -153,7 +171,7 @@ export class BattleScene extends BaseScene {
         this.context.audio.playSfx('ann_fight');
       }
     }
-    if (this.match.phase === 'roundOver' && this.prevPhase === 'fight') {
+    if (this.match.phase === 'roundOver' && this.prevPhase === 'fight' && (!this.pixelPilot || this.pixelPilot.effects)) {
       this.onRoundFinished(stage.groundY);
     }
     if (this.match.phase === 'matchOver') {
@@ -167,6 +185,12 @@ export class BattleScene extends BaseScene {
 
   /** Match가 남긴 연출 이벤트를 먼지·별·충격파·소리·진동으로 바꾼다(피해와 무관). */
   private consumeMatchEvents(groundY: number, screenShake: boolean, vibration: boolean): void {
+    if (this.pixelPilot && !this.pixelPilot.effects) {
+      this.match.consumeEvents();
+      this.effects.clear();
+      this.shakeFrames = this.flashFrames = this.finishFrames = this.koFrames = 0;
+      return;
+    }
     for (const event of this.match.consumeEvents()) {
       const y = groundY + event.y;
       if (event.type === 'fx') {
@@ -373,7 +397,9 @@ export class BattleScene extends BaseScene {
     // 잡힌 쪽은 잡은 쪽 뒤에 그린다(입에 물린 것처럼).
     const order = drawOrder(this.match.fighters);
     for (const fighter of order) {
-      renderFighter(g, fighter, stage.groundY, this.elapsed);
+      if (!this.pixelPilot?.render(g, fighter, stage.groundY)) {
+        renderFighter(g, fighter, stage.groundY, this.elapsed, !this.pixelPilot || this.pixelPilot.effects);
+      }
     }
     for (const projectile of this.match.projectiles) {
       this.renderProjectile(g, projectile, stage.groundY);
@@ -393,7 +419,7 @@ export class BattleScene extends BaseScene {
     }
 
     this.renderHud(g, width);
-    this.renderCutin(g, width, height);
+    if (!this.pixelPilot || this.pixelPilot.effects) this.renderCutin(g, width, height);
     this.renderRoundText(g, width, height);
 
     if (this.debugBoxes) {

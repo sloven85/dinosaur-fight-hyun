@@ -49,6 +49,17 @@ export class Game {
     this.installAudioUnlock();
     this.scenes = new SceneManager(this.input, createSession(), this.assets, this.settings, this.audio);
     this.scenes.change(new TitleScene());
+    if (import.meta.env.DEV && new URLSearchParams(location.search).get('pixelPilot') !== '1') {
+      const pilot = document.createElement('a');
+      pilot.href = '?pixelPilot=1';
+      pilot.textContent = '개발용 티라노 도트 비교판 열기';
+      pilot.style.cssText = 'position:fixed;top:8px;left:8px;z-index:10;color:white;background:#152536;padding:10px';
+      document.body.append(pilot);
+      const review = document.createElement('a');
+      review.href = 'pixel-review.html'; review.textContent = 'v2 동일 입력 A/B 검수 · 영상 기록';
+      review.style.cssText = 'position:fixed;top:8px;left:290px;z-index:10;color:white;background:#152536;padding:10px';
+      document.body.append(review);
+    }
   }
 
   /**
