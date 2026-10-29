@@ -403,7 +403,10 @@ export class BattleScene extends BaseScene {
     }
 
     const focusX = (this.match.p1.x + this.match.p2.x) / 2;
-    renderStage(g, stage, width, height, this.elapsed, focusX);
+    // 도트 배경 3레이어가 준비된 무대는 정수배·타일로 그리고, 없으면 기존 배경을 쓴다.
+    if (!this.spriteStage?.renderBackground(g, stage.id, stage.groundY, focusX, width, height)) {
+      renderStage(g, stage, width, height, this.elapsed, focusX);
+    }
 
     // 잡힌 쪽은 잡은 쪽 뒤에 그린다(입에 물린 것처럼).
     const order = drawOrder(this.match.fighters);

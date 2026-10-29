@@ -2,6 +2,7 @@ import type { Fighter } from '../../combat/Fighter';
 import type { Match } from '../../combat/Match';
 import type { AssetLoader } from '../AssetLoader';
 import { renderShadow } from '../FighterRenderer';
+import { PixelBackground } from './PixelBackground';
 import {
   ART_CLIPS, SPRITE_STATES, STATE_LABELS, SpriteClock, drawSpriteFrame, sampleFighter,
   parseSpriteManifest, type SpriteAssets, type SpriteState,
@@ -48,10 +49,12 @@ export class SpriteStage {
   private readonly poseState = document.createElement('select');
   private poseFacing: 1 | -1 = 1;
   private poseStep = 0;
+  private readonly background: PixelBackground;
   private round = 0;
   private disposed = false;
 
   constructor(private readonly loader: AssetLoader) {
+    this.background = new PixelBackground(loader);
     this.buildPanel();
     void this.boot();
   }
@@ -236,6 +239,12 @@ export class SpriteStage {
       + `그림 ${frame.w}×${frame.h}원본 → 화면 ${frame.w * 4}×${frame.h * 4}px · 기준 x=251/y=298 고정`;
   }
 
+  /** 도트 배경 3레이어를 그렸으면 true(호출부는 기존 배경을 건너뛴다). */
+  renderBackground(g: CanvasRenderingContext2D, stage: string, groundY: number,
+    focusX: number, width: number, height: number): boolean {
+    return this.background.render(g, stage, groundY, focusX, width, height, PARALLAX);
+  }
+
   /** true를 돌려주면 이 프레임은 신규 렌더러가 그렸다는 뜻. */
   render(g: CanvasRenderingContext2D, fighter: Fighter, groundY: number): boolean {
     if (this.view.value !== 'pixel') return false;
@@ -253,10 +262,14 @@ export class SpriteStage {
 
   dispose(): void {
     this.disposed = true;
+    this.background.dispose();
     this.species.clear();
     this.panel.remove();
   }
 }
+
+/** 엔진의 시차 계수. 배경 레이어도 캐릭터와 같은 카메라를 쓴다. */
+const PARALLAX = { far: 0.04, mid: 0.14, ground: 0.3 };
 
 const FOLDER_ORDER = ['trex', 'trike', 'velo', 'spino', 'anky', 'stego', 'carno', 'pachy', 'theri', 'dilo', 'brachio', 'ptera'];
 const FOLDER_LABEL: Record<string, string> = {

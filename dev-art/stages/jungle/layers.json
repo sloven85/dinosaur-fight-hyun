@@ -1,0 +1,13 @@
+{
+ "stage": "jungle",
+ "native": [
+  640,
+  360
+ ],
+ "standLine": 298,
+ "layers": {
+  "far": "jungle_far_640x360.png",
+  "mid": "jungle_mid_640x360.png",
+  "ground": "jungle_ground_640x360.png"
+ }
+}
