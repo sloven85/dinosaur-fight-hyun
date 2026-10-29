@@ -83,7 +83,8 @@ const hsl = (r: number, g: number, b: number): { h: number; l: number; s: number
   const max = Math.max(rn, gn, bn), min = Math.min(rn, gn, bn);
   const l = (max + min) / 2;
   const d = max - min;
-  const s = d === 0 ? 0 : d / (1 - Math.abs(2 * l - 1));
+  // 포장 스크립트(colorsys HLS)와 같은 정의를 쓴다 — 채도 규칙을 같은 자로 재야 한다.
+  const s = d === 0 ? 0 : l <= 0.5 ? d / (max + min) : d / (2 - max - min);
   let h = 0;
   if (d !== 0) {
     if (max === rn) h = 60 * (((gn - bn) / d) % 6);

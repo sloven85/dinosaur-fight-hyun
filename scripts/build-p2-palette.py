@@ -154,6 +154,7 @@ def main():
         manifest['p2'] = {
             'rule': 'hue+62 (body), cream 50deg (belly), dark/neutral kept',
             'bodyHueGap': stats['bodyHueGap'],
+            'body': [stats['body'], stats['bodyTo']],
             'colors': stats['mapping'],
         }
         if not args.check:
