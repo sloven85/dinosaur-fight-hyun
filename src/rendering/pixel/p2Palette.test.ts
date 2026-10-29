@@ -141,6 +141,34 @@ describe('2P 미러 색의 출처는 아티스트 팔레트 하나뿐', () => {
   });
 });
 
+describe('아티스트 팔레트 규칙(따뜻한 인덱스는 회전 금지)', () => {
+  const palettes = FOLDERS.filter((f) => paletteOf(f)).map((f) => [f, paletteOf(f)!] as const);
+
+  it.each(palettes)('%s: claw·belly·cream 은 1P hue ±20° 안, 몸통은 60° 이상', (folder, palette) => {
+    const raw = JSON.parse(readFileSync(`${PALETTE_DIR}/${folder}.json`, 'utf8')) as {
+      index_names: string[]; p1: number[][]; p2: number[][];
+    };
+    const toHue = (rgb: number[]): number => {
+      const [r, g, b] = rgb.map((v) => v / 255);
+      const max = Math.max(r, g, b), min = Math.min(r, g, b), d = max - min;
+      if (d === 0) return 0;
+      let h = max === r ? ((g - b) / d) % 6 : max === g ? (b - r) / d + 2 : (r - g) / d + 4;
+      h *= 60;
+      return (h + 360) % 360;
+    };
+    const gap = (a: number, b: number): number => { const d = Math.abs(a - b) % 360; return Math.min(d, 360 - d); };
+    expect(raw.p2).toHaveLength(raw.p1.length);
+    raw.index_names.forEach((name, i) => {
+      const d = gap(toHue(raw.p1[i]), toHue(raw.p2[i]));
+      const warm = /claw|belly|cream/.test(name);
+      if (warm) expect(d, `${name} Δhue ${d.toFixed(1)}`).toBeLessThanOrEqual(20);
+      else if (name !== 'outline' && name !== 'accent') expect(d, `${name} Δhue`).toBeGreaterThanOrEqual(60);
+      else expect(raw.p2[i]).toEqual(raw.p1[i]);
+    });
+    expect(palette.p1.length).toBeGreaterThan(4);
+  });
+});
+
 describe('엔진은 2P에만 팔레트 시트를 쓴다', () => {
   const assets = { manifest: { image: 'sheet.png' }, image: { width: 10, height: 10, tag: 'p1' }, p2: { width: 10, height: 10, tag: 'p2' } } as unknown as SpriteAssets & { p2: { tag: string } };
 

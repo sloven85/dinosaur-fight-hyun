@@ -11,11 +11,45 @@
 사용: python3 scripts/build-p2-from-palette.py [--dir dev-art/species] [--check]
 """
 import argparse
+import colorsys
 import json
 import os
 import sys
 
 from PIL import Image
+
+
+# 미러에서도 따뜻한 톤을 유지해야 하는 인덱스(마스터 확정 2026-10-29):
+# claw·belly·cream 은 2P에서도 1P hue의 ±20° 안. 몸통 계열만 회전한다.
+WARM_INDEX_KEYS = ('claw', 'belly', 'cream')
+WARM_HUE_TOLERANCE = 20.0
+BODY_HUE_MIN = 60.0
+
+
+def hue_of(rgb):
+    h, _l, _s = colorsys.rgb_to_hls(rgb[0] / 255, rgb[1] / 255, rgb[2] / 255)
+    return h * 360.0
+
+
+def hue_gap(a, b):
+    d = abs(a - b) % 360.0
+    return min(d, 360.0 - d)
+
+
+def check_index_rules(palette_path, palette):
+    """색 규칙을 벗어난 팔레트는 빌드를 실패시킨다 — 조용히 넘겨 2P만 어색해지지 않게."""
+    names = palette.get('index_names') or []
+    problems = []
+    for i, (a, b) in enumerate(zip(palette['p1'], palette['p2'])):
+        name = names[i] if i < len(names) else f'index{i}'
+        gap = hue_gap(hue_of(a), hue_of(b))
+        warm = any(key in name for key in WARM_INDEX_KEYS)
+        if warm and gap > WARM_HUE_TOLERANCE:
+            problems.append(f'{name}: 1P h{hue_of(a):.0f} → 2P h{hue_of(b):.0f} (Δ{gap:.0f}° > {WARM_HUE_TOLERANCE:.0f}°)')
+        if not warm and name not in ('outline', 'accent') and gap < BODY_HUE_MIN:
+            problems.append(f'{name}: 색상차 {gap:.0f}° < {BODY_HUE_MIN:.0f}°')
+    if problems:
+        sys.exit(f'{palette_path}: 팔레트 규칙 위반 — ' + ' / '.join(problems))
 
 
 def build_one(folder_dir, palette, check_only=False):
@@ -68,6 +102,7 @@ def main():
             continue
 
         palette = json.load(open(palette_path))
+        check_index_rules(palette_path, palette)
         stats = build_one(folder_dir, palette, args.check)
         manifest['p2Image'] = 'sheet_p2.png'
         manifest['p2'] = {
