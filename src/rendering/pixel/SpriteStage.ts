@@ -231,7 +231,11 @@ export class SpriteStage {
       const assets = folder ? this.species.get(folder) : null;
       if (!assets) return `${i + 1}P ${f.data.id} · 아트 대기 · 임시 도형`;
       const sample = sampleFighter(assets.manifest, f, this.clocks[i]);
-      return `${i + 1}P ${f.data.id} · ${STATE_LABELS[sample.state]} ${sample.step + 1}/${assets.manifest.clips[sample.state].frames.length} · HP ${f.health}`;
+      // 렌더 키(아트 bbox×4)와 판정 키(displayHeight)를 나란히 보여 준다 — 표 없이 판정을 흔들지 않기 위한 표시.
+      const art = f.data.artHeight, key = f.data.displayHeight;
+      const ratio = key ? `${((art - key) / key * 100 >= 0 ? '+' : '')}${((art - key) / key * 100).toFixed(1)}%` : '-';
+      return `${i + 1}P ${f.data.id} · ${STATE_LABELS[sample.state]} ${sample.step + 1}/${assets.manifest.clips[sample.state].frames.length}`
+        + ` · HP ${f.health} · 그림 ${art} / 판정 ${key} (${ratio})`;
     }).join('\n');
   }
 

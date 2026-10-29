@@ -7,15 +7,25 @@ import { PIXEL_ART_SCALE, PIXEL_LAYER_W, PIXEL_VIEW_W } from './PixelBackground'
 import { PARALLAX } from './SpriteStage';
 
 /**
- * displayHeight lock (jk 지시 2026-10-29).
+ * 그림 크기(artHeight)와 판정 키(displayHeight)를 분리해서 잠근다 (jk 확정 2026-10-29).
  *
- * 판정·몸 크기의 기준인 displayHeight는 **그 종의 아트 실측 키 × 4**여야 한다.
- * 아트가 바뀌면 이 테스트가 먼저 깨져서, 그림만 새로 넣고 판정을 그대로 두는 일을 막는다.
- * 기준 상태는 대기(idle) 클립의 실루엣 최대 높이다 — 서 있는 몸의 키.
- */
+ * - `artHeight` = idle 최고 프레임 알파 bbox 높이 × 4 → **렌더 크기**. 아트가 바뀌면 이 테스트가
+ *   먼저 깨져서, 그림만 새로 넣고 기준값을 몰래 두는 일을 막는다.
+ * - `displayHeight` = **판정 키**. 판정·피해·사거리는 아트 교체에 흔들리지 않아야 하므로,
+ *   여기 값을 상수 표로 못 박아 둔다. 그림이 커졌다고 이 표를 고치면 그건 판정 변경이다.
+ * - 두 값의 차이는 `scripts/height-ratio-table.py`가 12행 표로 낸다(±2% 확인용).
 
+ * 지금 차이: 티라노만 아트 452 vs 판정 436(+3.7%) — 마스터 판단 대기. 나머지 11종은 0.0%.
+ */
 const ROOT = 'dev-art/species';
 const SCALE = 4;
+
+/** 2026-10-29 기준 판정 키. 아트 교체로 이 값이 움직이면 실패한다. */
+const COMBAT_HEIGHT_KEYS: Record<string, number> = {
+  tyrannosaurus: 436, triceratops: 360, velociraptor: 344, spinosaurus: 424,
+  ankylosaurus: 328, stegosaurus: 408, carnotaurus: 428, pachycephalosaurus: 388,
+  therizinosaurus: 448, dilophosaurus: 376, brachiosaurus: 608, pteranodon: 348,
+};
 
 interface Sheet { width: number; height: number; alpha: Uint8Array }
 
@@ -93,11 +103,11 @@ function silhouetteHeight(sheet: Sheet, frame: { x: number; y: number; w: number
 
 const index = JSON.parse(readFileSync(`${ROOT}/index.json`, 'utf8'));
 
-describe('displayHeight lock: 종별 아트 실측 키 × 4', () => {
+describe('artHeight lock: 종별 아트 실측 키 × 4', () => {
   const byId = new Map(CHARACTERS.map((c) => [c.id, c]));
   const entries = Object.entries<{ character: string }>(index.species);
 
-  it('12종이 모두 아트 실측 키 × 4를 쓴다', () => {
+  it('12종이 모두 아트 실측 키 × 4를 artHeight로 쓴다', () => {
     const rows: string[] = [];
     for (const [folder, entry] of entries) {
       const manifest = JSON.parse(readFileSync(`${ROOT}/${folder}/manifest.json`, 'utf8'));
@@ -106,11 +116,31 @@ describe('displayHeight lock: 종별 아트 실측 키 × 4', () => {
       const art = Math.max(...heights);
       const data = byId.get(entry.character);
       expect(data, `${folder}: characters.json에 ${entry.character} 없음`).toBeDefined();
-      rows.push(`${entry.character}\tart ${art}px × ${SCALE} = ${art * SCALE}\tdata ${data!.displayHeight}`);
-      expect(data!.displayHeight, `${folder}: 아트 ${art}px×${SCALE}=${art * SCALE}인데 displayHeight=${data!.displayHeight}`)
+      rows.push(`${entry.character}\tart ${art}px × ${SCALE} = ${art * SCALE}\tartHeight ${data!.artHeight}`);
+      expect(data!.artHeight, `${folder}: 아트 ${art}px×${SCALE}=${art * SCALE}인데 artHeight=${data!.artHeight}`)
         .toBe(art * SCALE);
     }
     expect(rows).toHaveLength(12);
+  });
+});
+
+describe('displayHeight는 판정 키다 — 아트 교체로 움직이지 않는다', () => {
+  it('12종 판정 키가 2026-10-29 값 그대로다', () => {
+    for (const c of CHARACTERS) {
+      expect(c.displayHeight, `${c.id}: 판정 키가 바뀌었다 — 그림에 맞춰 다시 잠그면 전투 수치가 흔들린다`)
+        .toBe(COMBAT_HEIGHT_KEYS[c.id]);
+    }
+  });
+
+  it('도트 그리기는 판정 키로 배율을 만들지 않는다', () => {
+    // 벡터 리그는 displayHeight/마스터 박스로 축소하지만, 도트 경로는 배율이 4 고정이다.
+    // 판정 키가 그림 배율에 섞이면 그림만 바꿨는데 크기가 따라 움직인다.
+    const stage = readFileSync('src/rendering/pixel/SpriteStage.ts', 'utf8')
+      .split('\n').filter((line) => !line.trimStart().startsWith('//')).join('\n');
+    expect(stage).not.toMatch(/spriteScale\(|from '\.\.\/rig'/);
+    expect(stage).toMatch(/PIXEL_ART_SCALE/);
+    const species = readFileSync('src/rendering/pixel/SpeciesSprite.ts', 'utf8');
+    expect(species).not.toMatch(/displayHeight/);
   });
 });
 

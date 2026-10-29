@@ -1,15 +1,21 @@
 #!/usr/bin/env python3
-"""인테이크 검증기 — 전신 1프레임 아트가 들어올 때 게이트 3개를 통과했는지 잰다.
+"""인테이크 검증기 — 전신 1프레임 아트가 들어올 때 게이트를 통과했는지 잰다.
 
-게이트(마스터 확정 2026-10-29):
+게이트(마스터 확정 2026-10-29, 걷기는 2026-10-29 접촉 구간 기준으로 교체):
   1) 접지: 모든 프레임의 마지막 불투명 행 = 297 (아래 298행이 지면선).
   2) 앞끝 편차: 같은 클립 안 실루엣 앞끝(진행 방향 끝) x의 최대-최소 ≤ 3 아트px.
-  3) idle bob: idle 클립 실루엣 높이 진폭 ≤ displayHeight의 5% 그리고 ≤ 6 아트px.
+  3) idle bob: idle 클립 실루엣 높이 진폭 ≤ 아트 높이의 5% 그리고 ≤ 6 아트px.
+  4) **걷기 접촉 게이트(교체)**: 프레임 x의 단순 차이 대신 접지점에 정체성을 붙여
+     "접촉 중 후퇴"만 잰다. 스윙(발 들기·재착지) 프레임의 큰 x 이동은 감점하지 않는다.
+     G2 접촉 후퇴 일정성(전부 양수·산포 ≤2아트px) / G3 지지 중 12아트px 초과 이동 금지.
+  5) 고아 픽셀(불투명 연결성분 1), 팔레트 밖 색 0.
 
 어긋나면 조용히 넘기지 않고 리포트에 FAIL로 찍고 종료 코드 1을 돌려준다.
+접촉/스윙 상세 표는 `scripts/measure-walk-contact.py`가 같은 모듈로 출력한다.
 사용: python3 scripts/verify-intake.py [--dir dev-art/species] [--species trex,stego]
 """
 import argparse
+import importlib.util
 import json
 import os
 import statistics
@@ -21,8 +27,14 @@ GROUND_ROW = 297
 FRONT_TOL = 3
 BOB_ART_PX = 6
 BOB_RATIO = 0.05
-SOLE_JUMP = 12       # 프레임 간 접지발 이동 상한(아트px) — 순간이동 검출
+SOLE_JUMP = 12       # 참고값: 프레임 x 단순 차이의 최대(접촉/스윙을 구분하지 않은 옛 척도)
 PALETTE_DIR = 'dev-art/palettes'
+
+# 걷기 접촉 게이트는 measure-walk-contact.py 한 곳에서만 구현한다(같은 자로 재기 위해).
+_spec = importlib.util.spec_from_file_location(
+    'walkcontact', os.path.join(os.path.dirname(os.path.abspath(__file__)), 'measure-walk-contact.py'))
+walkcontact = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(walkcontact)
 
 # 아티스트 폴더 → 게임 캐릭터 id
 SPECIES_IDS = {
@@ -90,12 +102,13 @@ def main():
     args = ap.parse_args()
 
     index = json.load(open(os.path.join(args.dir, 'index.json')))
-    heights = {r['id']: r['displayHeight'] for r in
+    # bob 한도는 **그림 크기**(artHeight) 기준이다 — 판정 키(displayHeight)와 분리됐다.
+    heights = {r['id']: r.get('artHeight', r['displayHeight']) for r in
                json.load(open('src/data/characters.json'))['characters']}
     pick = [s for s in args.species.split(',') if s] or sorted(index['species'])
 
     failures = []
-    print(f"{'종':9}{'접지':>14}{'앞끝 편차':>12}{'idle bob':>16}  판정")
+    print(f"{'종':9}{'접지':>10}{'앞끝 편차':>10}{'idle bob':>14}{'접촉(쌍/후퇴/산포)':>26}  판정")
     for folder in pick:
         manifest = json.load(open(os.path.join(args.dir, folder, 'manifest.json')))
         sheet = Image.open(os.path.join(args.dir, folder, 'sheet.png')).convert('RGBA')
@@ -115,16 +128,25 @@ def main():
             allowed = {tuple(c) for c in palette['p1']}
             used = {px[:3] for px in sheet.getdata() if px[3] > 0}
             outside = sorted(used - allowed)
-        # ② 프레임 간 접지발 이동: 걷기 클립에서 이웃 프레임 간 이동이 상한을 넘으면 순간이동.
+        # ② 걷기 접촉 게이트 — 접지점에 정체성을 붙인다(스윙 프레임은 감점하지 않는다).
         walk = manifest['clips']['walk']['frames']
+        files = []
+        for i in walk:
+            fr = manifest['frames'][i]
+            crop = sheet.crop((fr['x'], fr['y'], fr['x'] + fr['w'], fr['y'] + fr['h']))
+            files.append((fr.get('source', str(i)), crop,
+                          (manifest['anchorX'] - fr['anchor']['x'], manifest['footY'] - fr['anchor']['y'])))
+        gait = walkcontact.measure(files)
+        # 옛 척도(프레임 x 단순 차이)는 참고 열로만 남긴다 — 접촉/스윙을 구분하지 않기 때문.
         sole_x = [rows[i]['sole'] for i in walk]
-        jumps = []
-        for a, b in zip(sole_x, sole_x[1:]):
-            if a is None or b is None:
-                continue
-            jumps.append(abs((b['x0'] + b['x1']) / 2 - (a['x0'] + a['x1']) / 2))
+        jumps = [abs((b['x0'] + b['x1']) / 2 - (a['x0'] + a['x1']) / 2)
+                 for a, b in zip(sole_x, sole_x[1:]) if a and b]
         worst_jump = max(jumps) if jumps else 0
-        bad_ground = sum(1 for r in rows if r['lastRow'] != GROUND_ROW)
+        # 접지 게이트는 **땅에 서 있어야 하는 클립**에만 건다. jump·flail은 공중 포즈다.
+        AIRBORNE = {'jump', 'flail'}
+        grounded_idx = {i for st, clip in manifest['clips'].items() if st not in AIRBORNE
+                        for i in clip['frames']}
+        bad_ground = sum(1 for i, r in enumerate(rows) if i in grounded_idx and r['lastRow'] != GROUND_ROW)
         notes = []
 
         # 2) 앞끝 편차 — 클립별로 잰다(포즈가 바뀌면 앞끝도 바뀌는 게 정상).
@@ -157,51 +179,45 @@ def main():
         if multi:
             notes.append(f'고아 {len(multi)}프레임')
             failures.append((folder, '연결성분', f'{len(multi)}프레임이 성분 2개 이상(예: {multi[:5]})'))
-        if worst_jump > SOLE_JUMP:
-            notes.append(f'접지발 점프 {worst_jump:.0f}px')
-            failures.append((folder, '접지발 이동', f'최대 {worst_jump:.0f}px > {SOLE_JUMP}'))
+        if not gait['gate']['G2_contactConstant']:
+            notes.append(f"접촉후퇴 불일정({gait['retreats']})")
+            failures.append((folder, '걷기 접촉 후퇴',
+                             f"접촉 {gait['contactPairs']}쌍, 후퇴 {gait['retreats']} — "
+                             f"전부 양수·산포 ≤{walkcontact.RETREAT_SPREAD}아트px 불성립"))
+        if gait['slides']:
+            notes.append(f"지지중 슬라이드 {len(gait['slides'])}건")
+            failures.append((folder, '지지 중 슬라이드',
+                             '같은 접지점이 두 프레임 연속 12아트px 초과 이동: '
+                             + ', '.join(f"{s['from']}→{s['to']} Δ{s['dx']:+.0f}" for s in gait['slides'][:3])))
         if outside:
             notes.append(f'팔레트 밖 {len(outside)}색')
             failures.append((folder, '팔레트', f'{len(outside)}색 이탈(예: {outside[:3]})'))
 
         ground_cell = 'OK' if not bad_ground else f'{bad_ground} FAIL'
-        print(f"{folder:9}{ground_cell:>14}{f'{worst_front}px {worst_state}':>12}{f'{bob}px / {bob_limit:.1f}':>16}  "
+        contact_cell = (f"{gait['contactPairs']}/8 쌍 " +
+                        ('-' if not gait['retreats'] else
+                         f"{gait['retreats'][0]:+.1f}..{max(gait['retreats']):+.1f} 산포{gait['retreatSpread']:.1f}"))
+        print(f"{folder:9}{ground_cell:>10}{f'{worst_front}px {worst_state}':>10}{f'{bob}px / {bob_limit:.1f}':>14}"
+              f"{contact_cell:>26}  "
               f"{'PASS' if not notes else 'FAIL — ' + ', '.join(notes)}"
-              f"   (참고 공격 앞끝 최대 {attack_front[0]}px {attack_front[1]})")
+              f"   (참고 공격 앞끝 최대 {attack_front[0]}px {attack_front[1]}, 옛 x점프 {worst_jump:.0f})")
 
-    # 접지발 x 표(미끄러짐 판정용) — 걷기 클립.
-    print('\n걷기 접지발 x(프레임 순, 아트px / 프레임 내 좌표)')
+    # 걷기 접촉/스윙 상세 — 접지점 정체성·후퇴량·게이트 근거(같은 모듈).
+    print('\n걷기 접촉 증거(접지점 track / 접촉 전이 후퇴량 / 스윙 프레임은 감점 없음)')
     for folder in pick:
         manifest = json.load(open(os.path.join(args.dir, folder, 'manifest.json')))
         sheet = Image.open(os.path.join(args.dir, folder, 'sheet.png')).convert('RGBA')
-        rows = [frame_metrics(sheet, f, manifest['anchorX'], manifest['footY'])
-                for f in manifest['frames']]
-        crops = [sheet.crop((f['x'], f['y'], f['x'] + f['w'], f['y'] + f['h'])) for f in manifest['frames']]
-        # ① 고아 픽셀: 프레임마다 불투명 성분이 1개여야 한다.
-        multi = [i for i, c in enumerate(crops) if components(c) != 1]
-        # ③ 팔레트 밖 색: 아티스트 팔레트가 있으면 그 표에 있는 색만 허용.
-        palette_path = os.path.join(PALETTE_DIR, f'{folder}.json')
-        outside = []
-        if os.path.exists(palette_path):
-            palette = json.load(open(palette_path))
-            allowed = {tuple(c) for c in palette['p1']}
-            used = {px[:3] for px in sheet.getdata() if px[3] > 0}
-            outside = sorted(used - allowed)
-        # ② 프레임 간 접지발 이동: 걷기 클립에서 이웃 프레임 간 이동이 상한을 넘으면 순간이동.
-        walk = manifest['clips']['walk']['frames']
-        sole_x = [rows[i]['sole'] for i in walk]
-        jumps = []
-        for a, b in zip(sole_x, sole_x[1:]):
-            if a is None or b is None:
-                continue
-            jumps.append(abs((b['x0'] + b['x1']) / 2 - (a['x0'] + a['x1']) / 2))
-        worst_jump = max(jumps) if jumps else 0
-        walk = manifest['clips']['walk']['frames']
-        soles = []
-        for i in walk:
-            sole = rows[i]['sole']
-            soles.append(None if sole is None else round((sole['x0'] + sole['x1']) / 2))
-        print(f'{folder:9} {soles}')
+        files = []
+        for i in manifest['clips']['walk']['frames']:
+            fr = manifest['frames'][i]
+            crop = sheet.crop((fr['x'], fr['y'], fr['x'] + fr['w'], fr['y'] + fr['h']))
+            files.append((fr.get('source', str(i)), crop,
+                          (manifest['anchorX'] - fr['anchor']['x'], manifest['footY'] - fr['anchor']['y'])))
+        g = walkcontact.measure(files)
+        tracks = ' · '.join(f"T{t['id']}{'*' if t['tail'] else ''}:{t['frames']}f/span{t['span']}" for t in g['tracks'])
+        print(f'{folder:9} 접점 {len(g["tracks"])}개 [{tracks}]')
+        print(f'{"":9} 전이 ' + (' · '.join(f"{c['from']}→{c['to']} Δ{c['dx']:+.0f}" for c in g['contacts']) or '없음')
+              + f"  | 속도 제안 {g['proposedSpeed'] if g['proposedSpeed'] is not None else '계산 불가'} (승인 대기)")
 
     if failures:
         print('\n실패 목록')

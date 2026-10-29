@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { inflateSync } from 'node:zlib';
 import { describe, expect, it } from 'vitest';
 import { Match } from '../../combat/Match';
@@ -166,6 +166,22 @@ describe('아티스트 팔레트 규칙(따뜻한 인덱스는 회전 금지)', 
       else expect(raw.p2[i]).toEqual(raw.p1[i]);
     });
     expect(palette.p1.length).toBeGreaterThan(4);
+  });
+});
+
+describe('이름표 없는 팔레트는 받지 않는다 (마스터 확정 2026-10-29)', () => {
+  it('dev-art/palettes 의 모든 JSON 이 index_names 를 가진다', () => {
+    const files = readdirSync(PALETTE_DIR).filter((f) => f.endsWith('.json') && !f.endsWith('.artist.json'));
+    expect(files.length).toBeGreaterThan(0);
+    for (const file of files) {
+      const raw = JSON.parse(readFileSync(`${PALETTE_DIR}/${file}`, 'utf8')) as {
+        index_names?: string[]; p1?: number[][];
+      };
+      const names = raw.index_names ?? (raw as { indexNames?: string[] }).indexNames;
+      expect(names, `${file}: index_names 없음 — claw·belly 를 이름으로 가릴 수 없어 2P 색을 만들 수 없다`)
+        .toBeDefined();
+      expect(names!.length, `${file}: index_names 길이가 p1 과 다르다`).toBe(raw.p1!.length);
+    }
   });
 });
 
