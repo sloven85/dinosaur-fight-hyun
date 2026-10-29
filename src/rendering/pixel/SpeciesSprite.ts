@@ -52,6 +52,8 @@ export interface SpriteManifest {
   folder: string;
   name: string;
   image: string;
+  /** 2P 전용 팔레트 시트(포장 단계에서 인덱스 치환으로 뽑은 것). 없으면 1P 시트를 그대로 쓴다. */
+  p2Image?: string;
   facing: 'right' | 'left';
   scale: number;
   cell: [number, number];
@@ -61,7 +63,17 @@ export interface SpriteManifest {
   clips: Record<SpriteState, SpriteClip>;
 }
 
-export interface SpriteAssets { manifest: SpriteManifest; image: CanvasImageSource & { width: number; height: number } }
+export interface SpriteAssets {
+  manifest: SpriteManifest;
+  image: CanvasImageSource & { width: number; height: number };
+  /** 동종 미러에서 2P가 쓰는 같은 프레임의 다른 팔레트 시트. 프레임 좌표는 1P와 동일하다. */
+  p2?: CanvasImageSource & { width: number; height: number };
+}
+
+/** 이 캐릭터가 지금 어느 시트로 그려지는가. 2P(미러)만 팔레트 시트를 쓴다 — 모양은 같다. */
+export function spriteSheetFor(assets: SpriteAssets, alternatePalette: boolean): CanvasImageSource & { width: number; height: number } {
+  return alternatePalette && assets.p2 ? assets.p2 : assets.image;
+}
 
 export interface SpriteSample { state: SpriteState; frame: number; /** 클립 안에서 몇 번째 그림인지. */ step: number }
 
@@ -82,6 +94,10 @@ export function parseSpriteManifest(raw: unknown): SpriteManifest {
   }
   if (!Array.isArray(raw.cell) || raw.cell[0] !== CONTRACT.cellW || raw.cell[1] !== CONTRACT.cellH) {
     throw new Error(`도트 계약 위반: 셀은 ${CONTRACT.cellW}×${CONTRACT.cellH}이어야 합니다.`);
+  }
+  if (raw.p2Image !== undefined && (typeof raw.p2Image !== 'string' || !/^[\w./-]+\.png$/i.test(raw.p2Image) ||
+      raw.p2Image.startsWith('/') || raw.p2Image.includes('..'))) {
+    throw new Error('2P 팔레트 시트 경로가 올바르지 않습니다.');
   }
   if (typeof raw.character !== 'string' || !raw.character || typeof raw.image !== 'string' ||
       !/^[\w./-]+\.png$/i.test(raw.image) || raw.image.startsWith('/') || raw.image.includes('..')) {
@@ -130,7 +146,8 @@ export function parseSpriteManifest(raw: unknown): SpriteManifest {
   return {
     version: 1, character: raw.character, folder: typeof raw.folder === 'string' ? raw.folder : '',
     name: typeof raw.name === 'string' ? raw.name : raw.character,
-    image: raw.image, facing: raw.facing === 'left' ? 'left' : 'right',
+    image: raw.image, p2Image: raw.p2Image as string | undefined,
+    facing: raw.facing === 'left' ? 'left' : 'right',
     scale: Number.isInteger(raw.scale) ? (raw.scale as number) : CONTRACT.scale,
     cell: [CONTRACT.cellW, CONTRACT.cellH],
     footY: CONTRACT.footY, anchorX: CONTRACT.anchorX, frames, clips,
@@ -275,8 +292,11 @@ export function drawSpriteFrame(
   y: number,
   facing: 1 | -1,
   scale: number,
+  alternatePalette = false,
 ): void {
-  const { manifest, image } = assets;
+  const { manifest } = assets;
+  // 같은 프레임 사각형, 같은 배율. 2P는 팔레트만 다른 시트를 쓴다(모양·크기 동일).
+  const image = spriteSheetFor(assets, alternatePalette);
   const flip = facing * (manifest.facing === 'right' ? 1 : -1);
   g.save();
   g.imageSmoothingEnabled = false;

@@ -50,7 +50,8 @@
      1,
      4
     ]
-   }
+   },
+   "p2Sheet": "sheet_p2.png"
   },
   "brachio": {
    "character": "brachiosaurus",
@@ -94,7 +95,8 @@
      1,
      3
     ]
-   }
+   },
+   "p2Sheet": "sheet_p2.png"
   },
   "carno": {
    "character": "carnotaurus",
@@ -138,7 +140,8 @@
      0,
      5
     ]
-   }
+   },
+   "p2Sheet": "sheet_p2.png"
   },
   "dilo": {
    "character": "dilophosaurus",
@@ -182,7 +185,8 @@
      1,
      4
     ]
-   }
+   },
+   "p2Sheet": "sheet_p2.png"
   },
   "pachy": {
    "character": "pachycephalosaurus",
@@ -226,7 +230,8 @@
      0,
      1
     ]
-   }
+   },
+   "p2Sheet": "sheet_p2.png"
   },
   "ptera": {
    "character": "pteranodon",
@@ -270,7 +275,8 @@
      0,
      1
     ]
-   }
+   },
+   "p2Sheet": "sheet_p2.png"
   },
   "spino": {
    "character": "spinosaurus",
@@ -314,7 +320,8 @@
      0,
      4
     ]
-   }
+   },
+   "p2Sheet": "sheet_p2.png"
   },
   "stego": {
    "character": "stegosaurus",
@@ -358,7 +365,8 @@
      1,
      1
     ]
-   }
+   },
+   "p2Sheet": "sheet_p2.png"
   },
   "theri": {
    "character": "therizinosaurus",
@@ -402,7 +410,8 @@
      0,
      1
     ]
-   }
+   },
+   "p2Sheet": "sheet_p2.png"
   },
   "trex": {
    "character": "tyrannosaurus",
@@ -446,7 +455,8 @@
      0,
      0
     ]
-   }
+   },
+   "p2Sheet": "sheet_p2.png"
   },
   "trike": {
    "character": "triceratops",
@@ -490,7 +500,8 @@
      0,
      3
     ]
-   }
+   },
+   "p2Sheet": "sheet_p2.png"
   },
   "velo": {
    "character": "velociraptor",
@@ -534,7 +545,8 @@
      2,
      7
     ]
-   }
+   },
+   "p2Sheet": "sheet_p2.png"
   }
  }
 }

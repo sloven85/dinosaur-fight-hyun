@@ -7,6 +7,7 @@ import {
   ART_CLIPS, SPRITE_STATES, STATE_LABELS, SpriteClock, drawSpriteFrame, sampleFighter,
   parseSpriteManifest, type SpriteAssets, type SpriteState,
 } from './SpeciesSprite';
+import { PLAYER_COLORS, drawGroundRing, drawHeadMarker } from './PlayerMarker';
 
 const ROOT = 'dev-art/species/';
 
@@ -26,7 +27,13 @@ async function loadSpecies(loader: AssetLoader, folder: string): Promise<SpriteA
   if (manifest.frames.some((f) => f.x + f.w > image.naturalWidth || f.y + f.h > image.naturalHeight)) {
     throw new Error(`${folder} 시트 경계를 벗어난 프레임이 있습니다.`);
   }
-  return { manifest, image };
+  // 2P 팔레트 시트는 같은 크기·같은 프레임 좌표를 전제한다. 어긋나면 아예 쓰지 않는다.
+  let p2: SpriteAssets['p2'];
+  if (manifest.p2Image) {
+    const alt = await loader.loadImage(`${ROOT}${folder}/${manifest.p2Image}`);
+    if (alt && alt.naturalWidth === image.naturalWidth && alt.naturalHeight === image.naturalHeight) p2 = alt;
+  }
+  return { manifest, image, p2 };
 }
 
 /**
@@ -53,6 +60,8 @@ export class SpriteStage {
   private poseStep = 0;
   private readonly background: PixelBackground;
   private round = 0;
+  /** 동종 미러 경기인가 — 이때만 발밑 링·머리 마커를 그린다(판정·타점은 건드리지 않는다). */
+  private mirror = false;
   private disposed = false;
 
   constructor(private readonly loader: AssetLoader) {
@@ -203,6 +212,7 @@ export class SpriteStage {
   }
 
   step(match: Match, frozen: readonly boolean[]): void {
+    this.mirror = match.mirrorMatch;
     if (this.round !== match.roundNumber) {
       this.round = match.roundNumber;
       this.clocks.forEach((c) => c.reset());
@@ -278,7 +288,21 @@ export class SpriteStage {
     const sample = sampleFighter(assets.manifest, fighter, this.clocks[fighter.player]);
     const frame = assets.manifest.frames[sample.frame];
     if (!frame) return true;
-    drawSpriteFrame(g, assets, frame, fighter.x, feetY, fighter.facing, this.scaleFor(g));
+    const scale = this.scaleFor(g);
+    const color = fighter.useAlternatePalette ? PLAYER_COLORS.p2 : PLAYER_COLORS.p1;
+    // 표식은 캐릭터 뒤(링)·앞(머리 마커)에 둔다. 미러가 아니면 그리지 않는다.
+    if (this.mirror) drawGroundRing(g, fighter.x, feetY + scale, (frame.w * scale) / 3, color, scale);
+    // 2P는 포장 단계에서 뽑아 둔 팔레트 시트로 같은 프레임을 그린다(모양·크기 동일).
+    drawSpriteFrame(g, assets, frame, fighter.x, feetY, fighter.facing, scale, fighter.useAlternatePalette);
+    if (this.mirror) {
+      const box = {
+        left: fighter.x - frame.anchor.x * scale,
+        top: feetY - frame.anchor.y * scale,
+        right: fighter.x + (frame.w - frame.anchor.x) * scale,
+        bottom: feetY + (frame.h - frame.anchor.y) * scale,
+      };
+      drawHeadMarker(g, box, fighter.facing, color, scale);
+    }
     return true;
   }
 
