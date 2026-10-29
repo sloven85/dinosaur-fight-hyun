@@ -1,0 +1,71 @@
+{
+ "note": "carno motion profiles (deg, +ve=clockwise on screen; root=stage px). tailtip is relative to tailbase (whip enabled).",
+ "motions": {
+  "idle": {
+   "angles": {},
+   "root": [
+    0,
+    0
+   ]
+  },
+  "walk": {
+   "angles": {
+    "nearleg": 4,
+    "farleg": -2,
+    "neararm": -6,
+    "fararm": 4,
+    "tailbase": -3,
+    "tailtip": -3,
+    "head": 2
+   },
+   "root": [
+    0,
+    0
+   ]
+  },
+  "light": {
+   "angles": {
+    "head": 10,
+    "jaw": -6,
+    "nearleg": 4,
+    "farleg": -2,
+    "tailbase": -2,
+    "tailtip": -2
+   },
+   "root": [
+    20,
+    0
+   ]
+  },
+  "strong": {
+   "angles": {
+    "head": 16,
+    "jaw": -8,
+    "nearleg": 8,
+    "farleg": -4,
+    "tailbase": -5,
+    "tailtip": -4
+   },
+   "root": [
+    48,
+    -4
+   ]
+  },
+  "special": {
+   "angles": {
+    "head": 8,
+    "jaw": -4,
+    "nearleg": 0,
+    "farleg": 4,
+    "tailbase": -6,
+    "tailtip": -5,
+    "neararm": -8,
+    "fararm": 5
+   },
+   "root": [
+    70,
+    0
+   ]
+  }
+ }
+}

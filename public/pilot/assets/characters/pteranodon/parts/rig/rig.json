@@ -1,0 +1,120 @@
+{
+ "stage": {
+  "width": 2048,
+  "height": 1536,
+  "rootX": 1024,
+  "rootY": 1280
+ },
+ "style": "radial-joint cutout rig (gap-free: child cap disk centred on pivot)",
+ "drawOrder": [
+  "farwing",
+  "nearwing",
+  "farleg",
+  "torso",
+  "neck",
+  "head",
+  "jaw",
+  "nearleg"
+ ],
+ "parts": {
+  "farwing": {
+   "parent": "torso",
+   "drawOrder": 0,
+   "offsetX": 824,
+   "offsetY": 538,
+   "width": 130,
+   "height": 221,
+   "pivotX": 1000,
+   "pivotY": 780,
+   "capRadius": 180,
+   "localPivotX": 176,
+   "localPivotY": 242
+  },
+  "nearwing": {
+   "parent": "torso",
+   "drawOrder": 1,
+   "offsetX": 715,
+   "offsetY": 719,
+   "width": 445,
+   "height": 561,
+   "pivotX": 1078,
+   "pivotY": 790,
+   "capRadius": 190,
+   "localPivotX": 363,
+   "localPivotY": 71
+  },
+  "farleg": {
+   "parent": "torso",
+   "drawOrder": 2,
+   "offsetX": 1080,
+   "offsetY": 912,
+   "width": 187,
+   "height": 311,
+   "pivotX": 1205,
+   "pivotY": 1000,
+   "capRadius": 105,
+   "localPivotX": 125,
+   "localPivotY": 88
+  },
+  "torso": {
+   "parent": null,
+   "drawOrder": 3,
+   "offsetX": 664,
+   "offsetY": 530,
+   "width": 545,
+   "height": 580
+  },
+  "neck": {
+   "parent": "torso",
+   "drawOrder": 4,
+   "offsetX": 1010,
+   "offsetY": 490,
+   "width": 261,
+   "height": 448,
+   "pivotX": 1085,
+   "pivotY": 800,
+   "capRadius": 125,
+   "localPivotX": 75,
+   "localPivotY": 310
+  },
+  "head": {
+   "parent": "neck",
+   "drawOrder": 5,
+   "offsetX": 879,
+   "offsetY": 335,
+   "width": 504,
+   "height": 415,
+   "pivotX": 1140,
+   "pivotY": 620,
+   "capRadius": 130,
+   "localPivotX": 261,
+   "localPivotY": 285
+  },
+  "jaw": {
+   "parent": "head",
+   "drawOrder": 6,
+   "offsetX": 1095,
+   "offsetY": 604,
+   "width": 275,
+   "height": 92,
+   "pivotX": 1165,
+   "pivotY": 615,
+   "capRadius": 70,
+   "localPivotX": 70,
+   "localPivotY": 11
+  },
+  "nearleg": {
+   "parent": "torso",
+   "drawOrder": 7,
+   "offsetX": 869,
+   "offsetY": 890,
+   "width": 297,
+   "height": 390,
+   "pivotX": 1120,
+   "pivotY": 1000,
+   "capRadius": 110,
+   "localPivotX": 251,
+   "localPivotY": 110
+  }
+ }
+}

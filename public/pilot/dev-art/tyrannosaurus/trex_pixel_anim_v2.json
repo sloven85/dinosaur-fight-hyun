@@ -1,0 +1,1209 @@
+{
+ "version": "trex_pixel_v2",
+ "cell": [
+  208,
+  136
+ ],
+ "footY": 128,
+ "contactRow": 127,
+ "coordNote": "모든 좌표는 원본 픽셀, 셀 왼쪽 위 원점. footY=128은 지지 발바닥 아래 경계선, 접촉 픽셀 행 = 127. 엔진 배율 4배 nearest.",
+ "v1Correction": "v1의 \"전 프레임 접지 동일\"은 틀렸음: v1 실제 바닥 행은 125~127(1~2px 여백)이고 선언 bbox도 실측과 달랐음. v2는 프레임별 실측 alpha bbox와 접촉 행을 따로 기록.",
+ "animations": {
+  "idle": {
+   "ms": [
+    200,
+    180,
+    200,
+    180
+   ],
+   "loop": true,
+   "frames": [
+    {
+     "file": "trex_idle_00.png",
+     "name": "breath0",
+     "sheetRect": [
+      0,
+      0,
+      208,
+      136
+     ],
+     "alphaBBox": [
+      23,
+      26,
+      160,
+      102
+     ],
+     "headTopY": 26,
+     "contacts": [
+      {
+       "kind": "foot_support",
+       "leg": "near",
+       "soleX": [
+        74,
+        95
+       ],
+       "row": 127
+      },
+      {
+       "kind": "foot_support_outline1px",
+       "leg": "far",
+       "soleX": [
+        110,
+        131
+       ],
+       "row": 126,
+       "note": "발바닥 외곽선 1px 차, 지지로 취급"
+      }
+     ]
+    },
+    {
+     "file": "trex_idle_01.png",
+     "name": "breath1",
+     "sheetRect": [
+      208,
+      0,
+      208,
+      136
+     ],
+     "alphaBBox": [
+      23,
+      25,
+      160,
+      103
+     ],
+     "headTopY": 25,
+     "contacts": [
+      {
+       "kind": "foot_support",
+       "leg": "near",
+       "soleX": [
+        74,
+        95
+       ],
+       "row": 127
+      },
+      {
+       "kind": "foot_support_outline1px",
+       "leg": "far",
+       "soleX": [
+        110,
+        131
+       ],
+       "row": 126,
+       "note": "발바닥 외곽선 1px 차, 지지로 취급"
+      }
+     ]
+    },
+    {
+     "file": "trex_idle_02.png",
+     "name": "breath2",
+     "sheetRect": [
+      416,
+      0,
+      208,
+      136
+     ],
+     "alphaBBox": [
+      23,
+      24,
+      160,
+      104
+     ],
+     "headTopY": 24,
+     "contacts": [
+      {
+       "kind": "foot_support",
+       "leg": "near",
+       "soleX": [
+        74,
+        95
+       ],
+       "row": 127
+      },
+      {
+       "kind": "foot_support_outline1px",
+       "leg": "far",
+       "soleX": [
+        110,
+        131
+       ],
+       "row": 126,
+       "note": "발바닥 외곽선 1px 차, 지지로 취급"
+      }
+     ]
+    },
+    {
+     "file": "trex_idle_03.png",
+     "name": "breath1b",
+     "sheetRect": [
+      624,
+      0,
+      208,
+      136
+     ],
+     "alphaBBox": [
+      23,
+      25,
+      160,
+      103
+     ],
+     "headTopY": 25,
+     "contacts": [
+      {
+       "kind": "foot_support",
+       "leg": "near",
+       "soleX": [
+        74,
+        95
+       ],
+       "row": 127
+      },
+      {
+       "kind": "foot_support_outline1px",
+       "leg": "far",
+       "soleX": [
+        110,
+        131
+       ],
+       "row": 126,
+       "note": "발바닥 외곽선 1px 차, 지지로 취급"
+      }
+     ]
+    }
+   ],
+   "headTopRange": [
+    24,
+    26
+   ]
+  },
+  "walk": {
+   "ms": [
+    90,
+    90,
+    90,
+    90,
+    90,
+    90,
+    90,
+    90
+   ],
+   "loop": true,
+   "frames": [
+    {
+     "file": "trex_walk_00.png",
+     "name": "nearContact",
+     "sheetRect": [
+      0,
+      136,
+      208,
+      136
+     ],
+     "alphaBBox": [
+      23,
+      26,
+      160,
+      102
+     ],
+     "headTopY": 26,
+     "contacts": [
+      {
+       "kind": "foot_support",
+       "leg": "near",
+       "soleX": [
+        85,
+        107
+       ],
+       "row": 127,
+       "heelX": 85,
+       "toeX": 107
+      }
+     ],
+     "uncertain": [
+      "far 공중 발이 지지발 실루엣과 겹쳐 따로 측정 불가(설계상 공중, 들림 약 2~3px)"
+     ]
+    },
+    {
+     "file": "trex_walk_01.png",
+     "name": "nearLoad",
+     "sheetRect": [
+      208,
+      136,
+      208,
+      136
+     ],
+     "alphaBBox": [
+      23,
+      27,
+      160,
+      101
+     ],
+     "headTopY": 27,
+     "contacts": [
+      {
+       "kind": "foot_support",
+       "leg": "near",
+       "soleX": [
+        78,
+        99
+       ],
+       "row": 127,
+       "heelX": 78,
+       "toeX": 99
+      },
+      {
+       "kind": "foot_air",
+       "leg": "far",
+       "soleX": [
+        110,
+        130
+       ],
+       "row": 121,
+       "liftPx": 6
+      }
+     ]
+    },
+    {
+     "file": "trex_walk_02.png",
+     "name": "nearPass",
+     "sheetRect": [
+      416,
+      136,
+      208,
+      136
+     ],
+     "alphaBBox": [
+      23,
+      26,
+      160,
+      102
+     ],
+     "headTopY": 26,
+     "contacts": [
+      {
+       "kind": "foot_support",
+       "leg": "near",
+       "soleX": [
+        70,
+        92
+       ],
+       "row": 127,
+       "heelX": 70,
+       "toeX": 92
+      },
+      {
+       "kind": "foot_air",
+       "leg": "far",
+       "soleX": [
+        117,
+        135
+       ],
+       "row": 123,
+       "liftPx": 4
+      }
+     ]
+    },
+    {
+     "file": "trex_walk_03.png",
+     "name": "nearPush",
+     "sheetRect": [
+      624,
+      136,
+      208,
+      136
+     ],
+     "alphaBBox": [
+      23,
+      26,
+      160,
+      102
+     ],
+     "headTopY": 26,
+     "contacts": [
+      {
+       "kind": "foot_support",
+       "leg": "near",
+       "soleX": [
+        61,
+        84
+       ],
+       "row": 127,
+       "heelX": 61,
+       "toeX": 84
+      },
+      {
+       "kind": "foot_air",
+       "leg": "far",
+       "soleX": [
+        122,
+        142
+       ],
+       "row": 125,
+       "liftPx": 2
+      }
+     ]
+    },
+    {
+     "file": "trex_walk_04.png",
+     "name": "farContact",
+     "sheetRect": [
+      832,
+      136,
+      208,
+      136
+     ],
+     "alphaBBox": [
+      23,
+      26,
+      160,
+      102
+     ],
+     "headTopY": 26,
+     "contacts": [
+      {
+       "kind": "foot_support",
+       "leg": "far",
+       "soleX": [
+        122,
+        144
+       ],
+       "row": 127,
+       "heelX": 122,
+       "toeX": 144
+      },
+      {
+       "kind": "foot_air",
+       "leg": "near",
+       "soleX": [
+        70,
+        89
+       ],
+       "row": 125,
+       "liftPx": 2
+      }
+     ]
+    },
+    {
+     "file": "trex_walk_05.png",
+     "name": "farLoad",
+     "sheetRect": [
+      1040,
+      136,
+      208,
+      136
+     ],
+     "alphaBBox": [
+      23,
+      27,
+      160,
+      101
+     ],
+     "headTopY": 27,
+     "contacts": [
+      {
+       "kind": "foot_support",
+       "leg": "far",
+       "soleX": [
+        114,
+        136
+       ],
+       "row": 127,
+       "heelX": 114,
+       "toeX": 136
+      },
+      {
+       "kind": "foot_air",
+       "leg": "near",
+       "soleX": [
+        89,
+        92
+       ],
+       "row": 123,
+       "liftPx": 4
+      }
+     ]
+    },
+    {
+     "file": "trex_walk_06.png",
+     "name": "farPass",
+     "sheetRect": [
+      1248,
+      136,
+      208,
+      136
+     ],
+     "alphaBBox": [
+      23,
+      26,
+      160,
+      102
+     ],
+     "headTopY": 26,
+     "contacts": [
+      {
+       "kind": "foot_support",
+       "leg": "far",
+       "soleX": [
+        106,
+        129
+       ],
+       "row": 127,
+       "heelX": 106,
+       "toeX": 129
+      },
+      {
+       "kind": "foot_air",
+       "leg": "near",
+       "soleX": [
+        86,
+        98
+       ],
+       "row": 124,
+       "liftPx": 3
+      }
+     ]
+    },
+    {
+     "file": "trex_walk_07.png",
+     "name": "farPush",
+     "sheetRect": [
+      1456,
+      136,
+      208,
+      136
+     ],
+     "alphaBBox": [
+      23,
+      26,
+      160,
+      102
+     ],
+     "headTopY": 26,
+     "contacts": [
+      {
+       "kind": "foot_support",
+       "leg": "far",
+       "soleX": [
+        107,
+        120
+       ],
+       "row": 127,
+       "heelX": 107,
+       "toeX": 120
+      },
+      {
+       "kind": "foot_air",
+       "leg": "near",
+       "soleX": [
+        84,
+        101
+       ],
+       "row": 125,
+       "liftPx": 2
+      }
+     ],
+     "uncertain": [
+      "far 지지발 뒤꿈치가 들리기 시작(밀어내기) → 접지 길이 14px로 짧음, 발끝 x를 기준으로 쓸 것"
+     ]
+    }
+   ],
+   "locomotion": {
+    "speedGamePxPerSec": 360,
+    "scale": 4,
+    "frameMs": 90,
+    "designRetreatPerFrame": 8.1,
+    "supportWindows": {
+     "near": "frames 0-3 (착지→하중→통과→밀어내기)",
+     "far": "frames 4-7"
+    },
+    "loopBoundary": "7(far 밀어내기·near 착지 직전 2px) → 0(near 착지). 3→4에서 지지 교대(near 들기·far 착지).",
+    "measured": [
+     {
+      "leg": "near",
+      "frames": [
+       0,
+       1,
+       2,
+       3
+      ],
+      "toeX": [
+       107,
+       99,
+       92,
+       84
+      ],
+      "perFrameRetreat": [
+       8,
+       7,
+       8
+      ],
+      "slipPx": [
+       -0.1,
+       -1.1,
+       -0.1
+      ]
+     },
+     {
+      "leg": "far",
+      "frames": [
+       4,
+       5,
+       6,
+       7
+      ],
+      "toeX": [
+       144,
+       136,
+       129,
+       120
+      ],
+      "perFrameRetreat": [
+       8,
+       7,
+       9
+      ],
+      "slipPx": [
+       -0.1,
+       -1.1,
+       0.9
+      ]
+     }
+    ],
+    "headTopRange": [
+     26,
+     27
+    ],
+    "bodyBobPx": [
+     0,
+     1,
+     0,
+     0,
+     0,
+     1,
+     0,
+     0
+    ]
+   }
+  },
+  "bite": {
+   "ticks": [
+    3,
+    3,
+    3,
+    3,
+    4,
+    7,
+    7
+   ],
+   "loop": false,
+   "frames": [
+    {
+     "file": "trex_bite_00.png",
+     "name": "windup",
+     "sheetRect": [
+      0,
+      272,
+      208,
+      136
+     ],
+     "alphaBBox": [
+      12,
+      16,
+      169,
+      112
+     ],
+     "headTopY": 16,
+     "contacts": [
+      {
+       "kind": "foot_support",
+       "leg": "near",
+       "soleX": [
+        74,
+        92
+       ],
+       "row": 127
+      },
+      {
+       "kind": "foot_air",
+       "leg": "far",
+       "soleX": [
+        111,
+        134
+       ],
+       "row": 125,
+       "liftPx": 2
+      }
+     ],
+     "uncertain": [
+      "far 발: 앞꿈치만 2px 떠 있는 원본 자세(체중 near 발). 지지 판정은 near 발 기준"
+     ]
+    },
+    {
+     "file": "trex_bite_01.png",
+     "name": "gape",
+     "sheetRect": [
+      208,
+      272,
+      208,
+      136
+     ],
+     "alphaBBox": [
+      22,
+      20,
+      169,
+      108
+     ],
+     "headTopY": 20,
+     "contacts": [
+      {
+       "kind": "foot_support",
+       "leg": "near",
+       "soleX": [
+        74,
+        95
+       ],
+       "row": 127
+      },
+      {
+       "kind": "foot_air",
+       "leg": "far",
+       "soleX": [
+        118,
+        135
+       ],
+       "row": 125,
+       "liftPx": 2
+      }
+     ],
+     "uncertain": [
+      "far 발: 앞꿈치만 2px 떠 있는 원본 자세(체중 near 발). 지지 판정은 near 발 기준"
+     ]
+    },
+    {
+     "file": "trex_bite_02.png",
+     "name": "contact1",
+     "sheetRect": [
+      416,
+      272,
+      208,
+      136
+     ],
+     "alphaBBox": [
+      22,
+      20,
+      168,
+      108
+     ],
+     "headTopY": 20,
+     "contacts": [
+      {
+       "kind": "foot_support",
+       "leg": "near",
+       "soleX": [
+        74,
+        95
+       ],
+       "row": 127
+      },
+      {
+       "kind": "foot_air",
+       "leg": "far",
+       "soleX": [
+        118,
+        135
+       ],
+       "row": 125,
+       "liftPx": 2
+      }
+     ],
+     "uncertain": [
+      "far 발: 앞꿈치만 2px 떠 있는 원본 자세(체중 near 발). 지지 판정은 near 발 기준"
+     ]
+    },
+    {
+     "file": "trex_bite_03.png",
+     "name": "reopen",
+     "sheetRect": [
+      624,
+      272,
+      208,
+      136
+     ],
+     "alphaBBox": [
+      22,
+      20,
+      169,
+      108
+     ],
+     "headTopY": 20,
+     "contacts": [
+      {
+       "kind": "foot_support",
+       "leg": "near",
+       "soleX": [
+        74,
+        95
+       ],
+       "row": 127
+      },
+      {
+       "kind": "foot_air",
+       "leg": "far",
+       "soleX": [
+        118,
+        135
+       ],
+       "row": 125,
+       "liftPx": 2
+      }
+     ],
+     "uncertain": [
+      "far 발: 앞꿈치만 2px 떠 있는 원본 자세(체중 near 발). 지지 판정은 near 발 기준"
+     ]
+    },
+    {
+     "file": "trex_bite_04.png",
+     "name": "contact2",
+     "sheetRect": [
+      832,
+      272,
+      208,
+      136
+     ],
+     "alphaBBox": [
+      22,
+      20,
+      165,
+      108
+     ],
+     "headTopY": 20,
+     "contacts": [
+      {
+       "kind": "foot_support",
+       "leg": "near",
+       "soleX": [
+        74,
+        95
+       ],
+       "row": 127
+      },
+      {
+       "kind": "foot_air",
+       "leg": "far",
+       "soleX": [
+        118,
+        135
+       ],
+       "row": 125,
+       "liftPx": 2
+      }
+     ],
+     "uncertain": [
+      "far 발: 앞꿈치만 2px 떠 있는 원본 자세(체중 near 발). 지지 판정은 near 발 기준"
+     ]
+    },
+    {
+     "file": "trex_bite_05.png",
+     "name": "recover",
+     "sheetRect": [
+      1040,
+      272,
+      208,
+      136
+     ],
+     "alphaBBox": [
+      18,
+      25,
+      145,
+      103
+     ],
+     "headTopY": 26,
+     "contacts": [
+      {
+       "kind": "foot_support",
+       "leg": "near",
+       "soleX": [
+        74,
+        95
+       ],
+       "row": 127
+      },
+      {
+       "kind": "foot_air",
+       "leg": "far",
+       "soleX": [
+        108,
+        131
+       ],
+       "row": 124,
+       "liftPx": 3
+      }
+     ],
+     "uncertain": [
+      "recover: far 발 3px 들림 → 회수 중 체중 이동으로 그림. 접지는 near 발"
+     ]
+    },
+    {
+     "file": "trex_bite_06.png",
+     "name": "settle",
+     "sheetRect": [
+      1248,
+      272,
+      208,
+      136
+     ],
+     "alphaBBox": [
+      22,
+      27,
+      157,
+      101
+     ],
+     "headTopY": 27,
+     "contacts": [
+      {
+       "kind": "foot_support",
+       "leg": "near",
+       "soleX": [
+        74,
+        96
+       ],
+       "row": 127
+      },
+      {
+       "kind": "foot_support_outline1px",
+       "leg": "far",
+       "soleX": [
+        110,
+        132
+       ],
+       "row": 126,
+       "note": "발바닥 외곽선 1px 차, 지지로 취급"
+      }
+     ]
+    }
+   ],
+   "totalTicks": 30,
+   "tickTimeline": [
+    {
+     "frame": "windup",
+     "startTick": 0,
+     "endTick": 2
+    },
+    {
+     "frame": "gape",
+     "startTick": 3,
+     "endTick": 5
+    },
+    {
+     "frame": "contact1",
+     "startTick": 6,
+     "endTick": 8
+    },
+    {
+     "frame": "reopen",
+     "startTick": 9,
+     "endTick": 11
+    },
+    {
+     "frame": "contact2",
+     "startTick": 12,
+     "endTick": 15
+    },
+    {
+     "frame": "recover",
+     "startTick": 16,
+     "endTick": 22
+    },
+    {
+     "frame": "settle",
+     "startTick": 23,
+     "endTick": 29
+    }
+   ],
+   "events": {
+    "contact1": {
+     "ticks": [
+      6,
+      8
+     ],
+     "frame": "contact1"
+    },
+    "contact2": {
+     "ticks": [
+      12,
+      15
+     ],
+     "frame": "contact2"
+    },
+    "note": "피해·사거리·히트스톱 값은 v1/엔진 값 그대로. 접촉 2회 사이에 대기 자세 복귀 없음(reopen 전용 프레임)."
+   },
+   "msAt60Hz": [
+    50.0,
+    50.0,
+    50.0,
+    50.0,
+    66.7,
+    116.7,
+    116.7
+   ]
+  },
+  "hit": {
+   "ms": [
+    70,
+    140,
+    120
+   ],
+   "loop": false,
+   "frames": [
+    {
+     "file": "trex_hit_00.png",
+     "name": "hit0",
+     "sheetRect": [
+      0,
+      408,
+      208,
+      136
+     ],
+     "alphaBBox": [
+      25,
+      15,
+      147,
+      113
+     ],
+     "headTopY": 15,
+     "contacts": [
+      {
+       "kind": "foot_support",
+       "leg": "near",
+       "soleX": [
+        75,
+        96
+       ],
+       "row": 127
+      },
+      {
+       "kind": "foot_support_outline1px",
+       "leg": "far",
+       "soleX": [
+        110,
+        131
+       ],
+       "row": 126,
+       "note": "발바닥 외곽선 1px 차, 지지로 취급"
+      }
+     ]
+    },
+    {
+     "file": "trex_hit_01.png",
+     "name": "hit1",
+     "sheetRect": [
+      208,
+      408,
+      208,
+      136
+     ],
+     "alphaBBox": [
+      13,
+      9,
+      140,
+      119
+     ],
+     "headTopY": 17,
+     "contacts": [
+      {
+       "kind": "tail_air",
+       "leg": "tail",
+       "soleX": [
+        34,
+        52
+       ],
+       "row": 123,
+       "liftPx": 4
+      },
+      {
+       "kind": "foot_support",
+       "leg": "foot(near/far 구분 불확실)",
+       "soleX": [
+        83,
+        102
+       ],
+       "row": 127
+      }
+     ],
+     "uncertain": [
+      "피격1: 한 발 지지 자세. 지지 발이 near/far 어느 쪽인지 그림만으로 불확실"
+     ]
+    },
+    {
+     "file": "trex_hit_02.png",
+     "name": "hit2",
+     "sheetRect": [
+      416,
+      408,
+      208,
+      136
+     ],
+     "alphaBBox": [
+      28,
+      22,
+      149,
+      106
+     ],
+     "headTopY": 22,
+     "contacts": [
+      {
+       "kind": "foot_support",
+       "leg": "near",
+       "soleX": [
+        75,
+        96
+       ],
+       "row": 127
+      },
+      {
+       "kind": "foot_support_outline1px",
+       "leg": "far",
+       "soleX": [
+        110,
+        131
+       ],
+       "row": 126,
+       "note": "발바닥 외곽선 1px 차, 지지로 취급"
+      }
+     ]
+    }
+   ]
+  },
+  "down": {
+   "ms": [
+    110,
+    140,
+    400
+   ],
+   "loop": false,
+   "holdLast": true,
+   "frames": [
+    {
+     "file": "trex_down_00.png",
+     "name": "down0",
+     "sheetRect": [
+      0,
+      544,
+      208,
+      136
+     ],
+     "alphaBBox": [
+      39,
+      9,
+      120,
+      119
+     ],
+     "headTopY": 80,
+     "contacts": [
+      {
+       "kind": "tail_air",
+       "soleX": [
+        66,
+        80
+       ],
+       "row": 124,
+       "liftPx": 3
+      },
+      {
+       "kind": "foot_support",
+       "leg": "foot(뒤로 넘어지는 한 발)",
+       "soleX": [
+        113,
+        133
+       ],
+       "row": 127
+      }
+     ],
+     "uncertain": [
+      "다운0: 지지 발 near/far 불확실, 꼬리 끝 3px 위"
+     ]
+    },
+    {
+     "file": "trex_down_01.png",
+     "name": "down1",
+     "sheetRect": [
+      208,
+      544,
+      208,
+      136
+     ],
+     "alphaBBox": [
+      36,
+      39,
+      141,
+      89
+     ],
+     "headTopY": 95,
+     "contacts": [
+      {
+       "kind": "body_contact",
+       "x": [
+        89,
+        119
+       ],
+       "row": 127,
+       "note": "몸 밑면/등(발 지지 아님)"
+      },
+      {
+       "kind": "foot_air",
+       "soleX": [
+        36,
+        41
+       ],
+       "row": 117,
+       "liftPx": 10
+      }
+     ],
+     "uncertain": [
+      "다운1: 등·몸통이 닿는 구간만 접촉. 위로 든 다리·꼬리는 공중"
+     ]
+    },
+    {
+     "file": "trex_down_02.png",
+     "name": "down2",
+     "sheetRect": [
+      416,
+      544,
+      208,
+      136
+     ],
+     "alphaBBox": [
+      16,
+      88,
+      154,
+      40
+     ],
+     "headTopY": 97,
+     "contacts": [
+      {
+       "kind": "body_contact",
+       "x": [
+        43,
+        56
+       ],
+       "row": 127,
+       "note": "몸 밑면/등(발 지지 아님)"
+      },
+      {
+       "kind": "body_contact",
+       "x": [
+        72,
+        124
+       ],
+       "row": 127,
+       "note": "몸 밑면/등(발 지지 아님)"
+      }
+     ],
+     "uncertain": [
+      "다운2: 몸통·꼬리 밑면이 x16~165에서 126행(1px 위)까지 거의 닿음 → 접촉 판정은 127행 구간만"
+     ]
+    }
+   ]
+  }
+ },
+ "sheet": "trex_pixel_sheet_v2.png"
+}

@@ -1,0 +1,122 @@
+{
+  "canvas": {
+    "width": 2048,
+    "height": 1536
+  },
+  "root": {
+    "x": 1023.5,
+    "y": 1279
+  },
+  "master": {
+    "imagePath": "master_side.png",
+    "usable": true,
+    "box": {
+      "minX": 198,
+      "minY": 30,
+      "maxX": 1849,
+      "maxY": 1279,
+      "w": 1652,
+      "h": 1250,
+      "cx": 1023.5,
+      "feet": 1279,
+      "fill": 0.14821592966715494
+    }
+  },
+  "portrait": {
+    "imagePath": "portrait.png",
+    "usable": true
+  },
+  "poses": {
+    "heavy": {
+      "imagePath": "poses/heavy.png",
+      "rootX": 1024,
+      "rootY": 1280,
+      "usable": false,
+      "box": null
+    },
+    "special": {
+      "imagePath": "poses/special.png",
+      "rootX": 1024,
+      "rootY": 1280,
+      "usable": false,
+      "box": null
+    },
+    "hit": {
+      "imagePath": "poses/hit.png",
+      "rootX": 1024,
+      "rootY": 1280,
+      "usable": false,
+      "box": null
+    },
+    "down": {
+      "imagePath": "poses/down.png",
+      "rootX": 1023.0,
+      "rootY": 1279,
+      "usable": true,
+      "box": {
+        "minX": 239,
+        "minY": 823,
+        "maxX": 1807,
+        "maxY": 1279,
+        "w": 1569,
+        "h": 457,
+        "cx": 1023.0,
+        "feet": 1279,
+        "fill": 0.125032107035319
+      }
+    },
+    "victory": {
+      "imagePath": "poses/victory.png",
+      "rootX": 1023.0,
+      "rootY": 1280,
+      "usable": true,
+      "box": {
+        "minX": 304,
+        "minY": 141,
+        "maxX": 1742,
+        "maxY": 1280,
+        "w": 1439,
+        "h": 1140,
+        "cx": 1023.0,
+        "feet": 1280,
+        "fill": 0.18419202168782553
+      }
+    },
+    "guard": {
+      "imagePath": "poses/guard.png",
+      "rootX": 1023.5,
+      "rootY": 1279,
+      "usable": true,
+      "box": {
+        "minX": 126,
+        "minY": 486,
+        "maxX": 1921,
+        "maxY": 1279,
+        "w": 1796,
+        "h": 794
+      },
+      "sameScaleAsMaster": true
+    },
+    "entrance": {
+      "imagePath": "poses/entrance.png",
+      "rootX": 1023.5,
+      "rootY": 1279,
+      "usable": true,
+      "box": {
+        "minX": 164,
+        "minY": 146,
+        "maxX": 1883,
+        "maxY": 1279,
+        "w": 1720,
+        "h": 1134
+      },
+      "sameScaleAsMaster": true
+    }
+  },
+  "parts": {
+    "sheet": "parts/parts_sheet.png",
+    "extractedDir": "parts/extracted",
+    "manualRiggingRequired": true,
+    "productionReady": false
+  }
+}
