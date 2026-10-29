@@ -11,32 +11,36 @@ import { defineConfig, type Plugin } from 'vite';
 const allowedHosts = ['.sspark.ai'];
 
 /**
- * public/assets 아래 모든 파일의 내용으로 하나의 버전 해시를 만든다.
+ * public/assets 와 public/dev-art 아래 모든 파일의 내용으로 하나의 버전 해시를 만든다.
  * 이 값을 에셋 URL 뒤에 `?v=`로 붙이면, 같은 경로의 파일을 교체해도 URL이
  * 바뀌어 브라우저·엣지 캐시(1년 max-age)가 옛 바이트를 계속 쓰는 문제가 없어진다.
  */
 function computeAssetVersion(): string {
-  const root = join(process.cwd(), 'public', 'assets');
+  const roots = [join(process.cwd(), 'public', 'assets'), join(process.cwd(), 'public', 'dev-art')];
   const hash = createHash('sha1');
-  const walk = (dir: string): void => {
+  const walk = (root: string, dir: string): void => {
     for (const name of readdirSync(dir).sort()) {
       const full = join(dir, name);
       const stat = statSync(full);
       if (stat.isDirectory()) {
-        walk(full);
+        walk(root, full);
       } else {
         hash.update(relative(root, full));
         hash.update(readFileSync(full));
       }
     }
   };
-  try {
-    walk(root);
-  } catch {
-    // 에셋 폴더가 없어도 빌드는 진행한다.
-    return 'dev';
+  let walked = 0;
+  for (const root of roots) {
+    try {
+      walk(root, root);
+      walked++;
+    } catch {
+      // 없는 폴더는 건너뛴다(개발 서버에서 dev-art가 없을 수 있다).
+    }
   }
-  return hash.digest('hex').slice(0, 12);
+  // 아무것도 못 읽으면 캐시 무효화가 의미 없으므로 고정값을 쓴다.
+  return walked === 0 ? 'dev' : hash.digest('hex').slice(0, 12);
 }
 
 /**
