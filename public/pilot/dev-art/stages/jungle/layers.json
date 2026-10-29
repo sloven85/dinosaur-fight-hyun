@@ -1,0 +1,22 @@
+{
+ "stage": "jungle",
+ "native": [
+  640,
+  360
+ ],
+ "standLine": 298,
+ "layers": {
+  "far": {
+   "file": "jungle_far_bleed.png",
+   "pad": 160
+  },
+  "mid": {
+   "file": "jungle_mid_bleed.png",
+   "pad": 48
+  },
+  "ground": {
+   "file": "jungle_ground_bleed.png",
+   "pad": 96
+  }
+ }
+}

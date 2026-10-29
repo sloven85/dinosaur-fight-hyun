@@ -1,0 +1,222 @@
+{
+ "stage": {
+  "width": 2048,
+  "height": 1536,
+  "rootX": 1024,
+  "rootY": 1280
+ },
+ "style": "radial-joint cutout rig (gap-free: child cap disk centred on pivot)",
+ "drawOrder": [
+  "backing",
+  "mfloor",
+  "mouth",
+  "lteeth",
+  "farleg",
+  "fararm",
+  "torso",
+  "tailbase",
+  "tailtip",
+  "head",
+  "jaw",
+  "neararm",
+  "nearleg"
+ ],
+ "parts": {
+  "mfloor": {
+   "parent": "jaw",
+   "drawOrder": 0,
+   "offsetX": 1605,
+   "offsetY": 231,
+   "width": 337,
+   "height": 203,
+   "pivotX": 1598,
+   "pivotY": 392,
+   "capRadius": 72,
+   "localPivotX": -7,
+   "localPivotY": 161
+  },
+  "mouth": {
+   "parent": "head",
+   "drawOrder": 1,
+   "offsetX": 1524,
+   "offsetY": 364,
+   "width": 426,
+   "height": 169,
+   "pivotX": 1320,
+   "pivotY": 560,
+   "capRadius": 130,
+   "localPivotX": -204,
+   "localPivotY": 196
+  },
+  "lteeth": {
+   "parent": "jaw",
+   "drawOrder": 2,
+   "offsetX": 1614,
+   "offsetY": 357,
+   "width": 288,
+   "height": 77,
+   "pivotX": 1598,
+   "pivotY": 392,
+   "capRadius": 72,
+   "localPivotX": -16,
+   "localPivotY": 35
+  },
+  "farleg": {
+   "parent": "torso",
+   "drawOrder": 3,
+   "offsetX": 938,
+   "offsetY": 693,
+   "width": 431,
+   "height": 577,
+   "pivotX": 1170,
+   "pivotY": 940,
+   "capRadius": 245,
+   "localPivotX": 232,
+   "localPivotY": 247
+  },
+  "fararm": {
+   "parent": "torso",
+   "drawOrder": 4,
+   "offsetX": 1399,
+   "offsetY": 728,
+   "width": 96,
+   "height": 73,
+   "pivotX": 1440,
+   "pivotY": 770,
+   "capRadius": 40,
+   "localPivotX": 41,
+   "localPivotY": 42
+  },
+  "torso": {
+   "parent": null,
+   "drawOrder": 5,
+   "offsetX": 460,
+   "offsetY": 392,
+   "width": 1106,
+   "height": 794
+  },
+  "tailbase": {
+   "parent": "torso",
+   "drawOrder": 6,
+   "offsetX": 353,
+   "offsetY": 503,
+   "width": 590,
+   "height": 464,
+   "pivotX": 700,
+   "pivotY": 730,
+   "capRadius": 240,
+   "localPivotX": 347,
+   "localPivotY": 227
+  },
+  "tailtip": {
+   "parent": "tailbase",
+   "drawOrder": 7,
+   "offsetX": 115,
+   "offsetY": 472,
+   "width": 460,
+   "height": 412,
+   "pivotX": 460,
+   "pivotY": 770,
+   "capRadius": 112,
+   "localPivotX": 345,
+   "localPivotY": 298
+  },
+  "head": {
+   "parent": "torso",
+   "drawOrder": 8,
+   "offsetX": 1188,
+   "offsetY": 130,
+   "width": 779,
+   "height": 563,
+   "pivotX": 1320,
+   "pivotY": 560,
+   "capRadius": 130,
+   "localPivotX": 132,
+   "localPivotY": 430
+  },
+  "jaw": {
+   "parent": "head",
+   "drawOrder": 9,
+   "offsetX": 1524,
+   "offsetY": 364,
+   "width": 426,
+   "height": 169,
+   "pivotX": 1598,
+   "pivotY": 392,
+   "capRadius": 72,
+   "localPivotX": 74,
+   "localPivotY": 28
+  },
+  "neararm": {
+   "parent": "torso",
+   "drawOrder": 10,
+   "offsetX": 1303,
+   "offsetY": 743,
+   "width": 91,
+   "height": 89,
+   "pivotX": 1350,
+   "pivotY": 790,
+   "capRadius": 45,
+   "localPivotX": 47,
+   "localPivotY": 47
+  },
+  "nearleg": {
+   "parent": "torso",
+   "drawOrder": 11,
+   "offsetX": 538,
+   "offsetY": 663,
+   "width": 468,
+   "height": 617,
+   "pivotX": 770,
+   "pivotY": 900,
+   "capRadius": 235,
+   "localPivotX": 232,
+   "localPivotY": 237
+  },
+  "backing": {
+   "parent": "torso",
+   "drawOrder": -1,
+   "offsetX": 402,
+   "offsetY": 397,
+   "width": 1179,
+   "height": 818,
+   "note": "hidden fill under all parts; follows torso transform; draw before everything"
+  }
+ },
+ "hitRange": {
+  "head": [
+   -24,
+   8
+  ],
+  "jaw": [
+   -26,
+   0
+  ],
+  "tailbase": [
+   -40,
+   40
+  ],
+  "tailtip": [
+   -40,
+   40
+  ],
+  "neararm": [
+   -40,
+   40
+  ],
+  "fararm": [
+   -40,
+   40
+  ],
+  "nearleg": [
+   -4,
+   10
+  ],
+  "farleg": [
+   -10,
+   20
+  ]
+ },
+ "note": "backing.png = hidden inpainted fill, drawn first, follows torso",
+ "hitRangeNote": "deg, engine sign as rig poses (+ = counter-clockwise). Clamp spring reactions to this; measured: each joint alone adds <=400px of gap over idle."
+}

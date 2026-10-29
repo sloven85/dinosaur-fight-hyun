@@ -1,0 +1,22 @@
+{
+ "stage": "volcano",
+ "native": [
+  640,
+  360
+ ],
+ "standLine": 298,
+ "layers": {
+  "far": {
+   "file": "volcano_far_960x360.png",
+   "pad": 160
+  },
+  "mid": {
+   "file": "volcano_mid_736x360.png",
+   "pad": 48
+  },
+  "ground": {
+   "file": "volcano_ground_832.png",
+   "pad": 96
+  }
+ }
+}

@@ -1,0 +1,8 @@
+{
+  "primary": "#77A65A",
+  "secondary": "#C85848",
+  "alternatePalette": {
+    "skin": "#367A91"
+  },
+  "skinTintableOnly": true
+}

@@ -1,0 +1,120 @@
+{
+  "canvas": {
+    "width": 2048,
+    "height": 1536
+  },
+  "root": {
+    "x": 1023.0,
+    "y": 1279
+  },
+  "master": {
+    "imagePath": "master_side.png",
+    "usable": true,
+    "box": {
+      "minX": 664,
+      "minY": 335,
+      "maxX": 1382,
+      "maxY": 1279,
+      "w": 719,
+      "h": 945,
+      "cx": 1023.0,
+      "feet": 1279,
+      "fill": 0.09485944112141927
+    }
+  },
+  "portrait": {
+    "imagePath": "portrait.png",
+    "usable": true
+  },
+  "poses": {
+    "heavy": {
+      "imagePath": "poses/heavy.png",
+      "rootX": 1024,
+      "rootY": 1280,
+      "usable": false,
+      "box": null
+    },
+    "special": {
+      "imagePath": "poses/special.png",
+      "rootX": 1024,
+      "rootY": 1280,
+      "usable": false,
+      "box": null
+    },
+    "hit": {
+      "imagePath": "poses/hit.png",
+      "rootX": 1024,
+      "rootY": 1280,
+      "usable": false,
+      "box": null
+    },
+    "down": {
+      "imagePath": "poses/down.png",
+      "rootX": 1023.0,
+      "rootY": 1279,
+      "usable": true,
+      "box": {
+        "minX": 682,
+        "minY": 1061,
+        "maxX": 1364,
+        "maxY": 1279,
+        "w": 683,
+        "h": 219,
+        "cx": 1023.0,
+        "feet": 1279,
+        "fill": 0.020653724670410156
+      }
+    },
+    "victory": {
+      "imagePath": "poses/victory.png",
+      "rootX": 1023.0,
+      "rootY": 1279,
+      "usable": true,
+      "box": {
+        "minX": 146,
+        "minY": 195,
+        "maxX": 1900,
+        "maxY": 1279,
+        "w": 1755,
+        "h": 1085
+      },
+      "sameScaleAsMaster": true
+    },
+    "guard": {
+      "imagePath": "poses/guard.png",
+      "rootX": 1023.0,
+      "rootY": 1279,
+      "usable": true,
+      "box": {
+        "minX": 696,
+        "minY": 329,
+        "maxX": 1350,
+        "maxY": 1279,
+        "w": 655,
+        "h": 951
+      },
+      "sameScaleAsMaster": true
+    },
+    "entrance": {
+      "imagePath": "poses/entrance.png",
+      "rootX": 1023.0,
+      "rootY": 1279,
+      "usable": true,
+      "box": {
+        "minX": 104,
+        "minY": 182,
+        "maxX": 1942,
+        "maxY": 1279,
+        "w": 1839,
+        "h": 1098
+      },
+      "sameScaleAsMaster": true
+    }
+  },
+  "parts": {
+    "sheet": "parts/parts_sheet.png",
+    "extractedDir": "parts/extracted",
+    "manualRiggingRequired": true,
+    "productionReady": false
+  }
+}

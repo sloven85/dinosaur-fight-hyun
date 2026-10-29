@@ -1,0 +1,70 @@
+{
+ "note": "anky motion profiles (deg, +ve=clockwise on screen; root=stage px). tailtip is relative to tailbase (whip enabled).",
+ "motions": {
+  "idle": {
+   "angles": {},
+   "root": [
+    0,
+    0
+   ]
+  },
+  "walk": {
+   "angles": {
+    "nearleg_back": 10,
+    "farleg_back": -2,
+    "nearleg_front": 0,
+    "farleg_front": 0,
+    "tailbase": -4,
+    "tailtip": -4,
+    "head": 2
+   },
+   "root": [
+    0,
+    0
+   ]
+  },
+  "light": {
+   "angles": {
+    "head": 4,
+    "nearleg_back": 7,
+    "nearleg_front": 0,
+    "farleg_back": -2,
+    "tailbase": 3,
+    "tailtip": 2
+   },
+   "root": [
+    16,
+    0
+   ]
+  },
+  "strong": {
+   "angles": {
+    "tailbase": -24,
+    "tailtip": -16,
+    "head": -6,
+    "jaw": -8,
+    "nearleg_back": 4,
+    "nearleg_front": 0
+   },
+   "root": [
+    -8,
+    0
+   ]
+  },
+  "special": {
+   "angles": {
+    "tailbase": -30,
+    "tailtip": -22,
+    "head": -9,
+    "jaw": -10,
+    "nearleg_back": 0,
+    "farleg_back": 2,
+    "nearleg_front": 0
+   },
+   "root": [
+    -14,
+    -3
+   ]
+  }
+ }
+}

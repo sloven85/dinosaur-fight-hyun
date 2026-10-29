@@ -1,0 +1,75 @@
+{
+ "note": "spino motion profiles (deg, +ve=clockwise on screen; root=stage px). tailtip is relative to tailbase (whip enabled).",
+ "motions": {
+  "idle": {
+   "angles": {},
+   "root": [
+    0,
+    0
+   ]
+  },
+  "walk": {
+   "angles": {
+    "nearleg": 12,
+    "farleg": -4,
+    "neararm": -5,
+    "fararm": 4,
+    "tailbase": -4,
+    "tailtip": -6,
+    "head": 2
+   },
+   "root": [
+    0,
+    0
+   ]
+  },
+  "light": {
+   "angles": {
+    "head": 7,
+    "jaw": -14,
+    "neararm": -4,
+    "fararm": 3,
+    "tailbase": -3,
+    "tailtip": -4,
+    "nearleg": 2,
+    "farleg": -2
+   },
+   "root": [
+    12,
+    0
+   ]
+  },
+  "strong": {
+   "angles": {
+    "head": 13,
+    "jaw": -18,
+    "neararm": -7,
+    "fararm": 5,
+    "tailbase": -5,
+    "tailtip": -6,
+    "nearleg": 5,
+    "farleg": -4
+   },
+   "root": [
+    28,
+    0
+   ]
+  },
+  "special": {
+   "angles": {
+    "head": 7,
+    "jaw": -11,
+    "tailbase": 10,
+    "tailtip": 14,
+    "neararm": 7,
+    "fararm": -5,
+    "nearleg": -5,
+    "farleg": 3
+   },
+   "root": [
+    80,
+    -4
+   ]
+  }
+ }
+}

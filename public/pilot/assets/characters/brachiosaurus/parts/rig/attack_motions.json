@@ -1,0 +1,64 @@
+{
+ "note": "brachiosaurus motion profiles (engineer default; deg, +ve clockwise). artist rig 5163082",
+ "motions": {
+  "idle": {
+   "angles": {},
+   "root": [
+    0,
+    0
+   ]
+  },
+  "walk": {
+   "angles": {
+    "nearleg": 12,
+    "farleg": -6,
+    "tailbase": -4,
+    "tailtip": -5,
+    "head": 2,
+    "neck": 2,
+    "neck2": 2
+   },
+   "root": [
+    0,
+    0
+   ]
+  },
+  "light": {
+   "angles": {
+    "head": 10,
+    "neck": 8,
+    "jaw": 16
+   },
+   "root": [
+    0,
+    0
+   ]
+  },
+  "strong": {
+   "angles": {
+    "head": 16,
+    "neck": 12,
+    "neck2": 10,
+    "jaw": 22,
+    "tailbase": -8
+   },
+   "root": [
+    0,
+    0
+   ]
+  },
+  "special": {
+   "angles": {
+    "head": -14,
+    "neck": -10,
+    "neck2": -8,
+    "jaw": 30,
+    "tailbase": 10
+   },
+   "root": [
+    0,
+    0
+   ]
+  }
+ }
+}

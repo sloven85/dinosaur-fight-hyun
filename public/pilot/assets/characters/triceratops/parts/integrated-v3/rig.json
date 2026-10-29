@@ -1,0 +1,171 @@
+{
+ "stage": {
+  "width": 2048,
+  "height": 1536,
+  "rootX": 1024,
+  "rootY": 1280
+ },
+ "style": "radial-joint cutout rig (gap-free: child cap disk centred on pivot)",
+ "drawOrder": [
+  "backing",
+  "farleg_back",
+  "nearleg_back",
+  "farleg_front",
+  "nearleg_front",
+  "torso",
+  "tailbase",
+  "tailtip",
+  "head",
+  "jaw"
+ ],
+ "parts": {
+  "farleg_back": {
+   "parent": "torso",
+   "drawOrder": 0,
+   "offsetX": 687,
+   "offsetY": 913,
+   "width": 277,
+   "height": 320,
+   "pivotX": 820,
+   "pivotY": 1060,
+   "capRadius": 145,
+   "localPivotX": 133,
+   "localPivotY": 147
+  },
+  "nearleg_back": {
+   "parent": "torso",
+   "drawOrder": 1,
+   "offsetX": 475,
+   "offsetY": 901,
+   "width": 261,
+   "height": 360,
+   "pivotX": 585,
+   "pivotY": 1040,
+   "capRadius": 150,
+   "localPivotX": 110,
+   "localPivotY": 139
+  },
+  "farleg_front": {
+   "parent": "torso",
+   "drawOrder": 2,
+   "offsetX": 1194,
+   "offsetY": 921,
+   "width": 340,
+   "height": 332,
+   "pivotX": 1360,
+   "pivotY": 1090,
+   "capRadius": 175,
+   "localPivotX": 166,
+   "localPivotY": 169
+  },
+  "nearleg_front": {
+   "parent": "torso",
+   "drawOrder": 3,
+   "offsetX": 922,
+   "offsetY": 908,
+   "width": 314,
+   "height": 372,
+   "pivotX": 1075,
+   "pivotY": 1070,
+   "capRadius": 160,
+   "localPivotX": 153,
+   "localPivotY": 162
+  },
+  "torso": {
+   "parent": null,
+   "drawOrder": 4,
+   "offsetX": 383,
+   "offsetY": 461,
+   "width": 1388,
+   "height": 791
+  },
+  "tailbase": {
+   "parent": "torso",
+   "drawOrder": 5,
+   "offsetX": 245,
+   "offsetY": 638,
+   "width": 598,
+   "height": 475,
+   "pivotX": 610,
+   "pivotY": 870,
+   "capRadius": 230,
+   "localPivotX": 365,
+   "localPivotY": 232
+  },
+  "tailtip": {
+   "parent": "tailbase",
+   "drawOrder": 6,
+   "offsetX": 75,
+   "offsetY": 880,
+   "width": 448,
+   "height": 237,
+   "pivotX": 380,
+   "pivotY": 1020,
+   "capRadius": 140,
+   "localPivotX": 305,
+   "localPivotY": 140
+  },
+  "head": {
+   "parent": "torso",
+   "drawOrder": 7,
+   "offsetX": 1147,
+   "offsetY": 316,
+   "width": 826,
+   "height": 777,
+   "pivotX": 1520,
+   "pivotY": 930,
+   "capRadius": 250,
+   "localPivotX": 373,
+   "localPivotY": 614
+  },
+  "jaw": {
+   "parent": "head",
+   "drawOrder": 8,
+   "offsetX": 1570,
+   "offsetY": 886,
+   "width": 280,
+   "height": 195,
+   "pivotX": 1650,
+   "pivotY": 1000,
+   "capRadius": 80,
+   "localPivotX": 80,
+   "localPivotY": 114
+  },
+  "backing": {
+   "parent": "torso",
+   "drawOrder": -1,
+   "offsetX": 435,
+   "offsetY": 520,
+   "width": 1051,
+   "height": 732,
+   "note": "hidden fill, follows torso, draw first"
+  }
+ },
+ "hitPivotNote": "Keys are <leg>+ / <leg>- = hit angle sign. Coordinates are REST-POSE canvas coords: transform them by the leg's current base-pose world matrix (parent chain x base rotation about hip joint) before rotating the hit angle. Do not use them as fixed screen coords.",
+ "hitPivot": {
+  "farleg_back-": {
+   "x": 909.8,
+   "y": 1222.0
+  },
+  "farleg_back+": {
+   "x": 819.2,
+   "y": 1232.0
+  },
+  "nearleg_back+": {
+   "x": 539.2,
+   "y": 1249.0
+  },
+  "farleg_front+": {
+   "x": 1349.0,
+   "y": 1251.0
+  },
+  "nearleg_front-": {
+   "x": 1142.0,
+   "y": 1279.0
+  },
+  "nearleg_front+": {
+   "x": 1056.0,
+   "y": 1259.0
+  }
+ }
+}

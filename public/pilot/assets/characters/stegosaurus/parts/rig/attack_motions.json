@@ -1,0 +1,69 @@
+{
+ "note": "stego motion profiles (deg, +ve=clockwise on screen; root=stage px). tailtip is relative to tailbase (whip enabled).",
+ "motions": {
+  "idle": {
+   "angles": {},
+   "root": [
+    0,
+    0
+   ]
+  },
+  "walk": {
+   "angles": {
+    "nearleg_back": 10,
+    "farleg_back": -2,
+    "nearleg_front": 8,
+    "farleg_front": 0,
+    "tailbase": -3,
+    "tailtip": 3,
+    "head": 2
+   },
+   "root": [
+    0,
+    0
+   ]
+  },
+  "light": {
+   "angles": {
+    "tailbase": -14,
+    "tailtip": -10,
+    "head": -4,
+    "nearleg_back": 2,
+    "nearleg_front": -3
+   },
+   "root": [
+    0,
+    0
+   ]
+  },
+  "strong": {
+   "angles": {
+    "head": 10,
+    "tailbase": 6,
+    "tailtip": 8,
+    "jaw": -10,
+    "nearleg_back": 4,
+    "nearleg_front": -4
+   },
+   "root": [
+    -6,
+    -2
+   ]
+  },
+  "special": {
+   "angles": {
+    "head": 14,
+    "jaw": -12,
+    "tailbase": -8,
+    "tailtip": -12,
+    "nearleg_back": -6,
+    "farleg_back": 4,
+    "nearleg_front": 8
+   },
+   "root": [
+    0,
+    -10
+   ]
+  }
+ }
+}

@@ -1,0 +1,70 @@
+{
+ "note": "trike motion profiles (deg, +ve=clockwise on screen; root=stage px). tailtip is relative to tailbase (whip enabled).",
+ "motions": {
+  "idle": {
+   "angles": {},
+   "root": [
+    0,
+    0
+   ]
+  },
+  "walk": {
+   "angles": {
+    "nearleg_back": 10,
+    "farleg_back": -2,
+    "nearleg_front": 0,
+    "farleg_front": 0,
+    "tailbase": -4,
+    "tailtip": -4,
+    "head": 2
+   },
+   "root": [
+    0,
+    0
+   ]
+  },
+  "light": {
+   "angles": {
+    "head": 8,
+    "jaw": -6,
+    "nearleg_back": 6,
+    "farleg_back": -2,
+    "tailbase": -3,
+    "tailtip": -2
+   },
+   "root": [
+    18,
+    0
+   ]
+  },
+  "strong": {
+   "angles": {
+    "head": -10,
+    "jaw": -10,
+    "nearleg_back": 8,
+    "nearleg_front": 0,
+    "tailbase": -5,
+    "tailtip": -4
+   },
+   "root": [
+    0,
+    -6
+   ]
+  },
+  "special": {
+   "angles": {
+    "head": -6,
+    "jaw": -6,
+    "tailbase": -7,
+    "tailtip": -5,
+    "nearleg_back": 6,
+    "farleg_back": -3,
+    "nearleg_front": 4
+   },
+   "root": [
+    16,
+    0
+   ]
+  }
+ }
+}

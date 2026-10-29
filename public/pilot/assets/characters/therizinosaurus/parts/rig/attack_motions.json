@@ -1,0 +1,69 @@
+{
+ "note": "therizinosaurus motion profiles (engineer default; deg, +ve clockwise). artist rig 5163082",
+ "motions": {
+  "idle": {
+   "angles": {},
+   "root": [
+    0,
+    0
+   ]
+  },
+  "walk": {
+   "angles": {
+    "nearleg": 12,
+    "farleg": -6,
+    "neararm": -6,
+    "fararm": 4,
+    "tailbase": -4,
+    "tailtip": -5,
+    "head": 2,
+    "neck": 2
+   },
+   "root": [
+    0,
+    0
+   ]
+  },
+  "light": {
+   "angles": {
+    "neararm": -40,
+    "fararm": -30,
+    "head": 10,
+    "neck": 8,
+    "jaw": 16
+   },
+   "root": [
+    0,
+    0
+   ]
+  },
+  "strong": {
+   "angles": {
+    "neararm": -60,
+    "fararm": -46,
+    "head": 16,
+    "neck": 12,
+    "jaw": 22,
+    "tailbase": -8
+   },
+   "root": [
+    0,
+    0
+   ]
+  },
+  "special": {
+   "angles": {
+    "neararm": -50,
+    "fararm": -40,
+    "head": -14,
+    "neck": -10,
+    "jaw": 30,
+    "tailbase": 10
+   },
+   "root": [
+    0,
+    0
+   ]
+  }
+ }
+}

@@ -1,0 +1,610 @@
+{
+ "cell": [
+  208,
+  136
+ ],
+ "footY": 128,
+ "anchorX": 100,
+ "pixelScaleNote": "native pixel art; render with nearest-neighbor, integer scale (x4 = 832x544 cell)",
+ "animations": {
+  "idle": {
+   "frames": [
+    {
+     "file": "trex_idle_00.png",
+     "bbox": [
+      22,
+      24,
+      162,
+      104
+     ],
+     "footY": 128,
+     "lift": 0,
+     "bodyAnchorX": 100,
+     "clipped": false,
+     "sheetRect": [
+      0,
+      0,
+      208,
+      136
+     ]
+    },
+    {
+     "file": "trex_idle_01.png",
+     "bbox": [
+      22,
+      16,
+      161,
+      112
+     ],
+     "footY": 128,
+     "lift": 0,
+     "bodyAnchorX": 100,
+     "clipped": false,
+     "sheetRect": [
+      208,
+      0,
+      208,
+      136
+     ]
+    },
+    {
+     "file": "trex_idle_02.png",
+     "bbox": [
+      25,
+      16,
+      158,
+      112
+     ],
+     "footY": 128,
+     "lift": 0,
+     "bodyAnchorX": 100,
+     "clipped": false,
+     "sheetRect": [
+      416,
+      0,
+      208,
+      136
+     ]
+    },
+    {
+     "file": "trex_idle_03.png",
+     "bbox": [
+      21,
+      23,
+      164,
+      105
+     ],
+     "footY": 128,
+     "lift": 0,
+     "bodyAnchorX": 100,
+     "clipped": false,
+     "sheetRect": [
+      624,
+      0,
+      208,
+      136
+     ]
+    }
+   ],
+   "order": [
+    0,
+    1,
+    2,
+    3
+   ],
+   "ms": [
+    180,
+    160,
+    180,
+    160
+   ],
+   "loop": true
+  },
+  "walk": {
+   "frames": [
+    {
+     "file": "trex_walk_00.png",
+     "bbox": [
+      23,
+      20,
+      160,
+      108
+     ],
+     "footY": 128,
+     "lift": 0,
+     "bodyAnchorX": 100,
+     "clipped": false,
+     "sheetRect": [
+      0,
+      136,
+      208,
+      136
+     ]
+    },
+    {
+     "file": "trex_walk_01.png",
+     "bbox": [
+      18,
+      26,
+      161,
+      102
+     ],
+     "footY": 128,
+     "lift": 0,
+     "bodyAnchorX": 100,
+     "clipped": false,
+     "sheetRect": [
+      208,
+      136,
+      208,
+      136
+     ]
+    },
+    {
+     "file": "trex_walk_02.png",
+     "bbox": [
+      15,
+      19,
+      163,
+      109
+     ],
+     "footY": 128,
+     "lift": 0,
+     "bodyAnchorX": 100,
+     "clipped": false,
+     "sheetRect": [
+      416,
+      136,
+      208,
+      136
+     ]
+    },
+    {
+     "file": "trex_walk_03.png",
+     "bbox": [
+      17,
+      9,
+      156,
+      119
+     ],
+     "footY": 128,
+     "lift": 0,
+     "bodyAnchorX": 100,
+     "clipped": false,
+     "sheetRect": [
+      624,
+      136,
+      208,
+      136
+     ]
+    },
+    {
+     "file": "trex_walk_04.png",
+     "bbox": [
+      24,
+      15,
+      154,
+      113
+     ],
+     "footY": 128,
+     "lift": 0,
+     "bodyAnchorX": 100,
+     "clipped": false,
+     "sheetRect": [
+      832,
+      136,
+      208,
+      136
+     ]
+    },
+    {
+     "file": "trex_walk_05.png",
+     "bbox": [
+      18,
+      30,
+      160,
+      98
+     ],
+     "footY": 128,
+     "lift": 0,
+     "bodyAnchorX": 100,
+     "clipped": false,
+     "sheetRect": [
+      1040,
+      136,
+      208,
+      136
+     ]
+    },
+    {
+     "file": "trex_walk_06.png",
+     "bbox": [
+      18,
+      23,
+      161,
+      105
+     ],
+     "footY": 128,
+     "lift": 0,
+     "bodyAnchorX": 100,
+     "clipped": false,
+     "sheetRect": [
+      1248,
+      136,
+      208,
+      136
+     ]
+    },
+    {
+     "file": "trex_walk_07.png",
+     "bbox": [
+      18,
+      11,
+      155,
+      117
+     ],
+     "footY": 128,
+     "lift": 0,
+     "bodyAnchorX": 100,
+     "clipped": false,
+     "sheetRect": [
+      1456,
+      136,
+      208,
+      136
+     ]
+    }
+   ],
+   "order": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "ms": [
+    90,
+    90,
+    90,
+    90,
+    90,
+    90,
+    90,
+    90
+   ],
+   "loop": true
+  },
+  "bite": {
+   "frames": [
+    {
+     "file": "trex_bite_00.png",
+     "bbox": [
+      35,
+      15,
+      140,
+      113
+     ],
+     "footY": 128,
+     "lift": 0,
+     "bodyAnchorX": 100,
+     "clipped": false,
+     "sheetRect": [
+      0,
+      272,
+      208,
+      136
+     ]
+    },
+    {
+     "file": "trex_bite_01.png",
+     "bbox": [
+      4,
+      14,
+      172,
+      114
+     ],
+     "footY": 128,
+     "lift": 0,
+     "bodyAnchorX": 100,
+     "clipped": false,
+     "sheetRect": [
+      208,
+      272,
+      208,
+      136
+     ]
+    },
+    {
+     "file": "trex_bite_02.png",
+     "bbox": [
+      3,
+      11,
+      181,
+      117
+     ],
+     "footY": 128,
+     "lift": 0,
+     "bodyAnchorX": 100,
+     "clipped": false,
+     "sheetRect": [
+      416,
+      272,
+      208,
+      136
+     ]
+    },
+    {
+     "file": "trex_bite_03.png",
+     "bbox": [
+      13,
+      4,
+      167,
+      124
+     ],
+     "footY": 128,
+     "lift": 0,
+     "bodyAnchorX": 100,
+     "clipped": false,
+     "sheetRect": [
+      624,
+      272,
+      208,
+      136
+     ]
+    },
+    {
+     "file": "trex_bite_04.png",
+     "bbox": [
+      14,
+      20,
+      168,
+      108
+     ],
+     "footY": 128,
+     "lift": 0,
+     "bodyAnchorX": 100,
+     "clipped": false,
+     "sheetRect": [
+      832,
+      272,
+      208,
+      136
+     ]
+    },
+    {
+     "file": "trex_bite_05.png",
+     "bbox": [
+      15,
+      17,
+      166,
+      111
+     ],
+     "footY": 128,
+     "lift": 0,
+     "bodyAnchorX": 100,
+     "clipped": false,
+     "sheetRect": [
+      1040,
+      272,
+      208,
+      136
+     ]
+    },
+    {
+     "file": "trex_bite_06.png",
+     "bbox": [
+      9,
+      6,
+      164,
+      122
+     ],
+     "footY": 128,
+     "lift": 0,
+     "bodyAnchorX": 100,
+     "clipped": false,
+     "sheetRect": [
+      1248,
+      272,
+      208,
+      136
+     ]
+    },
+    {
+     "file": "trex_bite_07.png",
+     "bbox": [
+      22,
+      24,
+      160,
+      104
+     ],
+     "footY": 128,
+     "lift": 0,
+     "bodyAnchorX": 100,
+     "clipped": false,
+     "sheetRect": [
+      1456,
+      272,
+      208,
+      136
+     ]
+    }
+   ],
+   "order": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "ms": [
+    110,
+    90,
+    60,
+    70,
+    50,
+    140,
+    90,
+    100
+   ],
+   "loop": false,
+   "events": {
+    "activeStart": 3,
+    "contact": 4,
+    "activeEnd": 5,
+    "recoveryStart": 6
+   }
+  },
+  "hit": {
+   "frames": [
+    {
+     "file": "trex_hit_00.png",
+     "bbox": [
+      24,
+      12,
+      149,
+      116
+     ],
+     "footY": 128,
+     "lift": 0,
+     "bodyAnchorX": 100,
+     "clipped": false,
+     "sheetRect": [
+      0,
+      408,
+      208,
+      136
+     ]
+    },
+    {
+     "file": "trex_hit_01.png",
+     "bbox": [
+      12,
+      6,
+      142,
+      122
+     ],
+     "footY": 128,
+     "lift": 0,
+     "bodyAnchorX": 100,
+     "clipped": false,
+     "sheetRect": [
+      208,
+      408,
+      208,
+      136
+     ]
+    },
+    {
+     "file": "trex_hit_02.png",
+     "bbox": [
+      27,
+      20,
+      152,
+      108
+     ],
+     "footY": 128,
+     "lift": 0,
+     "bodyAnchorX": 100,
+     "clipped": false,
+     "sheetRect": [
+      416,
+      408,
+      208,
+      136
+     ]
+    }
+   ],
+   "order": [
+    0,
+    1,
+    2
+   ],
+   "ms": [
+    70,
+    140,
+    120
+   ],
+   "loop": false
+  },
+  "down": {
+   "frames": [
+    {
+     "file": "trex_down_00.png",
+     "bbox": [
+      38,
+      7,
+      123,
+      121
+     ],
+     "footY": 128,
+     "lift": 0,
+     "bodyAnchorX": 100,
+     "clipped": false,
+     "sheetRect": [
+      0,
+      544,
+      208,
+      136
+     ]
+    },
+    {
+     "file": "trex_down_01.png",
+     "bbox": [
+      35,
+      36,
+      143,
+      92
+     ],
+     "footY": 128,
+     "lift": 0,
+     "bodyAnchorX": 100,
+     "clipped": false,
+     "sheetRect": [
+      208,
+      544,
+      208,
+      136
+     ]
+    },
+    {
+     "file": "trex_down_02.png",
+     "bbox": [
+      15,
+      85,
+      156,
+      43
+     ],
+     "footY": 128,
+     "lift": 0,
+     "bodyAnchorX": 100,
+     "clipped": false,
+     "sheetRect": [
+      416,
+      544,
+      208,
+      136
+     ]
+    }
+   ],
+   "order": [
+    0,
+    1,
+    2
+   ],
+   "ms": [
+    110,
+    140,
+    400
+   ],
+   "loop": false,
+   "holdLast": true
+  }
+ },
+ "sheet": "trex_pixel_sheet.png"
+}
