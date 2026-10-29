@@ -404,9 +404,10 @@ export class BattleScene extends BaseScene {
 
     const focusX = (this.match.p1.x + this.match.p2.x) / 2;
     // 도트 배경 3레이어가 준비된 무대는 정수배·타일로 그리고, 없으면 기존 배경을 쓴다.
-    if (!this.spriteStage?.renderBackground(g, stage.id, stage.groundY, focusX, width, height)) {
-      renderStage(g, stage, width, height, this.elapsed, focusX);
-    }
+    // DEV 분기를 식에 넣어 배포 번들에서 이 경로가 통째로 사라지게 한다.
+    const pixelBackground = import.meta.env.DEV &&
+      !!this.spriteStage?.renderBackground(g, stage.id, stage.groundY, focusX, width, height);
+    if (!pixelBackground) renderStage(g, stage, width, height, this.elapsed, focusX);
 
     // 잡힌 쪽은 잡은 쪽 뒤에 그린다(입에 물린 것처럼).
     const order = drawOrder(this.match.fighters);
