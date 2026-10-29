@@ -1,0 +1,73 @@
+{
+ "note": "pachy motion profiles (deg, +ve=clockwise on screen; root=stage px). tailtip is relative to tailbase (whip enabled).",
+ "motions": {
+  "idle": {
+   "angles": {},
+   "root": [
+    0,
+    0
+   ]
+  },
+  "walk": {
+   "angles": {
+    "nearleg": 4,
+    "farleg": -2,
+    "neararm": -6,
+    "fararm": 4,
+    "tailbase": -3,
+    "tailtip": -3,
+    "head": 2
+   },
+   "root": [
+    0,
+    0
+   ]
+  },
+  "light": {
+   "angles": {
+    "head": 10,
+    "jaw": -6,
+    "nearleg": 4,
+    "farleg": -2,
+    "tailbase": -2,
+    "tailtip": -2
+   },
+   "root": [
+    16,
+    0
+   ]
+  },
+  "strong": {
+   "angles": {
+    "head": 14,
+    "jaw": -8,
+    "nearleg": 24,
+    "farleg": 16,
+    "neararm": -12,
+    "fararm": 8,
+    "tailbase": -8,
+    "tailtip": -6
+   },
+   "root": [
+    26,
+    -42
+   ]
+  },
+  "special": {
+   "angles": {
+    "head": 12,
+    "jaw": -6,
+    "nearleg": 28,
+    "farleg": 20,
+    "neararm": -14,
+    "fararm": 9,
+    "tailbase": -10,
+    "tailtip": -8
+   },
+   "root": [
+    34,
+    -70
+   ]
+  }
+ }
+}

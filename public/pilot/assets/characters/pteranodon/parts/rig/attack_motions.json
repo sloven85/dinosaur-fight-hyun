@@ -1,0 +1,64 @@
+{
+ "note": "pteranodon motion profiles (engineer default; deg, +ve clockwise). artist rig 5163082",
+ "motions": {
+  "idle": {
+   "angles": {},
+   "root": [
+    0,
+    0
+   ]
+  },
+  "walk": {
+   "angles": {
+    "nearleg": 12,
+    "farleg": -6,
+    "head": 2,
+    "neck": 2,
+    "nearwing": -8,
+    "farwing": 6
+   },
+   "root": [
+    0,
+    0
+   ]
+  },
+  "light": {
+   "angles": {
+    "head": 10,
+    "neck": 8,
+    "jaw": 16,
+    "nearwing": -20
+   },
+   "root": [
+    0,
+    0
+   ]
+  },
+  "strong": {
+   "angles": {
+    "head": 16,
+    "neck": 12,
+    "jaw": 22,
+    "nearwing": -30,
+    "farwing": -20
+   },
+   "root": [
+    0,
+    0
+   ]
+  },
+  "special": {
+   "angles": {
+    "head": -14,
+    "neck": -10,
+    "jaw": 30,
+    "nearwing": -40,
+    "farwing": -30
+   },
+   "root": [
+    0,
+    0
+   ]
+  }
+ }
+}

@@ -1,0 +1,414 @@
+{
+  "frames": 25,
+  "paletteColors": 16,
+  "sheetSize": [
+    1664,
+    680
+  ],
+  "metrics": {
+    "idle": {
+      "heightRangePx": [
+        102,
+        104
+      ],
+      "heightRangeGamePx": [
+        408,
+        416
+      ],
+      "supportXRangesPx": [
+        [
+          74,
+          95
+        ],
+        [
+          74,
+          95
+        ],
+        [
+          74,
+          95
+        ],
+        [
+          74,
+          95
+        ]
+      ],
+      "groundGapsPx": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "bboxDifferences": [],
+      "originalMs": 760
+    },
+    "walk": {
+      "heightRangePx": [
+        101,
+        102
+      ],
+      "heightRangeGamePx": [
+        404,
+        408
+      ],
+      "supportXRangesPx": [
+        [
+          85,
+          107
+        ],
+        [
+          78,
+          99
+        ],
+        [
+          70,
+          92
+        ],
+        [
+          61,
+          84
+        ],
+        [
+          122,
+          144
+        ],
+        [
+          114,
+          136
+        ],
+        [
+          106,
+          129
+        ],
+        [
+          107,
+          120
+        ]
+      ],
+      "groundGapsPx": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "bboxDifferences": [],
+      "originalMs": 720
+    },
+    "bite": {
+      "heightRangePx": [
+        101,
+        112
+      ],
+      "heightRangeGamePx": [
+        404,
+        448
+      ],
+      "supportXRangesPx": [
+        [
+          74,
+          92
+        ],
+        [
+          74,
+          95
+        ],
+        [
+          74,
+          95
+        ],
+        [
+          74,
+          95
+        ],
+        [
+          74,
+          95
+        ],
+        [
+          74,
+          95
+        ],
+        [
+          74,
+          96
+        ]
+      ],
+      "groundGapsPx": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "bboxDifferences": [],
+      "originalMs": 500.0
+    },
+    "hit": {
+      "heightRangePx": [
+        106,
+        119
+      ],
+      "heightRangeGamePx": [
+        424,
+        476
+      ],
+      "supportXRangesPx": [
+        [
+          75,
+          96
+        ],
+        [
+          83,
+          102
+        ],
+        [
+          75,
+          96
+        ]
+      ],
+      "groundGapsPx": [
+        0,
+        0,
+        0
+      ],
+      "bboxDifferences": [],
+      "originalMs": 330
+    },
+    "down": {
+      "heightRangePx": [
+        40,
+        119
+      ],
+      "heightRangeGamePx": [
+        160,
+        476
+      ],
+      "supportXRangesPx": [
+        [
+          113,
+          133
+        ],
+        [
+          89,
+          119
+        ],
+        [
+          43,
+          124
+        ]
+      ],
+      "groundGapsPx": [
+        0,
+        0,
+        0
+      ],
+      "bboxDifferences": [],
+      "originalMs": 650
+    }
+  },
+  "contactDiscrepancies": [
+    {
+      "clip": "walk",
+      "frame": 6,
+      "contact": {
+        "kind": "foot_air",
+        "leg": "near",
+        "soleX": [
+          86,
+          98
+        ],
+        "row": 124,
+        "liftPx": 3
+      },
+      "transparentX": [
+        89,
+        90,
+        91,
+        92,
+        93,
+        94
+      ]
+    },
+    {
+      "clip": "walk",
+      "frame": 7,
+      "contact": {
+        "kind": "foot_air",
+        "leg": "near",
+        "soleX": [
+          84,
+          101
+        ],
+        "row": 125,
+        "liftPx": 2
+      },
+      "transparentX": [
+        95,
+        96
+      ]
+    },
+    {
+      "clip": "bite",
+      "frame": 1,
+      "contact": {
+        "kind": "foot_air",
+        "leg": "far",
+        "soleX": [
+          118,
+          135
+        ],
+        "row": 125,
+        "liftPx": 2
+      },
+      "transparentX": [
+        119,
+        120,
+        121,
+        122,
+        123,
+        124,
+        125,
+        126,
+        127,
+        128,
+        129,
+        130,
+        131,
+        132,
+        133,
+        134
+      ]
+    },
+    {
+      "clip": "bite",
+      "frame": 2,
+      "contact": {
+        "kind": "foot_air",
+        "leg": "far",
+        "soleX": [
+          118,
+          135
+        ],
+        "row": 125,
+        "liftPx": 2
+      },
+      "transparentX": [
+        119,
+        120,
+        121,
+        122,
+        123,
+        124,
+        125,
+        126,
+        127,
+        128,
+        129,
+        130,
+        131,
+        132,
+        133,
+        134
+      ]
+    },
+    {
+      "clip": "bite",
+      "frame": 3,
+      "contact": {
+        "kind": "foot_air",
+        "leg": "far",
+        "soleX": [
+          118,
+          135
+        ],
+        "row": 125,
+        "liftPx": 2
+      },
+      "transparentX": [
+        119,
+        120,
+        121,
+        122,
+        123,
+        124,
+        125,
+        126,
+        127,
+        128,
+        129,
+        130,
+        131,
+        132,
+        133,
+        134
+      ]
+    },
+    {
+      "clip": "bite",
+      "frame": 4,
+      "contact": {
+        "kind": "foot_air",
+        "leg": "far",
+        "soleX": [
+          118,
+          135
+        ],
+        "row": 125,
+        "liftPx": 2
+      },
+      "transparentX": [
+        119,
+        120,
+        121,
+        122,
+        123,
+        124,
+        125,
+        126,
+        127,
+        128,
+        129,
+        130,
+        131,
+        132,
+        133,
+        134
+      ]
+    }
+  ],
+  "sha256": {
+    "trex_pixel_anim_v2.json": "fddb4b26542aa0a62cdd50864901ea848ba55576e7b0b65db0bbab4623e357f5",
+    "trex_pixel_sheet_v2.png": "87cbc243bc266dcbe38f6283cfdf78b196f9f57a5067fb45286eba7486308dd8",
+    "frames/trex_idle_00.png": "2d7a5fdd232b8bfac97f145a1e6305dcb81db1b9fa5ee15835a6ff65f89d4a7e",
+    "frames/trex_idle_01.png": "b6346911bb9084f0b3b3c436bbf55e6808cf427fbfe9732b6281cf6d42375bb4",
+    "frames/trex_idle_02.png": "3dd4e52e124ad74d37999679b57648af196ed794b2892cb78b13172bcb9d49fd",
+    "frames/trex_idle_03.png": "b6346911bb9084f0b3b3c436bbf55e6808cf427fbfe9732b6281cf6d42375bb4",
+    "frames/trex_walk_00.png": "bd7fe3a8ada58f306276e1e224c7c527cd01a55c7d50a20c2b12b72eedb5e3ad",
+    "frames/trex_walk_01.png": "18ae6d5366af655eb4ef7b5906d0a8201945b7f40595f81150b554658923d2b7",
+    "frames/trex_walk_02.png": "f9137024a33f38a8488b87198e52b2a6696780a40fac60768f5a0fb8afa37fd6",
+    "frames/trex_walk_03.png": "1c7fea9747506c4709017e6b213a38dff800c397e525ac33f855e6695e61e461",
+    "frames/trex_walk_04.png": "154827a26dc9ed5032c0cc8c2cc5c337865a640f463f2630ce6f6954224549e4",
+    "frames/trex_walk_05.png": "71e21b452cbaac10902c8b900f684e9ade4d7e7195d5c804fe5df899f2b687f1",
+    "frames/trex_walk_06.png": "82a0068287a2e9984f0d853670060b1b008b8cbd58f01774d66a46b7376baf0d",
+    "frames/trex_walk_07.png": "aa022cbc7c95c6c2223d85073b11d1e8b7cd9de3551f4f11ce4d058fa43d8664",
+    "frames/trex_bite_00.png": "1be9c4cc3b97444e3430ee3d8d6882a96666ee6474fca8969ee0053e3d1247c6",
+    "frames/trex_bite_01.png": "dfe9f1c9189fdaeaea8206d624866d76f3d076d2ad18cbb131fba5eb73bea27a",
+    "frames/trex_bite_02.png": "564392e1a340b85c16a386b22ba55a9c3b92f0542c1e2200b656906e4e559d09",
+    "frames/trex_bite_03.png": "3adfddfdf10f30a14f6155b90fd1356562c584abf1a01a82a73d6db986856822",
+    "frames/trex_bite_04.png": "c97cca79ea4af7a3fbed2b13731006e70f71528f41875c6f984698f40668df53",
+    "frames/trex_bite_05.png": "e58bc8109a2865d1504f8b6195d175c65d93f14f3842fa13db4d87a50e16fb42",
+    "frames/trex_bite_06.png": "14c1367047b6b74846efbf25d078938aa75269bbe32d79d61c1c28736c6edbf9",
+    "frames/trex_hit_00.png": "efbbd377adddefa72ba3040de28da6a002070295a7fb3bb80cb3a678ced917ff",
+    "frames/trex_hit_01.png": "7a367020f9186c2d6ab2faa4b8278f4328321f696747a3a22a8a804b9dfca2f3",
+    "frames/trex_hit_02.png": "536980e08e59a7cd29b2c0d1cb790cab395d992fe12b624453efe39447ecbf67",
+    "frames/trex_down_00.png": "8eee8abce7a210f46a29ac5c16e0daf831faa3976435023e83dadebf69203f5c",
+    "frames/trex_down_01.png": "608f3d740e7d07e5764a40ae3d557890724401d33c59b07933efbe012767fde1",
+    "frames/trex_down_02.png": "940bc9192d4d5851bb83e526b0db618b69ef289c652cc7815bcf854884825154"
+  }
+}
