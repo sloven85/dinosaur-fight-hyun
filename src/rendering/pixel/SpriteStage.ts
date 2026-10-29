@@ -2,7 +2,7 @@ import type { Fighter } from '../../combat/Fighter';
 import type { Match } from '../../combat/Match';
 import type { AssetLoader } from '../AssetLoader';
 import { renderShadow } from '../FighterRenderer';
-import { PixelBackground } from './PixelBackground';
+import { PixelBackground, pixelScaleFor } from './PixelBackground';
 import {
   ART_CLIPS, SPRITE_STATES, STATE_LABELS, SpriteClock, drawSpriteFrame, sampleFighter,
   parseSpriteManifest, type SpriteAssets, type SpriteState,
@@ -47,6 +47,9 @@ export class SpriteStage {
   private readonly previewCaption = document.createElement('p');
   private readonly poseSpecies = document.createElement('select');
   private readonly poseState = document.createElement('select');
+  private readonly scaleView = document.createElement('select');
+  /** 캐릭터 확대 배율. 기본은 배경과 같은 k(1920×1080이면 3). */
+  private spriteScale: number | null = null;
   private poseFacing: 1 | -1 = 1;
   private poseStep = 0;
   private readonly background: PixelBackground;
@@ -86,13 +89,20 @@ export class SpriteStage {
     };
     const spec = document.createElement('p');
     spec.style.cssText = 'margin:6px 0;color:#9fb4c6;font-size:12px';
-    spec.textContent = '셀 502×304 · 발 기준 y=298 · 기준 x=251 · 정수 4배(2008×1216) · 프레임별 맞춤/회전 없음';
+    spec.textContent = '셀 502×304 · 발 기준 y=298 · 기준 x=251 · 배율은 화면 k(640×360의 정수배) · 프레임별 맞춤/회전 없음';
 
     for (const [value, text] of [['pixel', '도트 12종 (신규)'], ['legacy', '기존 부위 렌더러']]) {
       const option = document.createElement('option');
       option.value = value; option.textContent = text; this.view.append(option);
     }
     this.view.setAttribute('aria-label', '렌더러 선택');
+    for (const [value, text] of [['k', '캐릭터 배율 = k (배경과 동일)'], ['4', '캐릭터 배율 4 (도트 4px, 배경과 섞임)']]) {
+      const option = document.createElement('option');
+      option.value = value; option.textContent = text; this.scaleView.append(option);
+    }
+    this.scaleView.setAttribute('aria-label', '캐릭터 배율');
+    this.scaleView.style.cssText = 'width:100%;margin:2px 0';
+    this.scaleView.onchange = () => { this.spriteScale = null; };
     const effectLabel = document.createElement('label');
     this.effectsInput.type = 'checkbox';
     effectLabel.append(this.effectsInput, ' 연출/흔들림/이펙트 켜기');
@@ -135,7 +145,7 @@ export class SpriteStage {
     viewport.append(this.preview);
 
     this.status.textContent = '아트 확인 중';
-    this.panel.append(title, collapse, spec, this.view, effectLabel, this.status, this.diagnostics, table,
+    this.panel.append(title, collapse, spec, this.view, this.scaleView, effectLabel, this.status, this.diagnostics, table,
       poseLabel, row, this.previewCaption, viewport);
     document.body.append(this.panel);
   }
@@ -184,6 +194,13 @@ export class SpriteStage {
     return null;
   }
 
+  /** 배율: 기본은 화면 k(640×360의 정수배). 사용자가 4를 고르면 그 값으로 그린다. */
+  private scaleFor(g: CanvasRenderingContext2D): number | null {
+    if (this.scaleView.value === '4') return 4;
+    if (this.spriteScale === null) this.spriteScale = pixelScaleFor(g.canvas.width);
+    return this.spriteScale;
+  }
+
   private folderFor(fighter: Fighter): string | null {
     return this.byCharacter.get(fighter.data.id) ?? null;
   }
@@ -220,6 +237,7 @@ export class SpriteStage {
     const assets = this.species.get(this.poseSpecies.value);
     g.clearRect(0, 0, this.preview.width, this.preview.height);
     const groundY = 560;
+    const previewScale = pixelScaleFor(this.preview.width) ?? 3;
     g.fillStyle = '#7c8d9c';
     g.fillRect(0, groundY, this.preview.width, 2);
     g.fillStyle = '#33414f';
@@ -234,9 +252,9 @@ export class SpriteStage {
       ? this.poseStep % clip.frames.length
       : Math.min(clip.frames.length - 1, Math.floor(this.poseStep / 8) % clip.frames.length);
     const frame = assets.manifest.frames[clip.frames[step]];
-    drawSpriteFrame(g, assets, frame, 504, groundY, this.poseFacing);
+    drawSpriteFrame(g, assets, frame, 504, groundY, this.poseFacing, previewScale);
     this.previewCaption.textContent = `${assets.manifest.name} · ${STATE_LABELS[state]} ${step + 1}/${clip.frames.length} · `
-      + `그림 ${frame.w}×${frame.h}원본 → 화면 ${frame.w * 4}×${frame.h * 4}px · 기준 x=251/y=298 고정`;
+      + `그림 ${frame.w}×${frame.h}원본 → 화면 ${frame.w * previewScale}×${frame.h * previewScale}px (배율 ${previewScale}) · 기준 x=251/y=298 고정`;
   }
 
   /** 도트 배경 3레이어를 그렸으면 true(호출부는 기존 배경을 건너뛴다). */
@@ -254,9 +272,11 @@ export class SpriteStage {
     if (!assets) return false;
     const sample = sampleFighter(assets.manifest, fighter, this.clocks[fighter.player]);
     if (!sample) return false;
+    const scale = this.scaleFor(g);
+    if (!scale) return false;
     renderShadow(g, fighter, groundY);
     const frame = assets.manifest.frames[sample.frame];
-    drawSpriteFrame(g, assets, frame, fighter.x, groundY + fighter.y, fighter.facing);
+    drawSpriteFrame(g, assets, frame, fighter.x, groundY + fighter.y, fighter.facing, scale);
     return true;
   }
 

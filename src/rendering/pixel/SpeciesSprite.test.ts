@@ -41,11 +41,15 @@ describe('도트 계약(셀 502×304 · 발 y=298 · 기준 x=251 · ×4)', () =
     expect(m.cell).toEqual([502, 304]);
     expect(m.footY).toBe(298);
     expect(m.anchorX).toBe(251);
-    expect(m.scale).toBe(4);
+  });
+
+  it('캐릭터 배율은 캔버스 k에서 오고, manifest의 scale은 참고값이다', () => {
+    expect(parseSpriteManifest({ ...manifest(), scale: 3 }).scale).toBe(3);
+    expect(parseSpriteManifest({ ...manifest(), scale: 4 }).scale).toBe(4);
   });
 
   it.each([
-    ['scale', 2], ['scale', 3], ['footY', 300], ['anchorX', 250], ['cell', [500, 304]],
+    ['footY', 300], ['anchorX', 250], ['cell', [500, 304]],
   ])('계약과 다른 %s=%s는 재생하지 않는다', (key, value) => {
     const raw = { ...manifest(), [key]: value };
     expect(() => parseSpriteManifest(raw)).toThrow(/계약/);

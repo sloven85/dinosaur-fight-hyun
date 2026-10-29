@@ -15,12 +15,20 @@ import type { AssetLoader } from '../AssetLoader';
 export const PIXEL_STAGE_NATIVE_W = 640;
 export const PIXEL_STAGE_NATIVE_H = 360;
 
+/** 레이어 파일과 좌우 블리드 폭(원본 px). pad가 0이면 타일로 깐다. */
+export interface PixelLayerRef { file: string; pad?: number }
+
 export interface PixelStageLayers {
   stage: string;
   native: [number, number];
   /** 캐릭터가 서는 지면선(원본 행). 캐릭터 셀의 footY와 같은 값이어야 한다. */
   standLine: number;
-  layers: { far: string; mid: string; ground: string };
+  layers: { far: PixelLayerRef | string; mid: PixelLayerRef | string; ground: PixelLayerRef | string };
+}
+
+/** 문자열(파일 이름) 또는 {file, pad} 둘 다 받는다. */
+export function layerRef(value: PixelLayerRef | string): PixelLayerRef {
+  return typeof value === 'string' ? { file: value, pad: 0 } : { file: value.file, pad: value.pad ?? 0 };
 }
 
 const clampInt = (v: number): number => (Number.isFinite(v) ? Math.round(v) : 0);
@@ -30,6 +38,21 @@ export function pixelScaleFor(width: number): number | null {
   if (!Number.isFinite(width) || width <= 0 || width % PIXEL_STAGE_NATIVE_W !== 0) return null;
   const k = width / PIXEL_STAGE_NATIVE_W;
   return Number.isInteger(k) && k >= 1 && k <= 8 ? k : null;
+}
+
+/**
+ * 블리드가 있는 레이어는 한 장만 그리고, 좌우 pad만큼 밖에서 시작해 시차만큼 민다.
+ * pad가 그 레이어의 최대 이동거리보다 크면 카메라가 어디로 가도 화면에 빈 곳이 생기지 않는다.
+ */
+export function drawBleedLayer(
+  g: CanvasRenderingContext2D,
+  image: CanvasImageSource,
+  k: number,
+  dx: number,
+  pad: number,
+  top: number,
+): void {
+  g.drawImage(image, clampInt(-pad * k + dx), top, PIXEL_STAGE_NATIVE_W * k + pad * 2 * k, PIXEL_STAGE_NATIVE_H * k);
 }
 
 /**
@@ -80,9 +103,9 @@ export class PixelBackground {
     if (!k) return false;
     const spec = this.specs.get(stage);
     if (!spec) { this.ensure(stage); return false; }
-    const far = this.images.get(spec.layers.far);
-    const mid = this.images.get(spec.layers.mid);
-    const ground = this.images.get(spec.layers.ground);
+    const far = this.images.get(layerRef(spec.layers.far).file);
+    const mid = this.images.get(layerRef(spec.layers.mid).file);
+    const ground = this.images.get(layerRef(spec.layers.ground).file);
     if (!far || !mid || !ground) { this.ensure(stage); return false; }
 
     // 640×360 원본 프레임의 윗변을 어디에 둘 것인가: 배경 지면선을 캐릭터 발 높이에 맞춘다.
@@ -97,9 +120,15 @@ export class PixelBackground {
       g.fillStyle = '#000';
       g.fillRect(0, 0, width, top);
     }
-    drawTiledLayer(g, far, k, offset(parallax.far), top, width);
-    drawTiledLayer(g, mid, k, offset(parallax.mid), top, width);
-    drawTiledLayer(g, ground, k, offset(parallax.ground), top, width);
+    for (const [ref, image, coef] of [
+      [layerRef(spec.layers.far), far, parallax.far],
+      [layerRef(spec.layers.mid), mid, parallax.mid],
+      [layerRef(spec.layers.ground), ground, parallax.ground],
+    ] as const) {
+      const dx = offset(coef);
+      if ((ref.pad ?? 0) > 0) drawBleedLayer(g, image, k, dx, ref.pad!, top);
+      else drawTiledLayer(g, image, k, dx, top, width);
+    }
     g.restore();
 
     // 캐릭터가 배경에서 떠 보이지 않게 아주 옅게 눌러 준다(기존 배경과 같은 처리).
@@ -117,7 +146,7 @@ export class PixelBackground {
         if (!raw || !raw.layers || !Number.isFinite(raw.standLine)) throw new Error(`${stage} 배경 레이어 정보를 읽지 못했습니다.`);
         const loaded = await Promise.all(
           (['far', 'mid', 'ground'] as const).map(async (name) => {
-            const path = `${this.root}${stage}/${raw.layers[name]}`;
+            const path = `${this.root}${stage}/${layerRef(raw.layers[name]).file}`;
             const image = await this.loader.loadImage(path);
             return [path, image] as const;
           }),

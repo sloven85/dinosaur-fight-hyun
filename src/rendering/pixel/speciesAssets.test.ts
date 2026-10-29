@@ -29,14 +29,12 @@ describe('12종 도트 자산', () => {
     expect(index.cell).toEqual([502, 304]);
     expect(index.footY).toBe(298);
     expect(index.anchorX).toBe(251);
-    expect(index.scale).toBe(4);
     for (const folder of FOLDERS) {
       const m = manifestOf(folder);
       expect(m.character).toBe(CHARACTER[folder]);
       expect(m.cell).toEqual([502, 304]);
       expect(m.footY).toBe(298);
       expect(m.anchorX).toBe(251);
-      expect(m.scale).toBe(4);
       expect(folder).toBe(m.folder);
     }
   });

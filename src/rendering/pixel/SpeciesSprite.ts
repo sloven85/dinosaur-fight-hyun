@@ -76,7 +76,7 @@ const int = (v: unknown, min: number, max = 1 << 16): v is number =>
  */
 export function parseSpriteManifest(raw: unknown): SpriteManifest {
   if (!isObject(raw) || raw.version !== 1) throw new Error('도트 manifest 버전이 1이 아닙니다.');
-  for (const [key, want] of [['scale', CONTRACT.scale], ['footY', CONTRACT.footY], ['anchorX', CONTRACT.anchorX]] as const) {
+  for (const [key, want] of [['footY', CONTRACT.footY], ['anchorX', CONTRACT.anchorX]] as const) {
     if (raw[key] !== want) throw new Error(`도트 계약 위반: ${key}는 ${want}이어야 합니다(받은 값 ${String(raw[key])}).`);
   }
   if (!Array.isArray(raw.cell) || raw.cell[0] !== CONTRACT.cellW || raw.cell[1] !== CONTRACT.cellH) {
@@ -130,7 +130,8 @@ export function parseSpriteManifest(raw: unknown): SpriteManifest {
     version: 1, character: raw.character, folder: typeof raw.folder === 'string' ? raw.folder : '',
     name: typeof raw.name === 'string' ? raw.name : raw.character,
     image: raw.image, facing: raw.facing === 'left' ? 'left' : 'right',
-    scale: CONTRACT.scale, cell: [CONTRACT.cellW, CONTRACT.cellH],
+    scale: Number.isInteger(raw.scale) ? (raw.scale as number) : CONTRACT.scale,
+    cell: [CONTRACT.cellW, CONTRACT.cellH],
     footY: CONTRACT.footY, anchorX: CONTRACT.anchorX, frames, clips,
   };
 }
@@ -263,9 +264,9 @@ export function drawSpriteFrame(
   x: number,
   y: number,
   facing: 1 | -1,
+  scale: number,
 ): void {
   const { manifest, image } = assets;
-  const scale = manifest.scale;
   const flip = facing * (manifest.facing === 'right' ? 1 : -1);
   g.save();
   g.imageSmoothingEnabled = false;
