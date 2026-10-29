@@ -6,6 +6,7 @@ import { moveTotalFrames, type MoveData } from '../../combat/types';
  *
  * 규격: 셀 502×304, 발 기준선 footY=298, 기준 x anchorX=251, 정수배(×4)만.
  * 이 모듈은 그림을 "부위로 잘라 돌리는" 대신 통째로 그려진 프레임을 순서대로 재생한다.
+ * 그리는 위치는 항상 배율 격자(아트 1px = 화면 4px)에 맞춘다.
  * 판정·피해·사거리는 이 모듈이 만지지 않는다(전투 쪽 값 그대로).
  */
 
@@ -178,6 +179,12 @@ export function sampleSpriteClip(manifest: SpriteManifest, state: SpriteState, t
   return { state, step: index, frame: clip.frames[index] };
 }
 
+/** 위치를 배율 격자(정수 배)에 맞춘다. 아트 1픽셀 = scale 화면 px. */
+export function snapToScale(value: number, scale: number): number {
+  if (!Number.isFinite(value) || !Number.isFinite(scale) || scale <= 0) return 0;
+  return Math.round(value / scale) * scale;
+}
+
 /** 상태 → 재생할 클립. 그림이 없는 상태는 null을 돌려 기존 렌더러로 남긴다. */
 export function spriteStateFor(fighter: Fighter): SpriteState | null {
   switch (fighter.state) {
@@ -270,7 +277,9 @@ export function drawSpriteFrame(
   const flip = facing * (manifest.facing === 'right' ? 1 : -1);
   g.save();
   g.imageSmoothingEnabled = false;
-  g.translate(Math.round(x), Math.round(y));
+  // 아트 픽셀 경계가 화면 배율 격자에 딱 맞도록 위치를 배율 단위로 맞춘다.
+  // 이렇게 해야 캐릭터 블록(4px)과 배경 블록(4px)이 같은 격자 위에 놓인다.
+  g.translate(snapToScale(x, scale), snapToScale(y, scale));
   g.scale(flip, 1);
   g.drawImage(image as CanvasImageSource, frame.x, frame.y, frame.w, frame.h,
     -frame.anchor.x * scale, -frame.anchor.y * scale, frame.w * scale, frame.h * scale);

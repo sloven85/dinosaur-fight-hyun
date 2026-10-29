@@ -3,17 +3,24 @@ import type { AssetLoader } from '../AssetLoader';
 /**
  * 도트 배경 3레이어 재생기 (개발 비교판).
  *
- * 규격(디렉터 확정 2026-10-29): 배경 원본 640×360, 화면은 640×360의 정수 k배.
- * 레이어는 원경·중경·지면 3장, 각 640×360, 지면선은 원본 행 standLine.
- * 캐릭터가 서는 지면선과 배경의 지면선을 같은 행으로 맞추고, 확대는 정수배만 한다.
+ * 규격(jk 확정 2026-10-29): 아트 1px = 화면 4px. 캐릭터와 배경이 같은 격자를 쓴다.
+ *  - 창(화면에 보이는 범위)은 아트 기준 480×270 = 1920×1080 ÷ 4.
+ *  - 배경 레이어는 640×360 아트 px 그대로 4배로 그린다 → 2560×1440. 창보다 큰 것이 정상이다.
+ *  - 창은 레이어 가운데를 보여 주고, 시차만큼 민다. 레이어가 창보다 넓으므로 남는
+ *    여백(±(레이어-창)/2) 안에서만 움직여 화면에 빈 곳이 생기지 않는다.
+ *  - 지면선 standLine(아트 행)을 캐릭터 발 높이에 맞춘다.
  *
- * 레이어 폭이 화면보다 좁으므로 가로로 이어 붙여(타일) 그린다 — 시차 때문에 레이어가
- * 옆으로 밀려도 빈 곳이 생기지 않는다. 이음선 품질은 원본 그림의 몫이고,
- * 엔진은 이음선을 만들지도 감추지도 않는다.
+ * 캐릭터를 줄여 배경에 맞추지 않는다. 배율이 어긋나면 배경 쪽을 고친다.
  */
 
-export const PIXEL_STAGE_NATIVE_W = 640;
-export const PIXEL_STAGE_NATIVE_H = 360;
+/** 아트 1px = 화면 4px (고정). */
+export const PIXEL_ART_SCALE = 4;
+/** 창(아트 px). 1920×1080 화면 ÷ 4. */
+export const PIXEL_VIEW_W = 480;
+export const PIXEL_VIEW_H = 270;
+/** 배경 레이어 원본(아트 px). 창보다 크다. */
+export const PIXEL_LAYER_W = 640;
+export const PIXEL_LAYER_H = 360;
 
 /** 레이어 파일과 좌우 블리드 폭(원본 px). pad가 0이면 타일로 깐다. */
 export interface PixelLayerRef { file: string; pad?: number }
@@ -33,30 +40,42 @@ export function layerRef(value: PixelLayerRef | string): PixelLayerRef {
 
 const clampInt = (v: number): number => (Number.isFinite(v) ? Math.round(v) : 0);
 
-/** 화면 폭이 640의 정수배일 때만 k를 돌려준다. 아니면 도트 배경을 그리지 않는다(레터박스 원칙). */
+/** 화면 폭이 창(480)의 정수배일 때만 k를 돌려준다. 아니면 도트 배경을 그리지 않는다(레터박스 원칙). */
 export function pixelScaleFor(width: number): number | null {
-  if (!Number.isFinite(width) || width <= 0 || width % PIXEL_STAGE_NATIVE_W !== 0) return null;
-  const k = width / PIXEL_STAGE_NATIVE_W;
+  if (!Number.isFinite(width) || width <= 0 || width % PIXEL_VIEW_W !== 0) return null;
+  const k = width / PIXEL_VIEW_W;
   return Number.isInteger(k) && k >= 1 && k <= 8 ? k : null;
 }
 
 /**
- * 블리드가 있는 레이어는 한 장만 그리고, 좌우 pad만큼 밖에서 시작해 시차만큼 민다.
- * pad가 그 레이어의 최대 이동거리보다 크면 카메라가 어디로 가도 화면에 빈 곳이 생기지 않는다.
+ * 블리드가 있는 레이어도, 없는 레이어도 같은 규칙으로 그린다: 레이어 한 장을 4배로 그리고
+ * 창(화면) 가운데를 보여 준다. 시차만큼 민 dx는 레이어가 창보다 넓어서 생기는 여백
+ * (±(레이어폭-화면폭)/2) 안으로 자른다 — 끝까지 밀어도 화면에 빈 곳이 생기지 않는다.
+ * pad는 그림 자체에 여백이 있으면 그만큼 더 밀 수 있다는 표시일 뿐, 그리기 규칙은 하나다.
  */
-export function drawBleedLayer(
+export function drawCenteredLayer(
   g: CanvasRenderingContext2D,
   image: CanvasImageSource,
   k: number,
   dx: number,
   pad: number,
   top: number,
+  width: number,
 ): void {
-  g.drawImage(image, clampInt(-pad * k + dx), top, PIXEL_STAGE_NATIVE_W * k + pad * 2 * k, PIXEL_STAGE_NATIVE_H * k);
+  const layerW = (PIXEL_LAYER_W + pad * 2) * k;
+  const layerH = PIXEL_LAYER_H * k;
+  if (layerW <= 0) return;
+  // 레이어가 화면보다 좁으면(있을 수 없지만) 가로로 이어 붙인다.
+  if (layerW < width) { drawTiledLayer(g, image, k, dx, top, width, layerW, layerH); return; }
+  const slack = Math.round((layerW - width) / 2);
+  const shift = Math.max(-slack, Math.min(slack, clampInt(dx)));
+  // 그리기 원점을 배율 격자에 맞춘다 — 아트 픽셀 블록이 캐릭터와 같은 격자에 놓인다.
+  const snapped = Math.round(shift / k) * k;
+  g.drawImage(image, clampInt((width - layerW) / 2 + snapped), top, layerW, layerH);
 }
 
 /**
- * 레이어 하나를 가로 타일로 깐다. dx는 시차로 밀린 양(게임 px).
+ * 레이어 하나를 가로 타일로 깐다(레이어가 화면보다 좁을 때의 안전망). dx는 시차로 밀린 양.
  * 픽셀이 반 자리에 걸리지 않도록 dx와 그리기 좌표를 모두 정수로 맞춘다.
  */
 export function drawTiledLayer(
@@ -66,9 +85,11 @@ export function drawTiledLayer(
   dx: number,
   top: number,
   width: number,
+  layerW = PIXEL_LAYER_W,
+  layerH = PIXEL_LAYER_H,
 ): void {
-  const tileW = PIXEL_STAGE_NATIVE_W * k;
-  const tileH = PIXEL_STAGE_NATIVE_H * k;
+  const tileW = layerW * k;
+  const tileH = layerH * k;
   if (tileW <= 0) return;
   const shift = ((clampInt(dx) % tileW) + tileW) % tileW;
   // 딱 맞아떨어지면 왼쪽에 빈 타일을 한 장 더 깔지 않는다.
@@ -103,13 +124,16 @@ export class PixelBackground {
     if (!k) return false;
     const spec = this.specs.get(stage);
     if (!spec) { this.ensure(stage); return false; }
-    const far = this.images.get(layerRef(spec.layers.far).file);
-    const mid = this.images.get(layerRef(spec.layers.mid).file);
-    const ground = this.images.get(layerRef(spec.layers.ground).file);
+    // 이미지는 '폴더/파일' 전체 경로로 보관한다 — 파일 이름만으로 찾으면 영원히 못 찾는다.
+    const pathFor = (name: 'far' | 'mid' | 'ground'): string => `${this.root}${stage}/${layerRef(spec.layers[name]).file}`;
+    const far = this.images.get(pathFor('far'));
+    const mid = this.images.get(pathFor('mid'));
+    const ground = this.images.get(pathFor('ground'));
     if (!far || !mid || !ground) { this.ensure(stage); return false; }
 
-    // 640×360 원본 프레임의 윗변을 어디에 둘 것인가: 배경 지면선을 캐릭터 발 높이에 맞춘다.
-    const top = clampInt(groundY - spec.standLine * k);
+    // 지면선을 캐릭터 발 높이에 맞춘다. k=4면 레이어(1440)가 화면(1080)보다 커서 위가 잘린다 — 정상.
+    // top도 배율 격자에 맞춘다(지면선 행이 격자에 걸쳐 있으면 아트 픽셀이 반 칸 어긋난다).
+    const top = Math.round((groundY - spec.standLine * k) / k) * k;
     const center = width / 2;
     const offset = (coef: number): number => -clampInt((focusX - center) * coef);
 
@@ -125,9 +149,7 @@ export class PixelBackground {
       [layerRef(spec.layers.mid), mid, parallax.mid],
       [layerRef(spec.layers.ground), ground, parallax.ground],
     ] as const) {
-      const dx = offset(coef);
-      if ((ref.pad ?? 0) > 0) drawBleedLayer(g, image, k, dx, ref.pad!, top);
-      else drawTiledLayer(g, image, k, dx, top, width);
+      drawCenteredLayer(g, image, k, offset(coef), ref.pad ?? 0, top, width);
     }
     g.restore();
 

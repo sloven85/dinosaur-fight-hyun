@@ -2,7 +2,7 @@ import type { Fighter } from '../../combat/Fighter';
 import type { Match } from '../../combat/Match';
 import type { AssetLoader } from '../AssetLoader';
 import { renderShadow } from '../FighterRenderer';
-import { PixelBackground, pixelScaleFor } from './PixelBackground';
+import { PIXEL_ART_SCALE, PIXEL_VIEW_H, PIXEL_VIEW_W, PixelBackground, pixelScaleFor } from './PixelBackground';
 import {
   ART_CLIPS, SPRITE_STATES, STATE_LABELS, SpriteClock, drawSpriteFrame, sampleFighter,
   parseSpriteManifest, type SpriteAssets, type SpriteState,
@@ -47,9 +47,8 @@ export class SpriteStage {
   private readonly previewCaption = document.createElement('p');
   private readonly poseSpecies = document.createElement('select');
   private readonly poseState = document.createElement('select');
-  private readonly scaleView = document.createElement('select');
-  /** 캐릭터 확대 배율. 기본은 배경과 같은 k(1920×1080이면 3). */
-  private spriteScale: number | null = null;
+  /** 캐릭터 확대 배율. 아트 1px = 화면 4px 고정 — 배경과 같은 격자다. */
+  private readonly spriteScale = PIXEL_ART_SCALE;
   private poseFacing: 1 | -1 = 1;
   private poseStep = 0;
   private readonly background: PixelBackground;
@@ -89,20 +88,16 @@ export class SpriteStage {
     };
     const spec = document.createElement('p');
     spec.style.cssText = 'margin:6px 0;color:#9fb4c6;font-size:12px';
-    spec.textContent = '셀 502×304 · 발 기준 y=298 · 기준 x=251 · 배율은 화면 k(640×360의 정수배) · 프레임별 맞춤/회전 없음';
+    spec.textContent = '셀 502×304 · 발 기준 y=298 · 기준 x=251 · 아트 1px = 화면 4px 고정 · 프레임별 맞춤/회전 없음';
 
     for (const [value, text] of [['pixel', '도트 12종 (신규)'], ['legacy', '기존 부위 렌더러']]) {
       const option = document.createElement('option');
       option.value = value; option.textContent = text; this.view.append(option);
     }
     this.view.setAttribute('aria-label', '렌더러 선택');
-    for (const [value, text] of [['k', '캐릭터 배율 = k (배경과 동일)'], ['4', '캐릭터 배율 4 (도트 4px, 배경과 섞임)']]) {
-      const option = document.createElement('option');
-      option.value = value; option.textContent = text; this.scaleView.append(option);
-    }
-    this.scaleView.setAttribute('aria-label', '캐릭터 배율');
-    this.scaleView.style.cssText = 'width:100%;margin:2px 0';
-    this.scaleView.onchange = () => { this.spriteScale = null; };
+    const scaleNote = document.createElement('p');
+    scaleNote.style.cssText = 'margin:2px 0;color:#cfe3f2;font-size:12px';
+    scaleNote.textContent = `배율 4px 고정 · 캐릭터·배경 같은 격자 · 창 ${PIXEL_VIEW_W}×${PIXEL_VIEW_H}아트px`;
     const effectLabel = document.createElement('label');
     this.effectsInput.type = 'checkbox';
     effectLabel.append(this.effectsInput, ' 연출/흔들림/이펙트 켜기');
@@ -138,14 +133,15 @@ export class SpriteStage {
     row.style.cssText = 'display:flex;gap:6px;margin:4px 0';
     row.append(this.poseSpecies, this.poseState, flip);
 
-    this.preview.width = 1008; this.preview.height = 612;
+    // 자세 관찰용 확대판: 480×270 창의 2배(960×540). 실전 배율(4px)은 위 게임 화면에서 본다.
+    this.preview.width = 960; this.preview.height = 540;
     this.preview.style.cssText = 'display:block;background:#253140;image-rendering:pixelated;width:100%';
     const viewport = document.createElement('div');
     viewport.style.cssText = 'overflow:auto;max-height:320px';
     viewport.append(this.preview);
 
     this.status.textContent = '아트 확인 중';
-    this.panel.append(title, collapse, spec, this.view, this.scaleView, effectLabel, this.status, this.diagnostics, table,
+    this.panel.append(title, collapse, spec, this.view, scaleNote, effectLabel, this.status, this.diagnostics, table,
       poseLabel, row, this.previewCaption, viewport);
     document.body.append(this.panel);
   }
@@ -194,11 +190,9 @@ export class SpriteStage {
     return null;
   }
 
-  /** 배율: 기본은 화면 k(640×360의 정수배). 사용자가 4를 고르면 그 값으로 그린다. */
+  /** 배율: 아트 1px = 화면 4px 고정. 캔버스가 창의 정수배가 아니면 그리지 않는다. */
   private scaleFor(g: CanvasRenderingContext2D): number | null {
-    if (this.scaleView.value === '4') return 4;
-    if (this.spriteScale === null) this.spriteScale = pixelScaleFor(g.canvas.width);
-    return this.spriteScale;
+    return pixelScaleFor(g.canvas.width) ?? this.spriteScale;
   }
 
   private folderFor(fighter: Fighter): string | null {
@@ -236,12 +230,12 @@ export class SpriteStage {
     if (!g) return;
     const assets = this.species.get(this.poseSpecies.value);
     g.clearRect(0, 0, this.preview.width, this.preview.height);
-    const groundY = 560;
-    const previewScale = pixelScaleFor(this.preview.width) ?? 3;
+    const groundY = 460;
+    const previewScale = pixelScaleFor(this.preview.width) ?? 2;
     g.fillStyle = '#7c8d9c';
     g.fillRect(0, groundY, this.preview.width, 2);
     g.fillStyle = '#33414f';
-    g.fillRect(504, 0, 1, this.preview.height);
+    g.fillRect(480, 0, 1, this.preview.height);
     if (!assets) {
       this.previewCaption.textContent = `${this.poseSpecies.value}: 아트 로딩 중`;
       return;
@@ -252,7 +246,7 @@ export class SpriteStage {
       ? this.poseStep % clip.frames.length
       : Math.min(clip.frames.length - 1, Math.floor(this.poseStep / 8) % clip.frames.length);
     const frame = assets.manifest.frames[clip.frames[step]];
-    drawSpriteFrame(g, assets, frame, 504, groundY, this.poseFacing, previewScale);
+    drawSpriteFrame(g, assets, frame, 480, groundY, this.poseFacing, previewScale);
     this.previewCaption.textContent = `${assets.manifest.name} · ${STATE_LABELS[state]} ${step + 1}/${clip.frames.length} · `
       + `그림 ${frame.w}×${frame.h}원본 → 화면 ${frame.w * previewScale}×${frame.h * previewScale}px (배율 ${previewScale}) · 기준 x=251/y=298 고정`;
   }
