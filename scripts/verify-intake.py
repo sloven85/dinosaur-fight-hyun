@@ -21,6 +21,8 @@ GROUND_ROW = 297
 FRONT_TOL = 3
 BOB_ART_PX = 6
 BOB_RATIO = 0.05
+SOLE_JUMP = 12       # 프레임 간 접지발 이동 상한(아트px) — 순간이동 검출
+PALETTE_DIR = 'dev-art/palettes'
 
 # 아티스트 폴더 → 게임 캐릭터 id
 SPECIES_IDS = {
@@ -58,6 +60,29 @@ def frame_metrics(sheet, frame, anchor_x=251, foot_y=298):
     }
 
 
+def components(crop):
+    """불투명 픽셀의 연결 성분 개수(4-이웃). 고아 픽셀 검출용."""
+    alpha = crop.getchannel('A')
+    w, h = crop.size
+    px = alpha.load()
+    seen = [[False] * w for _ in range(h)]
+    count = 0
+    for y in range(h):
+        for x in range(w):
+            if px[x, y] == 0 or seen[y][x]:
+                continue
+            count += 1
+            stack = [(x, y)]
+            seen[y][x] = True
+            while stack:
+                cx, cy = stack.pop()
+                for nx, ny in ((cx + 1, cy), (cx - 1, cy), (cx, cy + 1), (cx, cy - 1)):
+                    if 0 <= nx < w and 0 <= ny < h and not seen[ny][nx] and px[nx, ny] > 0:
+                        seen[ny][nx] = True
+                        stack.append((nx, ny))
+    return count
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--dir', default='dev-art/species')
@@ -79,6 +104,26 @@ def main():
 
         rows = [frame_metrics(sheet, f, manifest['anchorX'], manifest['footY'])
                 for f in manifest['frames']]
+        crops = [sheet.crop((f['x'], f['y'], f['x'] + f['w'], f['y'] + f['h'])) for f in manifest['frames']]
+        # ① 고아 픽셀: 프레임마다 불투명 성분이 1개여야 한다.
+        multi = [i for i, c in enumerate(crops) if components(c) != 1]
+        # ③ 팔레트 밖 색: 아티스트 팔레트가 있으면 그 표에 있는 색만 허용.
+        palette_path = os.path.join(PALETTE_DIR, f'{folder}.json')
+        outside = []
+        if os.path.exists(palette_path):
+            palette = json.load(open(palette_path))
+            allowed = {tuple(c) for c in palette['p1']}
+            used = {px[:3] for px in sheet.getdata() if px[3] > 0}
+            outside = sorted(used - allowed)
+        # ② 프레임 간 접지발 이동: 걷기 클립에서 이웃 프레임 간 이동이 상한을 넘으면 순간이동.
+        walk = manifest['clips']['walk']['frames']
+        sole_x = [rows[i]['sole'] for i in walk]
+        jumps = []
+        for a, b in zip(sole_x, sole_x[1:]):
+            if a is None or b is None:
+                continue
+            jumps.append(abs((b['x0'] + b['x1']) / 2 - (a['x0'] + a['x1']) / 2))
+        worst_jump = max(jumps) if jumps else 0
         bad_ground = sum(1 for r in rows if r['lastRow'] != GROUND_ROW)
         notes = []
 
@@ -109,6 +154,15 @@ def main():
         if not bob_ok:
             notes.append(f'bob {bob}px > {bob_limit:.1f}')
             failures.append((folder, 'idle bob', f'{bob}px > {bob_limit:.1f}px'))
+        if multi:
+            notes.append(f'고아 {len(multi)}프레임')
+            failures.append((folder, '연결성분', f'{len(multi)}프레임이 성분 2개 이상(예: {multi[:5]})'))
+        if worst_jump > SOLE_JUMP:
+            notes.append(f'접지발 점프 {worst_jump:.0f}px')
+            failures.append((folder, '접지발 이동', f'최대 {worst_jump:.0f}px > {SOLE_JUMP}'))
+        if outside:
+            notes.append(f'팔레트 밖 {len(outside)}색')
+            failures.append((folder, '팔레트', f'{len(outside)}색 이탈(예: {outside[:3]})'))
 
         ground_cell = 'OK' if not bad_ground else f'{bad_ground} FAIL'
         print(f"{folder:9}{ground_cell:>14}{f'{worst_front}px {worst_state}':>12}{f'{bob}px / {bob_limit:.1f}':>16}  "
@@ -122,6 +176,26 @@ def main():
         sheet = Image.open(os.path.join(args.dir, folder, 'sheet.png')).convert('RGBA')
         rows = [frame_metrics(sheet, f, manifest['anchorX'], manifest['footY'])
                 for f in manifest['frames']]
+        crops = [sheet.crop((f['x'], f['y'], f['x'] + f['w'], f['y'] + f['h'])) for f in manifest['frames']]
+        # ① 고아 픽셀: 프레임마다 불투명 성분이 1개여야 한다.
+        multi = [i for i, c in enumerate(crops) if components(c) != 1]
+        # ③ 팔레트 밖 색: 아티스트 팔레트가 있으면 그 표에 있는 색만 허용.
+        palette_path = os.path.join(PALETTE_DIR, f'{folder}.json')
+        outside = []
+        if os.path.exists(palette_path):
+            palette = json.load(open(palette_path))
+            allowed = {tuple(c) for c in palette['p1']}
+            used = {px[:3] for px in sheet.getdata() if px[3] > 0}
+            outside = sorted(used - allowed)
+        # ② 프레임 간 접지발 이동: 걷기 클립에서 이웃 프레임 간 이동이 상한을 넘으면 순간이동.
+        walk = manifest['clips']['walk']['frames']
+        sole_x = [rows[i]['sole'] for i in walk]
+        jumps = []
+        for a, b in zip(sole_x, sole_x[1:]):
+            if a is None or b is None:
+                continue
+            jumps.append(abs((b['x0'] + b['x1']) / 2 - (a['x0'] + a['x1']) / 2))
+        worst_jump = max(jumps) if jumps else 0
         walk = manifest['clips']['walk']['frames']
         soles = []
         for i in walk:

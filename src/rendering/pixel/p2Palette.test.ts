@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { inflateSync } from 'node:zlib';
 import { describe, expect, it } from 'vitest';
 import { Match } from '../../combat/Match';
@@ -14,6 +14,7 @@ import { HEAD_MARKER_SIZE, PLAYER_COLORS, RING_H, RING_W, drawGroundRing, drawHe
  */
 
 const ROOT = 'dev-art/species';
+const PALETTE_DIR = 'dev-art/palettes';
 const FOLDERS = ['trex', 'trike', 'velo', 'spino', 'anky', 'stego', 'carno', 'pachy', 'theri', 'dilo', 'brachio', 'ptera'];
 
 interface Sheet { width: number; height: number; rgba: Uint8Array }
@@ -78,78 +79,65 @@ function readPng(path: string): Sheet {
   return { width, height, rgba };
 }
 
-const hsl = (r: number, g: number, b: number): { h: number; l: number; s: number } => {
-  const rn = r / 255, gn = g / 255, bn = b / 255;
-  const max = Math.max(rn, gn, bn), min = Math.min(rn, gn, bn);
-  const l = (max + min) / 2;
-  const d = max - min;
-  // 포장 스크립트(colorsys HLS)와 같은 정의를 쓴다 — 채도 규칙을 같은 자로 재야 한다.
-  const s = d === 0 ? 0 : l <= 0.5 ? d / (max + min) : d / (2 - max - min);
-  let h = 0;
-  if (d !== 0) {
-    if (max === rn) h = 60 * (((gn - bn) / d) % 6);
-    else if (max === gn) h = 60 * ((bn - rn) / d + 2);
-    else h = 60 * ((rn - gn) / d + 4);
+const manifestOf = (folder: string) =>
+  parseSpriteManifest(JSON.parse(readFileSync(`${ROOT}/${folder}/manifest.json`, 'utf8')));
+
+const paletteOf = (folder: string): { p1: number[][]; p2: number[][] } | null => {
+  try {
+    return JSON.parse(readFileSync(`${PALETTE_DIR}/${folder}.json`, 'utf8'));
+  } catch {
+    return null;
   }
-  return { h: (h + 360) % 360, l, s };
 };
 
-const hueGap = (a: number, b: number): number => {
-  const d = Math.abs(a - b) % 360;
-  return Math.min(d, 360 - d);
-};
+describe('2P 미러 색의 출처는 아티스트 팔레트 하나뿐', () => {
+  it.each(FOLDERS)('%s: 팔레트 JSON이 있을 때만 2P 시트가 있다', (folder) => {
+    const raw = JSON.parse(readFileSync(`${ROOT}/${folder}/manifest.json`, 'utf8')) as {
+      p2Image?: string; p2?: { source?: string };
+    };
+    const palette = paletteOf(folder);
+    expect(existsSync(`${ROOT}/${folder}/sheet_p2.png`)).toBe(!!palette);
+    if (palette) {
+      expect(raw.p2Image).toBe('sheet_p2.png');
+      expect(raw.p2?.source).toBe('artist');
+    } else {
+      expect(raw.p2Image).toBeUndefined();
+      expect(raw.p2).toBeUndefined();
+    }
+  });
 
-function manifestOf(folder: string) {
-  return parseSpriteManifest(JSON.parse(readFileSync(`${ROOT}/${folder}/manifest.json`, 'utf8')));
-}
-
-describe('2P 팔레트 시트(포장 단계 산출물)', () => {
-  it.each(FOLDERS)('%s: 1P와 크기·알파가 완전히 같다(모양 불변)', (folder) => {
+  it.each(FOLDERS.filter((f) => paletteOf(f)))('%s: 1P와 알파가 1비트도 다르지 않다(모양 불변)', (folder) => {
     const a = readPng(`${ROOT}/${folder}/sheet.png`);
     const b = readPng(`${ROOT}/${folder}/sheet_p2.png`);
     expect([b.width, b.height]).toEqual([a.width, a.height]);
-    const alphaOf = (s: Sheet): Buffer => Buffer.from(s.rgba.filter((_v, i) => i % 4 === 3));
-    // 알파 = 실루엣. 1px도 달라지면 안 된다.
-    expect(alphaOf(b).equals(alphaOf(a))).toBe(true);
+    const alpha = (s: Sheet): Buffer => Buffer.from(s.rgba.filter((_v, i) => i % 4 === 3));
+    expect(alpha(b).equals(alpha(a))).toBe(true);
   });
 
-  it.each(FOLDERS)('%s: 불투명 픽셀의 색이 실제로 바뀌었다', (folder) => {
-    const a = readPng(`${ROOT}/${folder}/sheet.png`);
-    const b = readPng(`${ROOT}/${folder}/sheet_p2.png`);
-    let opaque = 0;
+  it.each(FOLDERS.filter((f) => paletteOf(f)))('%s: 시트 색이 팔레트 p1 안에만 있고, 2P는 p2 그대로다', (folder) => {
+    const palette = paletteOf(folder)!;
+    const sheet = readPng(`${ROOT}/${folder}/sheet.png`);
+    const alt = readPng(`${ROOT}/${folder}/sheet_p2.png`);
+    const allowed = new Map<string, number[]>();
+    palette.p1.forEach((rgb, i) => allowed.set(rgb.join(','), palette.p2[i]));
+
+    // 느린 전수 비교 대신 위반만 모아서 한 번에 보고한다.
     let changed = 0;
-    for (let i = 0; i < a.rgba.length; i += 4) {
-      if (a.rgba[i + 3] === 0) continue;
-      opaque++;
-      if (a.rgba[i] !== b.rgba[i] || a.rgba[i + 1] !== b.rgba[i + 1] || a.rgba[i + 2] !== b.rgba[i + 2]) changed++;
-    }
-    expect(opaque).toBeGreaterThan(1000);
-    expect(changed / opaque).toBeGreaterThan(0.5);
-  });
-
-  it.each(FOLDERS)('%s: 치환표가 규칙을 지킨다(색상차 ≥60° · 명도 유지 · 외곽선 보존)', (folder) => {
-    expect(manifestOf(folder).p2Image).toBe('sheet_p2.png');
-    const raw = JSON.parse(readFileSync(`${ROOT}/${folder}/manifest.json`, 'utf8'));
-    const colors = raw.p2.colors as [number[], number[], string][];
-    expect(colors.length).toBeGreaterThan(8);
-    expect(raw.p2.bodyHueGap).toBeGreaterThanOrEqual(60);
-
-    for (const [from, to, family] of colors) {
-      const a = hsl(from[0], from[1], from[2]);
-      const b = hsl(to[0], to[1], to[2]);
-      if (family === 'keep') {
-        expect(to).toEqual(from);   // 외곽선·무채색은 손대지 않는다
-        continue;
+    const outside = new Set<string>();
+    const wrong: string[] = [];
+    for (let i = 0; i < sheet.rgba.length; i += 4) {
+      if (sheet.rgba[i + 3] === 0) continue;
+      const key = `${sheet.rgba[i]},${sheet.rgba[i + 1]},${sheet.rgba[i + 2]}`;
+      const target = allowed.get(key);
+      if (!target) { outside.add(key); continue; }
+      if (alt.rgba[i] !== target[0] || alt.rgba[i + 1] !== target[1] || alt.rgba[i + 2] !== target[2]) {
+        if (wrong.length < 3) wrong.push(`${key} -> ${[alt.rgba[i], alt.rgba[i + 1], alt.rgba[i + 2]].join(',')}`);
       }
-      // 명도: 올려도 +0.05까지, 내리지 않는다 — 실루엣 판독이 1P와 같아야 한다.
-      expect(b.l - a.l).toBeLessThanOrEqual(0.05 + 0.02);
-      expect(b.l - a.l).toBeGreaterThanOrEqual(-0.02);
-      // 채도: 올려도 min(0.50, 1P×1.5)까지, 내리지 않는다.
-      const satCap = Math.max(a.s, Math.min(0.5, a.s * 1.5));
-      expect(b.s).toBeLessThanOrEqual(satCap + 0.02);
-      expect(b.s).toBeGreaterThanOrEqual(a.s - 0.02);
-      if (family === 'shift') expect(hueGap(a.h, b.h)).toBeGreaterThanOrEqual(60);
+      if (key !== target.join(',')) changed++;
     }
+    expect([...outside]).toEqual([]);
+    expect(wrong).toEqual([]);
+    expect(changed).toBeGreaterThan(1000);
   });
 });
 
