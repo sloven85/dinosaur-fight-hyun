@@ -707,8 +707,11 @@ export function renderShadow(g: CanvasRenderingContext2D, fighter: Fighter, grou
   g.restore();
 }
 
-/** 에셋이 없을 때 쓰는 임시 도형(계획서 16절: 새 그림을 임의 생성하지 않는다). */
-function renderPlaceholder(g: CanvasRenderingContext2D, fighter: Fighter, feetY: number): void {
+/**
+ * 에셋이 없을 때 쓰는 임시 도형(계획서 16절: 새 그림을 임의 생성하지 않는다).
+ * 도트 화면에서도 "그림 준비 전"을 알리는 용도로만 쓴다 — 파츠를 조립해 캐릭터를 만들던 경로의 대체물이 아니다.
+ */
+export function renderPlaceholder(g: CanvasRenderingContext2D, fighter: Fighter, feetY: number): void {
   const crouch = fighter.state === 'crouch';
   const down = fighter.state === 'down';
   const height = fighter.data.displayHeight * (crouch ? CROUCH_SQUASH : down ? 0.4 : 1);

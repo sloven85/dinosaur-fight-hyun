@@ -1,7 +1,7 @@
 import type { Fighter } from '../../combat/Fighter';
 import type { Match } from '../../combat/Match';
 import type { AssetLoader } from '../AssetLoader';
-import { renderShadow } from '../FighterRenderer';
+import { renderPlaceholder, renderShadow } from '../FighterRenderer';
 import { PIXEL_ART_SCALE, PIXEL_VIEW_H, PIXEL_VIEW_W, PixelBackground, pixelScaleFor } from './PixelBackground';
 import {
   ART_CLIPS, SPRITE_STATES, STATE_LABELS, SpriteClock, drawSpriteFrame, sampleFighter,
@@ -88,7 +88,7 @@ export class SpriteStage {
     };
     const spec = document.createElement('p');
     spec.style.cssText = 'margin:6px 0;color:#9fb4c6;font-size:12px';
-    spec.textContent = '셀 502×304 · 발 기준 y=298 · 기준 x=251 · 아트 1px = 화면 4px 고정 · 프레임별 맞춤/회전 없음';
+    spec.textContent = '셀 502×304 · 발 기준 y=298 · 기준 x=251 · 아트 1px = 화면 4px 고정 · 부위 조합 없음 · 프레임별 맞춤/회전 없음';
 
     for (const [value, text] of [['pixel', '도트 12종 (신규)'], ['legacy', '기존 부위 렌더러']]) {
       const option = document.createElement('option');
@@ -190,8 +190,11 @@ export class SpriteStage {
     return null;
   }
 
-  /** 배율: 아트 1px = 화면 4px 고정. 캔버스가 창의 정수배가 아니면 그리지 않는다. */
-  private scaleFor(g: CanvasRenderingContext2D): number | null {
+  /**
+   * 배율: 아트 1px = 화면 4px. 캔버스 폭이 창(480)의 정수배면 그 k를 쓰고, 아니면 4로 고정한다.
+   * 어느 쪽이든 정수만 나온다 — 소수 배율로 리샘플하는 경로는 없다.
+   */
+  private scaleFor(g: CanvasRenderingContext2D): number {
     return pixelScaleFor(g.canvas.width) ?? this.spriteScale;
   }
 
@@ -217,11 +220,9 @@ export class SpriteStage {
     this.diagnostics.textContent = match.fighters.map((f, i) => {
       const folder = this.folderFor(f);
       const assets = folder ? this.species.get(folder) : null;
-      if (!assets) return `${i + 1}P ${f.data.id} · 아트 대기 · 기존 그림`;
+      if (!assets) return `${i + 1}P ${f.data.id} · 아트 대기 · 임시 도형`;
       const sample = sampleFighter(assets.manifest, f, this.clocks[i]);
-      return sample
-        ? `${i + 1}P ${f.data.id} · ${STATE_LABELS[sample.state]} ${sample.step + 1}/${assets.manifest.clips[sample.state].frames.length} · HP ${f.health}`
-        : `${i + 1}P ${f.data.id} · ${f.state} 미지원 · 기존 그림`;
+      return `${i + 1}P ${f.data.id} · ${STATE_LABELS[sample.state]} ${sample.step + 1}/${assets.manifest.clips[sample.state].frames.length} · HP ${f.health}`;
     }).join('\n');
   }
 
@@ -257,20 +258,27 @@ export class SpriteStage {
     return this.background.render(g, stage, groundY, focusX, width, height, PARALLAX);
   }
 
-  /** true를 돌려주면 이 프레임은 신규 렌더러가 그렸다는 뜻. */
+  /**
+   * 도트 화면에서는 **항상 true**를 돌려준다(이 캐릭터는 여기서 그린다).
+   * 그림이 아직 없거나 프레임을 못 고르면 임시 도형만 그리고 끝낸다 —
+   * false를 돌려 파츠 렌더러가 부위를 조립해 그리는 경로를 만들지 않는다(jk 확정 2026-10-29).
+   * false는 "이 화면은 도트가 아니다"라는 뜻 하나뿐이다.
+   */
   render(g: CanvasRenderingContext2D, fighter: Fighter, groundY: number): boolean {
     if (this.view.value !== 'pixel') return false;
-    const folder = this.folderFor(fighter);
-    if (!folder) return false;
-    const assets = this.species.get(folder);
-    if (!assets) return false;
-    const sample = sampleFighter(assets.manifest, fighter, this.clocks[fighter.player]);
-    if (!sample) return false;
-    const scale = this.scaleFor(g);
-    if (!scale) return false;
+    const feetY = groundY + fighter.y;
     renderShadow(g, fighter, groundY);
+    const folder = this.folderFor(fighter);
+    const assets = folder ? this.species.get(folder) : null;
+    if (!assets) {
+      // 아트 준비 전: 파츠 대신 임시 도형. 준비되면 다음 프레임부터 전신 그림으로 바뀐다.
+      renderPlaceholder(g, fighter, feetY);
+      return true;
+    }
+    const sample = sampleFighter(assets.manifest, fighter, this.clocks[fighter.player]);
     const frame = assets.manifest.frames[sample.frame];
-    drawSpriteFrame(g, assets, frame, fighter.x, groundY + fighter.y, fighter.facing, scale);
+    if (!frame) return true;
+    drawSpriteFrame(g, assets, frame, fighter.x, feetY, fighter.facing, this.scaleFor(g));
     return true;
   }
 

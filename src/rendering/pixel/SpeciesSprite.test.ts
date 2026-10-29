@@ -97,7 +97,8 @@ describe('상태 → 클립 매핑', () => {
     expect(spriteStateFor(fighter({ state: 'attack', attack: light }))).toBe('light');
     expect(spriteStateFor(fighter({ state: 'attack', attack: heavy }))).toBe('strong');
     expect(spriteStateFor(fighter({ state: 'attack', attack: special }))).toBe('special');
-    expect(spriteStateFor(fighter({ state: 'attack', attack: undefined }))).toBeNull();
+    // 기술 데이터가 붙기 전 프레임에도 파츠 렌더러로 빠지지 않고 전신 그림을 고른다.
+    expect(spriteStateFor(fighter({ state: 'attack', attack: undefined }))).toBe('light');
     expect(spriteStateFor(fighter({ state: 'hit', onGround: true }))).toBe('hit');
     expect(spriteStateFor(fighter({ state: 'hit', onGround: false }))).toBe('flail');
     expect(spriteStateFor(fighter({ state: 'held' }))).toBe('flail');

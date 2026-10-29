@@ -185,8 +185,12 @@ export function snapToScale(value: number, scale: number): number {
   return Math.round(value / scale) * scale;
 }
 
-/** 상태 → 재생할 클립. 그림이 없는 상태는 null을 돌려 기존 렌더러로 남긴다. */
-export function spriteStateFor(fighter: Fighter): SpriteState | null {
+/**
+ * 상태 → 재생할 클립. **항상 클립을 돌려준다** — "그림이 없으니 파츠 렌더러로 그린다"는
+ * 폴백을 만들지 않기 위해서다(jk 확정 2026-10-29: 파츠 조립 금지, 전신 1프레임만).
+ * 매핑이 없는 상태는 가장 가까운 전신 클립으로 보낸다.
+ */
+export function spriteStateFor(fighter: Fighter): SpriteState {
   switch (fighter.state) {
     case 'idle':
     case 'crouch':
@@ -199,10 +203,10 @@ export function spriteStateFor(fighter: Fighter): SpriteState | null {
       return fighter.onGround ? 'idle' : 'jump';
     case 'attack': {
       const kind = fighter.attack?.move.kind;
-      if (kind === 'light') return 'light';
       if (kind === 'heavy') return 'strong';
       if (kind === 'special') return 'special';
-      return null;
+      // light이거나 아직 기술 데이터가 붙기 전 프레임: 약공격 전신 그림으로 그린다.
+      return 'light';
     }
     case 'hit':
       return fighter.onGround ? 'hit' : 'flail';
@@ -214,7 +218,7 @@ export function spriteStateFor(fighter: Fighter): SpriteState | null {
     case 'victory':
       return 'victory';
     default:
-      return null;
+      return 'idle';
   }
 }
 
@@ -245,7 +249,7 @@ export class SpriteClock {
   }
 
   /** 지금 재생할 상태와 그 상태에서 흐른 틱. 판정은 전투 쪽 값을 그대로 쓴다. */
-  read(fighter: Fighter): { state: SpriteState | null; tick: number; air: number } {
+  read(fighter: Fighter): { state: SpriteState; tick: number; air: number } {
     return { state: spriteStateFor(fighter), tick: this.age, air: this.air };
   }
 }
@@ -254,9 +258,8 @@ export class SpriteClock {
  * 한 캐릭터를 그 상태에 맞춰 샘플링한다.
  * 공격은 기술 프레임 수에 그림 전체를 맞추고, 점프는 공중에 떠 있는 동안 원본 길이로 돈다.
  */
-export function sampleFighter(manifest: SpriteManifest, fighter: Fighter, clock: SpriteClock): SpriteSample | null {
+export function sampleFighter(manifest: SpriteManifest, fighter: Fighter, clock: SpriteClock): SpriteSample {
   const { state, tick } = clock.read(fighter);
-  if (!state) return null;
   const move = fighter.state === 'attack' ? fighter.attack?.move : undefined;
   const stretch = stretchTargetFor(fighter, move);
   if (stretch) return sampleSpriteClip(manifest, state, fighter.attack!.frame, stretch);

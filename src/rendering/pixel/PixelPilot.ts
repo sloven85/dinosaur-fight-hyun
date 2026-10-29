@@ -2,6 +2,7 @@ import type { Fighter } from '../../combat/Fighter';
 import type { Match } from '../../combat/Match';
 import { getMove } from '../../data';
 import type { AssetLoader } from '../AssetLoader';
+import { renderPlaceholder, renderShadow } from '../FighterRenderer';
 import { PixelAnimator, PIXEL_CLIPS, drawPixelSample, parsePixelManifest, pixelClipFor, samplePixelClip, sampleSourceClip,
   validateBiteTiming, validatePixelImage, type PixelAssets, type PixelClipName } from './PixelAnimation';
 
@@ -148,10 +149,20 @@ export class PixelPilot {
     }
   }
 
+  /**
+   * 도트 화면에서는 이 캐릭터를 여기서 맡는다(항상 true).
+   * 그림이 없거나 이 상태의 클립이 없으면 파츠 렌더러로 넘기지 않고 임시 도형만 그린다(jk 확정 2026-10-29).
+   */
   render(g: CanvasRenderingContext2D, fighter: Fighter, groundY: number): boolean {
-    if (this.view.value !== 'pixel' || !this.assets) return false;
-    const sample = this.clocks[fighter.player].sample(this.assets.manifest, fighter);
-    return !!sample && drawPixelSample(g, this.assets, sample, fighter.x, groundY + fighter.y, fighter.facing);
+    if (this.view.value !== 'pixel') return false;
+    const frame = this.assets ? this.clocks[fighter.player].sample(this.assets.manifest, fighter) : null;
+    if (!this.assets || !frame) {
+      renderShadow(g, fighter, groundY);
+      renderPlaceholder(g, fighter, groundY + fighter.y);
+      return true;
+    }
+    drawPixelSample(g, this.assets, frame, fighter.x, groundY + fighter.y, fighter.facing);
+    return true;
   }
 
   dispose(): void { this.disposed = true; this.loadGeneration++; this.assets = null; this.panel.remove(); }
