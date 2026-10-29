@@ -16,15 +16,24 @@ export const ROUNDS_TO_WIN = 2;
 export const MAX_ROUNDS = 9;
 
 /** 계획서 3절 공통 값(디자인 px, 프레임). */
-export const BASE_MOVE_SPEED = 360;
+/**
+ * 걷기 이동속도(디자인 px/초). 아트 걷기 8아트px/90ms = 88.9아트px/s = 355.6화면px/s에 맞춘다.
+ * 이 값이 어긋나면 지면에 붙은 발만큼 그림이 미끄러진다(아트는 다시 계산하지 않는다).
+ */
+export const BASE_MOVE_SPEED = 356;
 export const JUMP_VELOCITY = -900;
 export const GRAVITY = 2400;
 
-/** 화면 안쪽 여유. 스프라이트가 화면 밖으로 잘리지 않도록 이 안에서만 움직인다. */
+/**
+ * 화면 안쪽 여유. 실제 이동 한계는 여기에 displayBox(리그 실측 상자)만큼 더 들어온 값이라
+ * 티라노 기준 x 411~1509이고, 그 안에서 스프라이트(가장 긴 앞끝 364)가 화면 밖으로 나가지 않는다.
+ * 이 범위의 중점은 화면 중심±549를 넘지 않아 지면 1.00 시차(여백 ±704)를 여유 있게 소화한다.
+ */
 export const ARENA_LEFT = 60;
 export const ARENA_RIGHT = 1860;
-export const START_X_P1 = 620;
-export const START_X_P2 = 1300;
+/** 시작 간격: 주둥이 앞끝 사이 300~360px. 티라노 앞끝 332×2 + 302 = 966(화면 중심 기준 ±483). */
+export const START_X_P1 = 477;
+export const START_X_P2 = 1443;
 
 /** 계획서 2절 게이지. */
 export const MAX_METER = 100;

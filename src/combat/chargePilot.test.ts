@@ -66,13 +66,14 @@ describe('triceratops charge startup alignment', () => {
       const hit = m.p2.health < m.p2.maxHealth;
       if (hit) { expect(missed).toBe(false); boundary = gap; } else missed = true;
     }
-    expect(boundary).toBe(1590);
+    // 트리케라 displayHeight를 아트 실측(360)으로 다시 잡으면서 돌진 사거리가 1590→1580이 됐다.
+    expect(boundary).toBe(1580);
     // Original end-of-active pose has the same geometric reach; only its timing was wrong.
-    for (const gap of [1590, 1600]) {
+    for (const gap of [1580, 1590]) {
       const m = make(facing, gap, true); m.step(press, 1 / 60);
       m.p1.attack = { ...m.p1.attack!, move: getMove('triceratops_special') };
       for (let i = 0; i < 180; i++) m.step(NULL_INPUT, 1 / 60);
-      expect(m.p2.health < m.p2.maxHealth).toBe(gap === 1590);
+      expect(m.p2.health < m.p2.maxHealth).toBe(gap === 1580);
     }
   });
 });

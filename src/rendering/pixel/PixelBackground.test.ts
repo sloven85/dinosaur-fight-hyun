@@ -155,3 +155,32 @@ describe('배경 레이어 로딩(회귀: 파일 이름으로 찾다 항상 실�
     }
   });
 });
+
+describe('지면 레이어는 카메라와 1:1로 움직인다(발 미끄러짐 방지)', () => {
+  const PARALLAX = { far: 0.25, mid: 0.6, ground: 1 };
+
+  it('중점이 100px 움직이면 지면 레이어도 100px 움직이고, 좌표는 4의 배수다', async () => {
+    const bg = new PixelBackground(fakeLoader() as never);
+    const draw = (focusX: number): number[] => {
+      const { ctx, calls } = recordingCtx();
+      expect(bg.render(ctx, 'jungle', 900, focusX, 1920, 1080, PARALLAX)).toBe(true);
+      for (const call of calls) expect(Math.abs(call.x % 4)).toBe(0);
+      return calls.map((c) => c.x);
+    };
+    expect(draw.length).toBe(1);
+    // 첫 호출은 로딩만 시작한다(그리지 않음).
+    const warm = recordingCtx();
+    expect(bg.render(warm.ctx, 'jungle', 900, 960, 1920, 1080, PARALLAX)).toBe(false);
+    await new Promise((r) => setTimeout(r, 0));
+
+    const base = draw(960);
+    const right = draw(1060);
+    const left = draw(860);
+    // calls[2] = 지면 레이어
+    expect(right[2] - base[2]).toBe(-100);
+    expect(left[2] - base[2]).toBe(100);
+    // 원경·중경은 계수만큼 움직이되 4px 격자로 반올림된다(0.25×100=25 → -24).
+    expect(Math.abs((right[0] - base[0]) + 25)).toBeLessThanOrEqual(2);
+    expect(right[1] - base[1]).toBe(-60);
+  });
+});

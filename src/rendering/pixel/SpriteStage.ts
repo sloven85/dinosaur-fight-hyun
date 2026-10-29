@@ -282,8 +282,12 @@ export class SpriteStage {
   }
 }
 
-/** 엔진의 시차 계수. 배경 레이어도 캐릭터와 같은 카메라를 쓴다. */
-const PARALLAX = { far: 0.04, mid: 0.14, ground: 0.3 };
+/**
+ * 엔진의 시차 계수(jk 확정 2026-10-29): 원경 0.25 / 중경 0.60 / 지면 1.00.
+ * 지면이 1.00이어야 접지한 발이 지면 위를 미끄러지지 않는다(카메라 중심 = 두 캐릭터 중점).
+ * 0.30이면 지면 텍스처가 캐릭터 이동의 30%만 따라가 발이 흘러 보인다.
+ */
+export const PARALLAX = { far: 0.25, mid: 0.6, ground: 1 };
 
 const FOLDER_ORDER = ['trex', 'trike', 'velo', 'spino', 'anky', 'stego', 'carno', 'pachy', 'theri', 'dilo', 'brachio', 'ptera'];
 const FOLDER_LABEL: Record<string, string> = {

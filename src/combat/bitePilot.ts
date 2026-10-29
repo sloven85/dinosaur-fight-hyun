@@ -6,9 +6,11 @@ export function bitePilotMove(move: MoveData): MoveData {
   if (!move.script) return move;
   const key = (f: number, x: number, head: number, jaw: number): ScriptKey =>
     ({ f, x, rot: 0, sx: 1, sy: 1, parts: { head, jaw }, ease: 'linear' });
+  // 2번째 물기 x는 70이다. 물기 사거리를 종별 아트 높이×4로 다시 잡으면서(디펜더 몸이 8px 작아짐)
+  // 2연타의 두 번째 접촉이 헛방이 됐고, 같은 폭(8px)만큼 앞으로 내밀어 기존 2연타를 유지한다.
   if (move.id === 'tyrannosaurus_light') return { ...move, script: { ...move.script, frames: 38,
     keys: [key(0, 0, 0, 0), key(4, -8, -6, -26), key(8, 36, -6, -26), key(11, 36, -6, -2),
-      key(15, 30, -6, -26), key(20, 62, -6, -26), key(23, 62, -6, -2), key(36, 0, 0, 0)],
+      key(15, 30, -6, -26), key(20, 70, -6, -26), key(23, 70, -6, -2), key(36, 0, 0, 0)],
     hits: move.script.hits!.map((h, i) => ({ ...h, from: i ? 21 : 9, to: i ? 23 : 11 })),
   } };
   if (move.id === 'tyrannosaurus_heavy') return { ...move, script: { ...move.script,
