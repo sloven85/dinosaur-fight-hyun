@@ -1,0 +1,266 @@
+import type { Fighter } from '../../combat/Fighter';
+import type { Match } from '../../combat/Match';
+import type { AssetLoader } from '../AssetLoader';
+import { renderShadow } from '../FighterRenderer';
+import {
+  ART_CLIPS, SPRITE_STATES, STATE_LABELS, SpriteClock, drawSpriteFrame, sampleFighter,
+  parseSpriteManifest, type SpriteAssets, type SpriteState,
+} from './SpeciesSprite';
+
+const ROOT = 'dev-art/species/';
+
+export function spriteStageEnabled(dev: boolean, search: string): boolean {
+  return dev && new URLSearchParams(search).get('pixelStage') === '1';
+}
+
+interface IndexEntry { character: string; frames: number; sheet: [number, number] }
+interface SpeciesIndex { version: number; cell: [number, number]; footY: number; anchorX: number; scale: number; species: Record<string, IndexEntry> }
+
+async function loadSpecies(loader: AssetLoader, folder: string): Promise<SpriteAssets> {
+  const raw = await loader.loadJson<unknown>(`${ROOT}${folder}/manifest.json`);
+  if (!raw) throw new Error(`${folder} manifest를 읽지 못했습니다.`);
+  const manifest = parseSpriteManifest(raw);
+  const image = await loader.loadImage(`${ROOT}${folder}/${manifest.image}`);
+  if (!image) throw new Error(`${folder} 시트 PNG를 읽지 못했습니다.`);
+  if (manifest.frames.some((f) => f.x + f.w > image.naturalWidth || f.y + f.h > image.naturalHeight)) {
+    throw new Error(`${folder} 시트 경계를 벗어난 프레임이 있습니다.`);
+  }
+  return { manifest, image };
+}
+
+/**
+ * 12종 도트 스프라이트 비교판 (개발 전용).
+ * 실제 Match를 그대로 그리고, 그림만 갈아 끼운다 — 판정·피해·사거리·이동은 건드리지 않는다.
+ */
+export class SpriteStage {
+  private readonly byCharacter = new Map<string, string>();
+  private readonly species = new Map<string, SpriteAssets>();
+  private readonly pendingLoad = new Map<string, Promise<SpriteAssets | null>>();
+  private readonly clocks = [new SpriteClock(), new SpriteClock()];
+  private readonly panel = document.createElement('section');
+  private readonly status = document.createElement('p');
+  private readonly diagnostics = document.createElement('p');
+  private readonly view = document.createElement('select');
+  private readonly effectsInput = document.createElement('input');
+  private readonly preview = document.createElement('canvas');
+  private readonly previewCaption = document.createElement('p');
+  private readonly poseSpecies = document.createElement('select');
+  private readonly poseState = document.createElement('select');
+  private poseFacing: 1 | -1 = 1;
+  private poseStep = 0;
+  private round = 0;
+  private disposed = false;
+
+  constructor(private readonly loader: AssetLoader) {
+    this.buildPanel();
+    void this.boot();
+  }
+
+  get effects(): boolean { return this.effectsInput.checked; }
+
+  private buildPanel(): void {
+    this.panel.setAttribute('aria-label', '12종 도트 스프라이트 비교판');
+    this.panel.style.cssText = 'position:fixed;right:8px;top:8px;z-index:22;width:400px;max-height:78vh;overflow:auto;'
+      + 'padding:12px;background:#101820ee;color:#fff;font:13px/1.5 system-ui;border:1px solid #637888;border-radius:8px';
+    const title = document.createElement('strong');
+    title.textContent = '12종 도트 스프라이트 · 개발 비교판';
+    // 검수 캡처용: 패널을 한 줄로 접어 화면을 가리지 않게 한다.
+    const collapse = document.createElement('button');
+    collapse.textContent = '패널 접기';
+    collapse.style.cssText = 'float:right;font-size:11px';
+    collapse.onclick = () => {
+      const folded = this.panel.dataset.folded === '1';
+      this.panel.dataset.folded = folded ? '0' : '1';
+      for (const child of Array.from(this.panel.children) as HTMLElement[]) {
+        if (child === collapse) continue;
+        // hidden 속성만으로는 flex/grid 인라인 스타일에 밀리므로 display도 함께 끈다.
+        child.hidden = !folded;
+        if (folded) child.style.removeProperty('display');
+        else child.style.display = 'none';
+      }
+      collapse.textContent = folded ? '패널 접기' : '패널 펴기';
+      this.panel.style.width = folded ? '400px' : '190px';
+    };
+    const spec = document.createElement('p');
+    spec.style.cssText = 'margin:6px 0;color:#9fb4c6;font-size:12px';
+    spec.textContent = '셀 502×304 · 발 기준 y=298 · 기준 x=251 · 정수 4배(2008×1216) · 프레임별 맞춤/회전 없음';
+
+    for (const [value, text] of [['pixel', '도트 12종 (신규)'], ['legacy', '기존 부위 렌더러']]) {
+      const option = document.createElement('option');
+      option.value = value; option.textContent = text; this.view.append(option);
+    }
+    this.view.setAttribute('aria-label', '렌더러 선택');
+    const effectLabel = document.createElement('label');
+    this.effectsInput.type = 'checkbox';
+    effectLabel.append(this.effectsInput, ' 연출/흔들림/이펙트 켜기');
+
+    const table = document.createElement('table');
+    table.style.cssText = 'border-collapse:collapse;font-size:11px;margin:6px 0;width:100%';
+    table.innerHTML = '<thead><tr><th style="text-align:left">상태</th><th>아티스트 클립</th><th>프레임</th></tr></thead>';
+    const tbody = document.createElement('tbody');
+    for (const state of SPRITE_STATES) {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td>${STATE_LABELS[state]}</td><td style="color:#9fb4c6">${ART_CLIPS[state]}</td><td data-clip="${state}" style="text-align:center">-</td>`;
+      tbody.append(tr);
+    }
+    table.append(tbody);
+
+    const poseLabel = document.createElement('p');
+    poseLabel.textContent = '자세 관찰 (실전 판정과 별개)';
+    poseLabel.style.cssText = 'margin:8px 0 2px;font-weight:600';
+    for (const folder of FOLDER_ORDER) {
+      const option = document.createElement('option');
+      option.value = folder; option.textContent = FOLDER_LABEL[folder] ?? folder; this.poseSpecies.append(option);
+    }
+    for (const state of SPRITE_STATES) {
+      const option = document.createElement('option');
+      option.value = state; option.textContent = STATE_LABELS[state]; this.poseState.append(option);
+    }
+    this.poseState.value = 'walk';
+    this.poseSpecies.onchange = () => { this.ensure(this.poseSpecies.value); this.refreshClipTable(); };
+    const flip = document.createElement('button');
+    flip.textContent = '방향 반전';
+    flip.onclick = () => { this.poseFacing = this.poseFacing === 1 ? -1 : 1; };
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;gap:6px;margin:4px 0';
+    row.append(this.poseSpecies, this.poseState, flip);
+
+    this.preview.width = 1008; this.preview.height = 612;
+    this.preview.style.cssText = 'display:block;background:#253140;image-rendering:pixelated;width:100%';
+    const viewport = document.createElement('div');
+    viewport.style.cssText = 'overflow:auto;max-height:320px';
+    viewport.append(this.preview);
+
+    this.status.textContent = '아트 확인 중';
+    this.panel.append(title, collapse, spec, this.view, effectLabel, this.status, this.diagnostics, table,
+      poseLabel, row, this.previewCaption, viewport);
+    document.body.append(this.panel);
+  }
+
+  private async boot(): Promise<void> {
+    try {
+      const raw = await this.loader.loadJson<SpeciesIndex>(`${ROOT}index.json`);
+      if (!raw) throw new Error('dev-art/species/index.json이 없습니다.');
+      for (const [folder, entry] of Object.entries(raw.species)) this.byCharacter.set(entry.character, folder);
+      const total = Object.values(raw.species).reduce((n, s) => n + s.frames, 0);
+      this.status.textContent = `${Object.keys(raw.species).length}종 ${total}장 준비 · 판정/피해/사거리는 기존 값 그대로`;
+      this.ensure(this.poseSpecies.value);
+    } catch (error) {
+      this.status.textContent = `아트 미연결 — ${error instanceof Error ? error.message : '파일 확인 실패'} 기존 렌더러로 진행`;
+    }
+    this.refreshClipTable();
+  }
+
+  private refreshClipTable(): void {
+    const selected = this.poseSpecies.value;
+    const assets = this.species.get(selected);
+    for (const cell of this.panel.querySelectorAll<HTMLElement>('[data-clip]')) {
+      const state = cell.dataset.clip as SpriteState;
+      const clip = assets?.manifest.clips[state];
+      cell.textContent = clip ? `${clip.frames.length}장 / ${clip.ticks.reduce((a, b) => a + b, 0)}틱` : '-';
+    }
+  }
+
+  /** 매치에 필요한 종만 그때그때 받는다. */
+  private ensure(folder: string): SpriteAssets | null {
+    const loaded = this.species.get(folder);
+    if (loaded) return loaded;
+    if (!this.pendingLoad.has(folder)) {
+      const promise = loadSpecies(this.loader, folder)
+        .then((assets) => {
+          if (!this.disposed) { this.species.set(folder, assets); this.refreshClipTable(); }
+          return assets;
+        })
+        .catch((error: unknown) => {
+          this.status.textContent = `아트 미연결 — ${error instanceof Error ? error.message : '알 수 없는 오류'}`;
+          return null;
+        })
+        .finally(() => { this.pendingLoad.delete(folder); });
+      this.pendingLoad.set(folder, promise);
+    }
+    return null;
+  }
+
+  private folderFor(fighter: Fighter): string | null {
+    return this.byCharacter.get(fighter.data.id) ?? null;
+  }
+
+  step(match: Match, frozen: readonly boolean[]): void {
+    if (this.round !== match.roundNumber) {
+      this.round = match.roundNumber;
+      this.clocks.forEach((c) => c.reset());
+    }
+    match.fighters.forEach((f, i) => {
+      this.clocks[i].step(f, frozen[i]);
+      const folder = this.folderFor(f);
+      if (folder) this.ensure(folder);
+    });
+    this.poseStep++;
+    this.drawPreview();
+
+    if (this.view.value !== 'pixel') { this.diagnostics.textContent = '기존 렌더러 재생 중'; return; }
+    this.diagnostics.style.whiteSpace = 'pre-line';
+    this.diagnostics.textContent = match.fighters.map((f, i) => {
+      const folder = this.folderFor(f);
+      const assets = folder ? this.species.get(folder) : null;
+      if (!assets) return `${i + 1}P ${f.data.id} · 아트 대기 · 기존 그림`;
+      const sample = sampleFighter(assets.manifest, f, this.clocks[i]);
+      return sample
+        ? `${i + 1}P ${f.data.id} · ${STATE_LABELS[sample.state]} ${sample.step + 1}/${assets.manifest.clips[sample.state].frames.length} · HP ${f.health}`
+        : `${i + 1}P ${f.data.id} · ${f.state} 미지원 · 기존 그림`;
+    }).join('\n');
+  }
+
+  private drawPreview(): void {
+    const g = this.preview.getContext('2d');
+    if (!g) return;
+    const assets = this.species.get(this.poseSpecies.value);
+    g.clearRect(0, 0, this.preview.width, this.preview.height);
+    const groundY = 560;
+    g.fillStyle = '#7c8d9c';
+    g.fillRect(0, groundY, this.preview.width, 2);
+    g.fillStyle = '#33414f';
+    g.fillRect(504, 0, 1, this.preview.height);
+    if (!assets) {
+      this.previewCaption.textContent = `${this.poseSpecies.value}: 아트 로딩 중`;
+      return;
+    }
+    const state = this.poseState.value as SpriteState;
+    const clip = assets.manifest.clips[state];
+    const step = clip.loop
+      ? this.poseStep % clip.frames.length
+      : Math.min(clip.frames.length - 1, Math.floor(this.poseStep / 8) % clip.frames.length);
+    const frame = assets.manifest.frames[clip.frames[step]];
+    drawSpriteFrame(g, assets, frame, 504, groundY, this.poseFacing);
+    this.previewCaption.textContent = `${assets.manifest.name} · ${STATE_LABELS[state]} ${step + 1}/${clip.frames.length} · `
+      + `그림 ${frame.w}×${frame.h}원본 → 화면 ${frame.w * 4}×${frame.h * 4}px · 기준 x=251/y=298 고정`;
+  }
+
+  /** true를 돌려주면 이 프레임은 신규 렌더러가 그렸다는 뜻. */
+  render(g: CanvasRenderingContext2D, fighter: Fighter, groundY: number): boolean {
+    if (this.view.value !== 'pixel') return false;
+    const folder = this.folderFor(fighter);
+    if (!folder) return false;
+    const assets = this.species.get(folder);
+    if (!assets) return false;
+    const sample = sampleFighter(assets.manifest, fighter, this.clocks[fighter.player]);
+    if (!sample) return false;
+    renderShadow(g, fighter, groundY);
+    const frame = assets.manifest.frames[sample.frame];
+    drawSpriteFrame(g, assets, frame, fighter.x, groundY + fighter.y, fighter.facing);
+    return true;
+  }
+
+  dispose(): void {
+    this.disposed = true;
+    this.species.clear();
+    this.panel.remove();
+  }
+}
+
+const FOLDER_ORDER = ['trex', 'trike', 'velo', 'spino', 'anky', 'stego', 'carno', 'pachy', 'theri', 'dilo', 'brachio', 'ptera'];
+const FOLDER_LABEL: Record<string, string> = {
+  trex: '티라노', trike: '트리케라', velo: '벨로키', spino: '스피노', anky: '안킬로', stego: '스테고',
+  carno: '카르노', pachy: '파키', theri: '테리지노', dilo: '딜로포', brachio: '브라키오', ptera: '프테라',
+};
+

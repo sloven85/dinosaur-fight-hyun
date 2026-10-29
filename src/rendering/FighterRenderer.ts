@@ -691,7 +691,8 @@ function applyEmotionTransform(g: CanvasRenderingContext2D, emotion: Emotion, ti
   }
 }
 
-function renderShadow(g: CanvasRenderingContext2D, fighter: Fighter, groundY: number): void {
+/** 발밑 그림자. 도트 비교판도 같은 그림자를 써서 접지 판단이 흔들리지 않게 한다. */
+export function renderShadow(g: CanvasRenderingContext2D, fighter: Fighter, groundY: number): void {
   const box = fighter.hurtbox();
   const width = box.right - box.left;
   const lift = Math.max(0, -fighter.y);

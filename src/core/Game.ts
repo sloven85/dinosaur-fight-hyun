@@ -59,6 +59,10 @@ export class Game {
       review.href = 'pixel-review.html'; review.textContent = 'v2 동일 입력 A/B 검수 · 영상 기록';
       review.style.cssText = 'position:fixed;top:8px;left:290px;z-index:10;color:white;background:#152536;padding:10px';
       document.body.append(review);
+      const stage = document.createElement('a');
+      stage.href = '?pixelStage=1'; stage.textContent = '개발용 12종 도트 스프라이트 비교판';
+      stage.style.cssText = 'position:fixed;top:8px;left:610px;z-index:10;color:white;background:#1c3a52;padding:10px';
+      document.body.append(stage);
     }
   }
 

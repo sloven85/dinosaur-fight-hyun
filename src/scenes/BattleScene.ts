@@ -16,6 +16,7 @@ import { ResultScene } from './ResultScene';
 import { drawText, fillRoundRect } from '../ui/draw';
 import { COLORS, FONTS } from '../ui/theme';
 import type { PixelPilot } from '../rendering/pixel/PixelPilot';
+import type { SpriteStage } from '../rendering/pixel/SpriteStage';
 
 const HUD_BAR_W = 700;
 const HUD_BAR_H = 42;
@@ -62,6 +63,7 @@ export class BattleScene extends BaseScene {
   private finishX = 960;
   private finishY = 600;
   private pixelPilot: PixelPilot | null = null;
+  private spriteStage: SpriteStage | null = null;
   private disposed = false;
 
   constructor(private readonly characterAssets: [CharacterAssets, CharacterAssets] | null = null) {
@@ -74,6 +76,12 @@ export class BattleScene extends BaseScene {
     if (import.meta.env.DEV && typeof location !== 'undefined' && new URLSearchParams(location.search).get('pixelPilot') === '1') {
       void import('../rendering/pixel/PixelPilot').then(({ PixelPilot }) => {
         if (!this.disposed) this.pixelPilot = new PixelPilot(context.assets);
+      });
+    }
+    // 12종 도트 스프라이트 비교판(?pixelStage=1). 공개 빌드에는 포함되지 않는다.
+    if (import.meta.env.DEV && typeof location !== 'undefined' && new URLSearchParams(location.search).get('pixelStage') === '1') {
+      void import('../rendering/pixel/SpriteStage').then(({ SpriteStage }) => {
+        if (!this.disposed) this.spriteStage = new SpriteStage(context.assets);
       });
     }
     const { session, settings } = context;
@@ -104,6 +112,8 @@ export class BattleScene extends BaseScene {
     this.disposed = true;
     this.pixelPilot?.dispose();
     this.pixelPilot = null;
+    this.spriteStage?.dispose();
+    this.spriteStage = null;
     this.context.audio.stopBgm();
   }
 
@@ -114,7 +124,7 @@ export class BattleScene extends BaseScene {
     this.elapsed += dt;
 
     if (input.consumeDebugToggle()) this.debugBoxes = !this.debugBoxes;
-    if (this.pixelPilot && !this.pixelPilot.effects) {
+    if ((this.pixelPilot && !this.pixelPilot.effects) || (this.spriteStage && !this.spriteStage.effects)) {
       this.shakeFrames = this.flashFrames = this.finishFrames = this.koFrames = 0;
       this.effects.clear();
     }
@@ -139,6 +149,7 @@ export class BattleScene extends BaseScene {
     const pixelFrozen = this.match.fighters.map(f => f.hitstopFrames > 0 || this.match.cutinFrames > 0);
     this.match.step(input, dt);
     this.pixelPilot?.step(this.match, pixelFrozen);
+    this.spriteStage?.step(this.match, pixelFrozen);
     // 개발 서버 전용: ?devko=1이면 2P 체력을 1로(KO 연출 확인용). 배포 빌드에는 들어가지 않는다.
     if (import.meta.env.DEV && typeof location !== 'undefined' && location.search.includes('devko=1') && this.match.phase === 'fight') {
       this.match.p2.health = Math.min(this.match.p2.health, 1);
@@ -152,7 +163,7 @@ export class BattleScene extends BaseScene {
       };
     }
     this.consumeMatchEvents(stage.groundY, settings.screenShake, settings.vibration);
-    if (!this.pixelPilot || this.pixelPilot.effects) this.spawnLandingDust(stage.groundY);
+    if (effectsOn(this.pixelPilot, this.spriteStage)) this.spawnLandingDust(stage.groundY);
     this.effects.update(dt);
     if (this.shakeFrames > 0) this.shakeFrames -= 1;
     if (this.flashFrames > 0) this.flashFrames -= 1;
@@ -171,7 +182,7 @@ export class BattleScene extends BaseScene {
         this.context.audio.playSfx('ann_fight');
       }
     }
-    if (this.match.phase === 'roundOver' && this.prevPhase === 'fight' && (!this.pixelPilot || this.pixelPilot.effects)) {
+    if (this.match.phase === 'roundOver' && this.prevPhase === 'fight' && effectsOn(this.pixelPilot, this.spriteStage)) {
       this.onRoundFinished(stage.groundY);
     }
     if (this.match.phase === 'matchOver') {
@@ -185,7 +196,7 @@ export class BattleScene extends BaseScene {
 
   /** Match가 남긴 연출 이벤트를 먼지·별·충격파·소리·진동으로 바꾼다(피해와 무관). */
   private consumeMatchEvents(groundY: number, screenShake: boolean, vibration: boolean): void {
-    if (this.pixelPilot && !this.pixelPilot.effects) {
+    if ((this.pixelPilot && !this.pixelPilot.effects) || (this.spriteStage && !this.spriteStage.effects)) {
       this.match.consumeEvents();
       this.effects.clear();
       this.shakeFrames = this.flashFrames = this.finishFrames = this.koFrames = 0;
@@ -397,8 +408,8 @@ export class BattleScene extends BaseScene {
     // 잡힌 쪽은 잡은 쪽 뒤에 그린다(입에 물린 것처럼).
     const order = drawOrder(this.match.fighters);
     for (const fighter of order) {
-      if (!this.pixelPilot?.render(g, fighter, stage.groundY)) {
-        renderFighter(g, fighter, stage.groundY, this.elapsed, !this.pixelPilot || this.pixelPilot.effects);
+      if (!this.spriteStage?.render(g, fighter, stage.groundY) && !this.pixelPilot?.render(g, fighter, stage.groundY)) {
+        renderFighter(g, fighter, stage.groundY, this.elapsed, effectsOn(this.pixelPilot, this.spriteStage));
       }
     }
     for (const projectile of this.match.projectiles) {
@@ -419,7 +430,7 @@ export class BattleScene extends BaseScene {
     }
 
     this.renderHud(g, width);
-    if (!this.pixelPilot || this.pixelPilot.effects) this.renderCutin(g, width, height);
+    if (effectsOn(this.pixelPilot, this.spriteStage)) this.renderCutin(g, width, height);
     this.renderRoundText(g, width, height);
 
     if (this.debugBoxes) {
@@ -753,3 +764,10 @@ function renderBar(
 }
 
 export type { Fighter };
+
+/** 도트 비교판이 연출을 끄면 이펙트·컷인도 함께 끈다. 비교판이 없으면 배포와 같은 동작. */
+function effectsOn(pilot: PixelPilot | null, stage: SpriteStage | null): boolean {
+  if (stage) return stage.effects;
+  if (pilot) return pilot.effects;
+  return true;
+}
