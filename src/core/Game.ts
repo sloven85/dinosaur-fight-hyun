@@ -59,8 +59,10 @@ export class Game {
     this.installAudioUnlock();
     this.scenes = new SceneManager(this.input, createSession(), this.assets, this.settings, this.audio);
     this.scenes.change(new TitleScene());
-    if ((import.meta.env as Record<string, string | undefined>).VITE_DOT_PILOT === '1') {
-      // 파일럿 배포 표식: 지금 화면이 최종본이 아니라는 사실을 항상 보이게 둔다.
+    if ((import.meta.env as Record<string, string | undefined>).VITE_DOT_PILOT === '1'
+      && new URLSearchParams(location.search).get('badge') === '1') {
+      // 파일럿 표식: 검수용으로만 `?badge=1`일 때 띄운다.
+      // (기본으로 항상 띄우면 배포 화면에서 HUD 초상을 덮는다 — 검수 요청 2026-10-30)
       const badge = document.createElement('div');
       badge.textContent = '도트 통합 빌드 · 화면 전체 도트 · 파일럿';
       badge.style.cssText = 'position:fixed;top:10px;left:10px;z-index:30;color:#fff;background:#B3261E;'

@@ -38,6 +38,20 @@ export function layerRef(value: PixelLayerRef | string): PixelLayerRef {
   return typeof value === 'string' ? { file: value, pad: 0 } : { file: value.file, pad: value.pad ?? 0 };
 }
 
+/**
+ * 도트 배경 레이어 아트가 실제로 있는 경기장.
+ *
+ * 아트가 없는 경기장은 layers.json을 아예 요청하지 않고 절차적 도트 배경(PixelStageFallback)으로 간다 —
+ * 없는 파일을 요청하면 콘솔에 404가 남는다(기존판은 도트 배경이 없어 404가 0건).
+ * 이 목록은 `dev-art/stages/<id>/layers.json`이 있는 폴더와 정확히 같아야 하고,
+ * `stageLayers.test.ts`가 디스크와 대조해 어긋나면 실패한다(아트가 늘면 목록도 같이 는다).
+ */
+export const DOT_STAGE_LAYER_ART: readonly string[] = ['jungle', 'volcano'];
+
+export function hasDotStageLayers(stage: string): boolean {
+  return DOT_STAGE_LAYER_ART.includes(stage);
+}
+
 const clampInt = (v: number): number => (Number.isFinite(v) ? Math.round(v) : 0);
 
 /** 화면 폭이 창(480)의 정수배일 때만 k를 돌려준다. 아니면 도트 배경을 그리지 않는다(레터박스 원칙). */
@@ -122,6 +136,7 @@ export class PixelBackground {
   ): boolean {
     const k = pixelScaleFor(width);
     if (!k) return false;
+    if (!hasDotStageLayers(stage)) return false;
     const spec = this.specs.get(stage);
     if (!spec) { this.ensure(stage); return false; }
     // 이미지는 '폴더/파일' 전체 경로로 보관한다 — 파일 이름만으로 찾으면 영원히 못 찾는다.
@@ -160,6 +175,7 @@ export class PixelBackground {
   }
 
   private ensure(stage: string): void {
+    if (!hasDotStageLayers(stage)) return;
     if (this.pending.has(stage) || this.disposed) return;
     this.pending.add(stage);
     void (async () => {

@@ -60,6 +60,8 @@ export class PixelPilot {
     this.view.setAttribute('aria-label', '실전 렌더러');
     const effectLabel = document.createElement('label');
     this.effectsInput.type = 'checkbox';
+    // 기본값 켜짐 — 공개판과 같은 연출(피격음·흔들림·KO)을 기본으로 둔다.
+    this.effectsInput.checked = true;
     effectLabel.append(this.effectsInput, ' 연출/흔들림 켜기');
     const manifestFile = document.createElement('input'); manifestFile.type = 'file'; manifestFile.accept = '.json';
     manifestFile.setAttribute('aria-label', '도트 manifest JSON');

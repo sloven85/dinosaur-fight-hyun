@@ -115,6 +115,9 @@ export class SpriteStage {
     scaleNote.textContent = `배율 4px 고정 · 캐릭터·배경 같은 격자 · 창 ${PIXEL_VIEW_W}×${PIXEL_VIEW_H}아트px`;
     const effectLabel = document.createElement('label');
     this.effectsInput.type = 'checkbox';
+    // 기본값 켜짐: 공개 베타와 같은 연출을 처음부터 보여 준다. 끄면 예전처럼 그림만 남는다.
+    // (이 값이 꺼져 있으면 BattleScene이 피격음·진동·흔들림·컷인·KO 슬로를 통째로 건너뛴다.)
+    this.effectsInput.checked = true;
     effectLabel.append(this.effectsInput, ' 연출/흔들림/이펙트 켜기');
 
     const table = document.createElement('table');
