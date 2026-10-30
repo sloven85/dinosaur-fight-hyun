@@ -112,6 +112,12 @@ export interface TitleView {
   sound: string;
 }
 
+/** 아래 양피지 배너(아티스트 보드 실측) 안쪽 행. */
+export const TITLE_BANNER_TOP = 311;
+export const TITLE_BANNER_BOTTOM = 341;
+/** 메뉴 탭 줄과 그 아래 안내문 사이 간격(아트 px). */
+export const TITLE_TAB_GAP = 9;
+
 export function drawTitleScreen(g: CanvasRenderingContext2D, view: TitleView): void {
   inDotGrid(g, DOT_K_UI, (c) => {
     board(c, view.loader, 'title', DOT.shade);
@@ -119,18 +125,23 @@ export function drawTitleScreen(g: CanvasRenderingContext2D, view: TitleView): v
     textCenter(c, '다이노 파이터즈', W / 2, 44, { size: 24, color: DOT.ink });
     textCenter(c, 'DINO  FIGHTERS', W / 2, 74, { size: 10, color: DOT.goldDark });
 
-    // 메뉴: 아래 배너 안쪽 가로 탭.
-    tabRow(c, view.options.map((label) => ({ label })), view.index, W / 2, 300, 28);
+    // 메뉴: 배너 바로 위 풀밭 줄에 가로 탭. 아래 양피지 배너와 9아트px 띄운다.
+    const tabH = 26;
+    tabRow(c, view.options.map((label) => ({ label })), view.index, W / 2, TITLE_BANNER_TOP - TITLE_TAB_GAP - tabH, tabH);
 
-    // 도움말: 아래 배너(양피지) 위에는 어두운 글자로 2줄.
-    textCenter(c, view.controls, W / 2, 330, { size: 11, color: DOT.ink });
-    textCenter(c, `${view.sound} · 1P ${view.p1} · 2P ${view.p2}`, W / 2, 343, { size: 11, color: DOT.goldDark });
+    // 안내문은 아래 양피지 배너 안에 한 줄로 넣고 위아래 여백을 남긴다(겹침 없음).
+    textCenter(c, view.controls, W / 2, TITLE_BANNER_TOP + 12, { size: 11, color: DOT.ink });
 
-    // 패드 안내는 우상단 판 위에(그림 위에 글자를 직접 얹지 않는다).
-    const padLines = wrap(view.padHint, 11, 260).split('\n');
-    const padW = Math.max(...padLines.map((line) => dotTextWidth(line, 11))) + 12;
-    panel(c, W - padW - 8, 8, padW, padLines.length * 14 + 8, { fill: DOT.deep, top: DOT.shade, side: DOT.ink, border: DOT.stone });
-    textLines(c, padLines.join('\n'), W - 14, 12, { size: 11, color: DOT.parchment, align: 'right' }, 3);
+    // 패드·소리·참가 상태는 우상단 판 위에(그림 위에 글자를 직접 얹지 않는다).
+    const statusLine = `${view.sound} · 1P ${view.p1} · 2P ${view.p2}`;
+    const padLines = wrap(view.padHint, 10, 250).split('\n');
+    const padW = Math.max(...padLines.map((line) => dotTextWidth(line, 10)), dotTextWidth(statusLine, 10)) + 12;
+    const lineH = 13;
+    panel(c, W - padW - 8, 8, padW, (padLines.length + 1) * lineH + 8, {
+      fill: DOT.deep, top: DOT.shade, side: DOT.ink, border: DOT.stone,
+    });
+    textLines(c, padLines.join('\n'), W - 14, 13, { size: 10, color: DOT.parchment, align: 'right' }, 3);
+    text(c, statusLine, W - 14, 13 + padLines.length * lineH, { size: 10, color: DOT.gold, align: 'right' });
   });
 }
 
@@ -201,13 +212,30 @@ export const SELECT_SLOTS: ReadonlyArray<{ x: number; y: number }> = [117, 205].
   (y) => [98, 177, 256, 335, 415, 494].map((x) => ({ x, y })),
 );
 
+/** 상단 양피지 배너(아티스트 보드 실측) 안쪽 폭 — 제목과 설정 칩이 이 안에 들어간다. */
+export const SELECT_BANNER = { left: 104, right: 540, y: 44 } as const;
+
+/**
+ * 선택 화면 상단 배너의 설정 칩 문구.
+ * 난이도·도움은 1인 대전에서만 적용되므로 2인 대전에서는 그 사실을 그대로 적는다(기존판 C3 판과 같은 내용).
+ */
+export function selectSettingsChip(settings: readonly string[], twoPlayer: boolean): string {
+  const difficulty = settings[0] ?? '난이도 보통';
+  const assist = settings[1] ?? '도움 꺼짐';
+  return twoPlayer ? `${settings[2] ?? '2인 대전'} · 난이도·도움 미적용` : `${difficulty} · ${assist}`;
+}
+
 export function drawSelectScreen(g: CanvasRenderingContext2D, view: SelectView): void {
   const sprites = dotSprites(view.loader);
   for (const character of CHARACTERS) sprites.request(character.id);
 
   inDotGrid(g, DOT_K_UI, (c) => {
     board(c, view.loader, 'select', DOT.shade);
-    textCenter(c, '공룡을 고르세요', W / 2, 52, { size: 14, color: DOT.ink });
+    // 상단 배너: 왼쪽에 제목, 오른쪽에 지금 적용되는 난이도·도움(기존판과 같은 정보).
+    text(c, '공룡을 고르세요', SELECT_BANNER.left, SELECT_BANNER.y, { size: 13, color: DOT.ink });
+    text(c, selectSettingsChip(view.settings, view.twoPlayer), SELECT_BANNER.right, SELECT_BANNER.y + 2, {
+      size: 10, color: view.twoPlayer ? DOT.parchmentDark : DOT.ink, align: 'right',
+    });
 
     CHARACTERS.forEach((character, i) => {
       const slot = SELECT_SLOTS[i];

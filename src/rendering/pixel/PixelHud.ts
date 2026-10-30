@@ -1,13 +1,19 @@
 /**
- * 전투 HUD 도트 버전 — 체력바·이름표·초상·게이지·라운드 점·타이머.
+ * 전투 HUD 도트 버전 — 체력바·이름표·초상·게이지·라운드 점·타이머·감정.
  *
  * 전투 화면은 아트 1px = 화면 4px 계약(2026-10-29)을 그대로 쓴다. HUD도 같은 격자,
  * 480×270 아트 좌표 위에 그린다. 둥근 막대·그라디언트 없이 4px 블록 눈금으로 채운다.
+ *
+ * 기존판(공개 베타)과 같은 정보를 같은 자리에 둔다 — 도트판이 더 낮으면 안 된다(정종길 님 8108869):
+ *  - 라운드 승수 점은 0승에서도 보이도록 8아트px + 어두운 테두리 + 밝은 빈 색을 쓴다.
+ *  - 감정은 얼굴 아이콘 + 문구(활기·보통·지침)를 함께 쓴다.
+ *  - 게이지가 꽉 차면 '특수기 준비' 문구를 게이지 옆에 쓴다.
  */
 import type { Fighter } from '../../combat/Fighter';
 import { MAX_METER, ROUNDS_TO_WIN } from '../../core/constants';
+import { EMOTION_LABELS, emotionFor, type Emotion } from '../../combat/emotion';
 import type { DotSpritesApi } from './DotSprites';
-import { DOT, DOT_K_BATTLE, box, cursor, dither, inDotGrid, outline, panel, text } from './PixelStyle';
+import { DOT, DOT_K_BATTLE, box, dither, inDotGrid, outline, panel, text } from './PixelStyle';
 
 export interface HudView {
   p1: Fighter;
@@ -19,6 +25,56 @@ export interface HudView {
 }
 
 const VIEW_W = 480;
+/** 위쪽 정보 띠 높이(아트 px). 감정을 아래 띠로 내리면서 52 → 64로 늘렸다. */
+export const HUD_BAND_H = 64;
+
+/** 라운드 점: 8아트px(=화면 32px) 정사각형 + 1px 테두리 — 기존판 24px 원보다 크다. */
+export const ROUND_PIP_SIZE = 8;
+export const ROUND_PIP_GAP = 4;
+/** 0승 점도 배경과 구분되게 밝은 빈 색을 쓴다(예전 hpBack은 띠 색과 거의 같았다). */
+export const ROUND_PIP_EMPTY = DOT.stone;
+export const ROUND_PIP_WON = DOT.gold;
+/** 라운드 점이 놓이는 행(아트 px). 이름표 줄과 같은 높이다. */
+export const ROUND_PIP_Y = 40;
+/** 라운드 점 묶음이 붙는 x(체력바 안쪽 끝 = 1P 198 / 2P 282에서 시작). */
+const PIP_ANCHOR = 198;
+
+/** 게이지가 꽉 찼을 때만 나오는 문구. */
+export const SPECIAL_READY_LABEL = '특수기 준비';
+
+/** 감정 문구의 도트 팔레트 색(기존 EMOTION_COLORS와 같은 의미: 활기=초록·보통=노랑·지침=주황). */
+export const EMOTION_DOT_COLORS: Record<Emotion, string> = {
+  energetic: DOT.hp,
+  steady: DOT.gold,
+  tired: DOT.p1,
+};
+
+export interface EmotionMark { emotion: Emotion; label: string; color: string }
+
+/** 체력 비율 → 감정 3단계(문구·색). 기존판과 같은 기준(0.6 / 0.3)을 쓴다. */
+export function emotionMark(healthRatio: number): EmotionMark {
+  const emotion = emotionFor(healthRatio);
+  return { emotion, label: EMOTION_LABELS[emotion], color: EMOTION_DOT_COLORS[emotion] };
+}
+
+export interface PipRect { x: number; y: number; w: number; h: number; filled: boolean }
+
+/**
+ * 라운드 승수 점의 자리. 1P는 체력바 안쪽(가운데 쪽) 끝에, 2P는 반대쪽에 같은 모양으로 놓는다.
+ * 좌표를 순수 함수로 빼 두어 "0승에서도 보이는가"를 테스트가 직접 검사한다.
+ */
+export function roundPipRects(wins: number, mirrored: boolean): PipRect[] {
+  const step = ROUND_PIP_SIZE + ROUND_PIP_GAP;
+  const span = ROUNDS_TO_WIN * ROUND_PIP_SIZE + (ROUNDS_TO_WIN - 1) * ROUND_PIP_GAP;
+  const start = mirrored ? VIEW_W - PIP_ANCHOR : PIP_ANCHOR - span;
+  return Array.from({ length: ROUNDS_TO_WIN }, (_, i) => ({
+    x: mirrored ? start + (ROUNDS_TO_WIN - 1 - i) * step : start + i * step,
+    y: ROUND_PIP_Y,
+    w: ROUND_PIP_SIZE,
+    h: ROUND_PIP_SIZE,
+    filled: i < wins,
+  }));
+}
 
 /** 4px 블록 눈금 막대(도트). 오른쪽 정렬이면 오른쪽에서 채운다. */
 function blockBar(
@@ -60,20 +116,27 @@ function portrait(
   box(g, x, y + size - 3, size, 3, accent);
 }
 
-/** 감정 표시: 3단계를 얼굴 도트로. */
-function mood(g: CanvasRenderingContext2D, x: number, y: number, ratio: number): void {
-  const energetic = ratio > 0.66;
-  const tired = ratio <= 0.33;
-  const color = energetic ? DOT.hp : tired ? DOT.p1 : DOT.gold;
+/** 라운드 점: 어두운 테두리를 먼저 깔고 안을 채운다(0승 점도 띠와 구분된다). */
+function roundPips(g: CanvasRenderingContext2D, wins: number, mirrored: boolean): void {
+  for (const pip of roundPipRects(wins, mirrored)) {
+    box(g, pip.x, pip.y, pip.w, pip.h, DOT.ink);
+    box(g, pip.x + 1, pip.y + 1, pip.w - 2, pip.h - 2, pip.filled ? ROUND_PIP_WON : ROUND_PIP_EMPTY);
+    if (pip.filled) box(g, pip.x + 1, pip.y + 1, pip.w - 2, 1, DOT.parchment);
+  }
+}
+
+/** 감정 표시: 3단계를 얼굴 도트로(문구는 옆에 따로 쓴다). */
+function moodFace(g: CanvasRenderingContext2D, x: number, y: number, mark: EmotionMark): void {
+  const color = mark.color;
   box(g, x, y, 13, 13, DOT.ink);
   box(g, x + 1, y + 1, 11, 11, DOT.shade);
   box(g, x + 3, y + 4, 2, 2, color);
   box(g, x + 8, y + 4, 2, 2, color);
-  if (energetic) {
+  if (mark.emotion === 'energetic') {
     box(g, x + 4, y + 8, 5, 1, color);
     box(g, x + 4, y + 7, 1, 1, color);
     box(g, x + 8, y + 7, 1, 1, color);
-  } else if (tired) {
+  } else if (mark.emotion === 'tired') {
     box(g, x + 4, y + 9, 5, 1, color);
   } else {
     box(g, x + 4, y + 8, 5, 1, color);
@@ -87,58 +150,70 @@ export function drawPixelHud(g: CanvasRenderingContext2D, width: number, height:
   sprites.request(p1.data.id);
   sprites.request(p2.data.id);
 
+  /** 기준 x를 2P에서 좌우 반전한다(1P 왼쪽 정렬 ↔ 2P 오른쪽 정렬). */
+  const edge = (mirrored: boolean, x: number, w = 0): number => (mirrored ? VIEW_W - x - w : x);
+  const anchor = (mirrored: boolean, x: number): number => (mirrored ? VIEW_W - x : x);
+
   inDotGrid(g, DOT_K_BATTLE, (c) => {
     // 위쪽 어두운 띠: HUD가 배경 위에서 읽히게. 디더 대신 단색 + 1px 경계(픽셀 잡음 없음).
-    box(c, 0, 0, VIEW_W, 52, DOT.ink);
-    box(c, 0, 52, VIEW_W, 1, DOT.stone);
+    box(c, 0, 0, VIEW_W, HUD_BAND_H, DOT.ink);
+    box(c, 0, HUD_BAND_H, VIEW_W, 1, DOT.stone);
 
-    portrait(c, sprites, p1.data.id, 4, 4, 40, p1.useAlternatePalette, DOT.p1);
-    portrait(c, sprites, p2.data.id, VIEW_W - 44, 4, 40, p2.useAlternatePalette, DOT.p2);
+    const sides = [
+      { fighter: p1, mirrored: false, accent: DOT.p1 },
+      { fighter: p2, mirrored: true, accent: DOT.p2 },
+    ] as const;
 
-    // 체력: 가운데에서 바깥으로 줄어드는 방향(1P 왼쪽 정렬, 2P 오른쪽 정렬).
-    const barW = 150;
-    blockBar(c, 48, 8, barW, 12, p1.health / p1.maxHealth, DOT.hp, false);
-    blockBar(c, VIEW_W - 48 - barW, 8, barW, 12, p2.health / p2.maxHealth, DOT.hp, true);
+    for (const { fighter, mirrored, accent } of sides) {
+      const ratio = fighter.health / fighter.maxHealth;
 
-    // 이름표.
-    text(c, p1.data.name, 50, 24, { size: 11, color: DOT.white });
-    text(c, p2.data.name, VIEW_W - 50, 24, { size: 11, color: DOT.white, align: 'right' });
+      portrait(c, sprites, fighter.data.id, edge(mirrored, 4, 40), 4, 40, fighter.useAlternatePalette, accent);
 
-    // 라운드 점: 4px 사각형.
-    for (let i = 0; i < ROUNDS_TO_WIN; i++) {
-      box(c, 48 + i * 8, 38, 6, 6, i < p1.roundWins ? DOT.gold : DOT.hpBack);
-      box(c, VIEW_W - 48 - (i + 1) * 8, 38, 6, 6, i < p2.roundWins ? DOT.gold : DOT.hpBack);
+      // 체력: 가운데에서 바깥으로 줄어드는 방향(1P 왼쪽 정렬, 2P 오른쪽 정렬).
+      blockBar(c, edge(mirrored, 48, 150), 6, 150, 12, ratio, DOT.hp, mirrored);
+
+      // 1P/2P 색 표식(체력바 바로 아래 얇은 띠).
+      box(c, edge(mirrored, 48, 34), 19, 34, 2, accent);
+
+      // 게이지: 얇은 블록 눈금. 꽉 차면 색이 금색으로 바뀌고 옆에 '특수기 준비'.
+      const meterW = 70;
+      const ready = fighter.meter >= MAX_METER;
+      blockBar(c, edge(mirrored, 48, meterW), 23, meterW, 6, fighter.meter / MAX_METER, ready ? DOT.gold : DOT.moss, mirrored);
+      if (ready) {
+        text(c, SPECIAL_READY_LABEL, anchor(mirrored, 122), 21, {
+          size: 9, color: DOT.gold, align: mirrored ? 'right' : 'left',
+        });
+      }
+
+      // 이름표(라운드 점과 같은 줄, 서로 겹치지 않는 폭).
+      text(c, fighter.data.name, anchor(mirrored, 48), 38, { size: 10, color: DOT.white, align: mirrored ? 'right' : 'left' });
+
+      // 라운드 점: 0승에서도 보이는 점.
+      roundPips(c, fighter.roundWins, mirrored);
     }
-
-    // 게이지: 얇은 블록 눈금 + 꽉 차면 '특수기 준비'.
-    const meterW = 104;
-    const meterY = 37;
-    blockBar(c, 80, meterY, meterW, 6, p1.meter / MAX_METER, p1.meter >= MAX_METER ? DOT.gold : DOT.moss, false);
-    blockBar(c, VIEW_W - 80 - meterW, meterY, meterW, 6, p2.meter / MAX_METER, p2.meter >= MAX_METER ? DOT.gold : DOT.moss, true);
-    if (p1.meter >= MAX_METER) cursor(c, 74, meterY - 2, DOT.gold, 2);
-    if (p2.meter >= MAX_METER) cursor(c, VIEW_W - 66, meterY - 2, DOT.gold, 2);
-
-    // 감정 3단계.
-    mood(c, 48, 42, p1.health / p1.maxHealth);
-    mood(c, VIEW_W - 61, 42, p2.health / p2.maxHealth);
 
     // 타이머: 가운데, 도트 글자.
     box(c, VIEW_W / 2 - 22, 4, 44, 26, DOT.ink);
     outline(c, VIEW_W / 2 - 22, 4, 44, 26, DOT.stone);
     text(c, `${view.timeLeft}`, VIEW_W / 2, 9, { size: 16, color: DOT.gold, align: 'center' });
 
-    // 1P/2P 색 표식(색 구분은 팔레트 시트가 맡고, 여기선 이름표 아래 색 띠).
-    box(c, 48, 21, 34, 2, DOT.p1);
-    box(c, VIEW_W - 82, 21, 34, 2, DOT.p2);
-
+    // 1인 대전에서만 난이도·도움을 가운데 아래에 알려 준다(양쪽 이름표·라운드 점과 겹치지 않는 자리).
     if (view.difficulty === 'easy' || view.assist) {
       const label = `난이도 ${view.difficulty === 'easy' ? '쉬움' : '보통'}${view.assist ? ' · 도움 켜짐' : ''}`;
-      text(c, label, VIEW_W / 2, 39, { size: 10, color: DOT.dim, align: 'center' });
+      text(c, label, VIEW_W / 2, 49, { size: 9, color: DOT.dim, align: 'center' });
     }
 
-    // 화면 아래: 조작 힌트.
-    box(c, 0, 264, VIEW_W, 6, DOT.ink);
-    text(c, 'F/G/H · J/K/L · Esc', 4, 263, { size: 8, color: DOT.stone });
+    // 아래쪽 띠: 감정(아이콘 + 문구)과 조작 힌트. 기존판처럼 양 끝에 1P/2P를 둔다.
+    box(c, 0, 250, VIEW_W, 20, DOT.ink);
+    box(c, 0, 249, VIEW_W, 1, DOT.stone);
+    for (const { fighter, mirrored } of sides) {
+      const mark = emotionMark(fighter.health / fighter.maxHealth);
+      moodFace(c, edge(mirrored, 4, 13), 254, mark);
+      text(c, mark.label, anchor(mirrored, 20), 255, {
+        size: 10, color: mark.color, align: mirrored ? 'right' : 'left',
+      });
+    }
+    text(c, 'F/G/H · J/K/L · Esc', VIEW_W / 2, 256, { size: 8, color: DOT.stone, align: 'center' });
   });
 }
 
