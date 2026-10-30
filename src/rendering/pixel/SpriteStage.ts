@@ -8,6 +8,9 @@ import {
   parseSpriteManifest, type SpriteAssets, type SpriteState,
 } from './SpeciesSprite';
 import { PLAYER_COLORS, drawGroundRing, drawHeadMarker, markerShapeFor } from './PlayerMarker';
+import { contactOffsetArt } from './ContactAlign';
+import { DOT_PILOT_BUILD } from './pilotFlag';
+import { renderDotBackdrop } from './PixelStageFallback';
 
 const ROOT = 'dev-art/species/';
 
@@ -66,6 +69,10 @@ export class SpriteStage {
   constructor(private readonly loader: AssetLoader) {
     this.background = new PixelBackground(loader);
     this.buildPanel();
+    // 통합 빌드에서는 개발 패널을 숨긴다(화면을 가리지 않게). ?panel=1이면 다시 보인다.
+    if (DOT_PILOT_BUILD && !(typeof location !== 'undefined' && location.search.includes('panel=1'))) {
+      this.panel.style.display = 'none';
+    }
     void this.boot();
   }
 
@@ -268,7 +275,11 @@ export class SpriteStage {
   /** 도트 배경 3레이어를 그렸으면 true(호출부는 기존 배경을 건너뛴다). */
   renderBackground(g: CanvasRenderingContext2D, stage: string, groundY: number,
     focusX: number, width: number, height: number): boolean {
-    return this.background.render(g, stage, groundY, focusX, width, height, PARALLAX);
+    if (this.background.render(g, stage, groundY, focusX, width, height, PARALLAX)) return true;
+    // 도트 레이어가 없는 경기장: 같은 격자·같은 시차의 절차적 도트 배경으로 통일한다
+    // (그림체가 섞이지 않게 하는 것이 목적 — 사진 배경을 흐리게 깔지 않는다).
+    renderDotBackdrop(g, { id: stage, groundY, placeholderColor: stageTint(stage) }, focusX, width, height);
+    return true;
   }
 
   /**
@@ -293,16 +304,21 @@ export class SpriteStage {
     if (!frame) return true;
     const scale = this.scaleFor(g);
     const color = fighter.useAlternatePalette ? PLAYER_COLORS.p2 : PLAYER_COLORS.p1;
+    // 그림→판정 정합: 공격 중에는 접촉 프레임의 주둥이가 판정 앞끝에 닿도록 그림만 내민다.
+    // 피해·사거리·상자 수치는 건드리지 않는다(마스터 조건 8044694).
+    const move = fighter.state === 'attack' ? fighter.attack?.move : undefined;
+    const contactArt = move ? contactOffsetArt(fighter, move, assets.manifest) : 0;
+    const drawX = fighter.x + contactArt * scale * (fighter.facing === 1 ? 1 : -1);
     // 표식은 캐릭터 뒤(링)·앞(머리 마커)에 둔다. 미러가 아니면 그리지 않는다.
     // 링 72×10아트px, 위쪽을 접지선(=feetY)에 맞추고 두 발 중앙에 둔다.
     if (this.mirror) drawGroundRing(g, fighter.x, feetY, color, scale);
     // 2P는 포장 단계에서 뽑아 둔 팔레트 시트로 같은 프레임을 그린다(모양·크기 동일).
-    drawSpriteFrame(g, assets, frame, fighter.x, feetY, fighter.facing, scale, fighter.useAlternatePalette);
+    drawSpriteFrame(g, assets, frame, drawX, feetY, fighter.facing, scale, fighter.useAlternatePalette);
     if (this.mirror) {
       const box = {
-        left: fighter.x - frame.anchor.x * scale,
+        left: drawX - frame.anchor.x * scale,
         top: feetY - frame.anchor.y * scale,
-        right: fighter.x + (frame.w - frame.anchor.x) * scale,
+        right: drawX + (frame.w - frame.anchor.x) * scale,
         bottom: feetY + (frame.h - frame.anchor.y) * scale,
       };
       drawHeadMarker(g, box, fighter.facing, color, scale, markerShapeFor(fighter.useAlternatePalette));
@@ -324,6 +340,15 @@ export class SpriteStage {
  * 0.30이면 지면 텍스처가 캐릭터 이동의 30%만 따라가 발이 흘러 보인다.
  */
 export const PARALLAX = { far: 0.25, mid: 0.6, ground: 1 };
+
+/** 경기장 대표색(절차적 도트 배경용). 데이터 stages.json의 placeholderColor를 쓴다. */
+function stageTint(stage: string): string {
+  const TINT: Record<string, string> = {
+    desert: '#b98a4a', museum: '#6b6a7a', lagoon: '#2f7d86', snow: '#8fa8bd',
+    swamp: '#3f5b3c', meadow: '#6f9a4e', jungle: '#2f5d3a', volcano: '#6d3a2f',
+  };
+  return TINT[stage] ?? '#3f5b3c';
+}
 
 const FOLDER_ORDER = ['trex', 'trike', 'velo', 'spino', 'anky', 'stego', 'carno', 'pachy', 'theri', 'dilo', 'brachio', 'ptera'];
 const FOLDER_LABEL: Record<string, string> = {

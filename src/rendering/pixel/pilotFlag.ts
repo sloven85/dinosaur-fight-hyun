@@ -12,3 +12,14 @@ export function spriteStageEnabled(dev: boolean, search: string): boolean {
   if (DOT_PILOT_BUILD) return true;
   return dev && new URLSearchParams(search).get('pixelStage') === '1';
 }
+
+/**
+ * 도트 UI(메뉴·선택·VS·결과·일시정지·HUD)를 켜는 조건.
+ * 파일럿 빌드에서는 기본, 개발 서버에서는 ?dotUi=1. 공개 베타 빌드에서는 false로 인라인된다.
+ */
+export const DOT_UI_BUILD = (import.meta.env as Record<string, string | undefined>).VITE_DOT_PILOT === '1';
+
+export function dotUiEnabled(dev: boolean, search: string): boolean {
+  if (DOT_UI_BUILD) return true;
+  return dev && new URLSearchParams(search).get('dotUi') === '1';
+}

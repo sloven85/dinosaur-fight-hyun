@@ -18,6 +18,9 @@ import { COLORS, FONTS } from '../ui/theme';
 import type { PixelPilot } from '../rendering/pixel/PixelPilot';
 import { DOT_PILOT_BUILD } from '../rendering/pixel/pilotFlag';
 import type { SpriteStage } from '../rendering/pixel/SpriteStage';
+import { drawPixelCallout, drawPixelHud } from '../rendering/pixel/PixelHud';
+import { dotSprites } from '../rendering/pixel/DotSprites';
+import { DOT } from '../rendering/pixel/PixelStyle';
 
 const HUD_BAR_W = 700;
 const HUD_BAR_H = 42;
@@ -39,6 +42,8 @@ const LOGO_KO = 'assets/ui/logo_ko.png';
 
 /** 계획서 16절 프롬프트 6: 대전 화면. 전투 규칙은 Match, 보이는 모양은 FighterRenderer·EffectSystem이 맡는다. */
 export class BattleScene extends BaseScene {
+  /** 캡처 스크립트·진단용 고정 이름(번들에서 클래스 이름이 압축되어도 유지). */
+  readonly sceneId = 'BattleScene';
   readonly pausable = true;
 
   private match!: Match;
@@ -158,6 +163,17 @@ export class BattleScene extends BaseScene {
     this.spriteStage?.step(this.match, pixelFrozen);
     // 개발 서버 전용: ?devko=1이면 2P 체력을 1로(KO 연출 확인용). 배포 빌드에는 들어가지 않는다.
     if (import.meta.env.DEV && typeof location !== 'undefined' && location.search.includes('devko=1') && this.match.phase === 'fight') {
+      this.match.p2.health = Math.min(this.match.p2.health, 1);
+    }
+    // 파일럿 빌드: 캡처 스크립트가 '싸움 시작' 시점을 알 수 있게 상태만 노출한다.
+    if (DOT_PILOT_BUILD && typeof window !== 'undefined') {
+      (window as unknown as { __dotPhase?: string }).__dotPhase = this.match.phase;
+      (window as unknown as { __dotHealth?: number[] }).__dotHealth =
+        this.match.fighters.map((fighter) => fighter.health);
+    }
+    // 파일럿 빌드 캡처용: ?koShot=1이면 KO 연출·결과 화면까지 한 번에 찍을 수 있게 2P 체력을 1로.
+    // 공개 베타 빌드에서는 DOT_PILOT_BUILD가 false로 인라인되어 이 분기가 사라진다.
+    if (DOT_PILOT_BUILD && typeof location !== 'undefined' && location.search.includes('koShot=1') && this.match.phase === 'fight') {
       this.match.p2.health = Math.min(this.match.p2.health, 1);
     }
     // 개발 서버 전용: 확인용으로 현재 상태를 창에 노출(배포 빌드에는 없음).
@@ -457,6 +473,18 @@ export class BattleScene extends BaseScene {
 
   private renderHud(g: CanvasRenderingContext2D, width: number): void {
     const [p1, p2] = this.match.fighters;
+    // 도트 재생기가 켜진 화면은 HUD도 같은 격자·같은 팔레트로 그린다(벡터 HUD가 한 화면도 남지 않게).
+    if (this.spriteStage) {
+      drawPixelHud(g, width, 1080, {
+        p1,
+        p2,
+        timeLeft: this.match.timeLeftSeconds,
+        difficulty: this.match.difficulty,
+        assist: this.match.assistActive,
+        sprites: dotSprites(this.context.assets),
+      });
+      return;
+    }
 
     // 도움 설정으로 최대 체력이 달라질 수 있어 data.baseHealth가 아니라 maxHealth로 나눈다.
     renderBar(g, 60, 60, HUD_BAR_W, HUD_BAR_H, p1.health / p1.maxHealth, COLORS.health, false);
@@ -603,6 +631,10 @@ export class BattleScene extends BaseScene {
 
   private renderRoundText(g: CanvasRenderingContext2D, width: number, height: number): void {
     const { phase, phaseFrames } = this.match;
+    if (this.spriteStage) {
+      this.renderRoundTextPixel(g, width, height, phase, phaseFrames);
+      return;
+    }
 
     if (phase === 'intro') {
       // ROUND N(0~54틱) → FIGHT!(55틱~). 아티스트 로고가 있으면 로고, 없으면 글자.
@@ -671,6 +703,38 @@ export class BattleScene extends BaseScene {
     if (phase === 'matchOver') {
       const label = this.match.matchWinner === null ? '무승부' : `${this.match.matchWinner + 1}P 승리`;
       drawText(g, label, width / 2, height / 2 - 140, { font: FONTS.heading, color: COLORS.text });
+    }
+  }
+
+  /** 도트 화면의 라운드/승부 글자. 로고 이미지·회전·확대 대신 도트 판과 글자만 쓴다. */
+  private renderRoundTextPixel(
+    g: CanvasRenderingContext2D,
+    width: number,
+    height: number,
+    phase: string,
+    phaseFrames: number,
+  ): void {
+    if (phase === 'intro') {
+      const fight = phaseFrames >= 55;
+      drawPixelCallout(g, width, height, fight ? '시작!' : `라운드 ${this.match.roundNumber}`, '', fight ? DOT.p1 : DOT.gold);
+      return;
+    }
+    if (this.koLogoAt >= 0 && this.elapsed - this.koLogoAt < 1.6) {
+      drawPixelCallout(g, width, height, 'K.O.', '', DOT.p1);
+      return;
+    }
+    if (phase === 'roundOver') {
+      drawPixelCallout(
+        g, width, height,
+        this.match.roundWinner === null ? '무승부' : `${this.match.roundWinner + 1}P 라운드 승리`,
+      );
+      return;
+    }
+    if (phase === 'matchOver') {
+      drawPixelCallout(
+        g, width, height,
+        this.match.matchWinner === null ? '무승부' : `${this.match.matchWinner + 1}P 승리`,
+      );
     }
   }
 

@@ -7,6 +7,8 @@ import { TitleScene } from './TitleScene';
 import { drawButton, drawText } from '../ui/draw';
 import { moveListIndex } from '../ui/menu';
 import { COLORS, FONTS } from '../ui/theme';
+import { dotUiEnabled } from '../rendering/pixel/pilotFlag';
+import { drawResultScreen } from '../rendering/pixel/PixelScreens';
 
 interface ResultOption {
   label: string;
@@ -14,6 +16,8 @@ interface ResultOption {
 }
 
 export class ResultScene extends BaseScene {
+  /** 캡처 스크립트·진단용 고정 이름(번들에서 클래스 이름이 압축되어도 유지). */
+  readonly sceneId = 'ResultScene';
   private index = 0;
 
   constructor(
@@ -43,6 +47,16 @@ export class ResultScene extends BaseScene {
   }
 
   render(g: CanvasRenderingContext2D, width: number, height: number): void {
+    if (dotUiEnabled(import.meta.env.DEV, typeof location === 'undefined' ? '' : location.search)) {
+      drawResultScreen(g, {
+        loader: this.context.assets,
+        winner: this.winner,
+        winnerId: this.winner === null ? null : this.context.session.characters[this.winner],
+        options: this.options.map((option) => option.label),
+        index: this.index,
+      });
+      return;
+    }
     g.fillStyle = COLORS.bg;
     g.fillRect(0, 0, width, height);
 

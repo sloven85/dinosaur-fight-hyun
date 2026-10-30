@@ -7,6 +7,8 @@ import { VsScene } from './VsScene';
 import { drawText, fillRoundRect } from '../ui/draw';
 import { moveListIndex } from '../ui/menu';
 import { COLORS, FONTS } from '../ui/theme';
+import { dotUiEnabled } from '../rendering/pixel/pilotFlag';
+import { drawStageScreen } from '../rendering/pixel/PixelScreens';
 
 const CARD_W = 380;
 const CARD_H = 300;
@@ -14,7 +16,15 @@ const GAP = 36;
 /** 한 줄에 4곳, 8곳이면 2줄. */
 const PER_ROW = 4;
 
+/** 도트 배경이 이미 있는 경기장은 그렇다고 표시한다(없는 곳은 절차적 도트 톤). */
+const DOT_STAGE_NOTE: Record<string, string> = {
+  jungle: '도트 배경', volcano: '도트 배경', desert: '도트 톤', museum: '도트 톤',
+  lagoon: '도트 톤', snow: '도트 톤', swamp: '도트 톤', meadow: '도트 톤',
+};
+
 export class StageSelectScene extends BaseScene {
+  /** 캡처 스크립트·진단용 고정 이름(번들에서 클래스 이름이 압축되어도 유지). */
+  readonly sceneId = 'StageSelectScene';
   private cursor = 0;
 
   enter(context: GameContext): void {
@@ -41,6 +51,19 @@ export class StageSelectScene extends BaseScene {
   }
 
   render(g: CanvasRenderingContext2D, width: number, height: number): void {
+    if (dotUiEnabled(import.meta.env.DEV, typeof location === 'undefined' ? '' : location.search)) {
+      drawStageScreen(g, {
+        loader: this.context.assets,
+        stages: STAGES.map((stage) => ({
+          id: stage.id,
+          name: stage.name,
+          note: DOT_STAGE_NOTE[stage.id] ?? '도트 톤',
+          tint: stage.placeholderColor,
+        })),
+        index: this.cursor,
+      });
+      return;
+    }
     g.fillStyle = COLORS.bg;
     g.fillRect(0, 0, width, height);
 

@@ -5,6 +5,8 @@ import { TitleScene } from './TitleScene';
 import { drawButton, drawText } from '../ui/draw';
 import { moveListIndex } from '../ui/menu';
 import { COLORS, FONTS } from '../ui/theme';
+import { dotUiEnabled } from '../rendering/pixel/pilotFlag';
+import { drawModeScreen } from '../rendering/pixel/PixelScreens';
 
 interface ModeOption {
   id: GameMode;
@@ -18,6 +20,8 @@ const OPTIONS: ModeOption[] = [
 ];
 
 export class ModeScene extends BaseScene {
+  /** 캡처 스크립트·진단용 고정 이름(번들에서 클래스 이름이 압축되어도 유지). */
+  readonly sceneId = 'ModeScene';
   private index = 0;
 
   protected tick(_dt: number): void {
@@ -36,6 +40,15 @@ export class ModeScene extends BaseScene {
   }
 
   render(g: CanvasRenderingContext2D, width: number, height: number): void {
+    if (dotUiEnabled(import.meta.env.DEV, typeof location === 'undefined' ? '' : location.search)) {
+      drawModeScreen(g, {
+        loader: this.context.assets,
+        options: OPTIONS.map((option) => option.label),
+        index: this.index,
+        hint: OPTIONS[this.index].hint,
+      });
+      return;
+    }
     g.fillStyle = COLORS.bg;
     g.fillRect(0, 0, width, height);
 

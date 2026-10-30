@@ -90,23 +90,20 @@ const paletteOf = (folder: string): { p1: number[][]; p2: number[][] } | null =>
   }
 };
 
-describe('2P 미러 색의 출처는 아티스트 팔레트 하나뿐', () => {
-  it.each(FOLDERS)('%s: 팔레트 JSON이 있을 때만 2P 시트가 있다', (folder) => {
+describe('2P 미러 색 — 12종 전부 팔레트 교체(런타임 tint 금지)', () => {
+  // 규칙 변경(2026-10-30 통합 빌드): 아티스트 팔레트 JSON이 있는 종(trex)은 그 팔레트를 쓰고,
+  // 없는 11종은 포장 단계에서 1:1 색 치환으로 2P 시트를 만든다(scripts/build-p2-all-species.py).
+  // 어느 쪽이든 픽셀 하나가 픽셀 하나로 바뀔 뿐, 필터·리샘플·런타임 tint는 없다.
+  it.each(FOLDERS)('%s: 2P 시트가 있고 manifest가 그 시트를 가리킨다', (folder) => {
     const raw = JSON.parse(readFileSync(`${ROOT}/${folder}/manifest.json`, 'utf8')) as {
       p2Image?: string; p2?: { source?: string };
     };
-    const palette = paletteOf(folder);
-    expect(existsSync(`${ROOT}/${folder}/sheet_p2.png`)).toBe(!!palette);
-    if (palette) {
-      expect(raw.p2Image).toBe('sheet_p2.png');
-      expect(raw.p2?.source).toBe('artist');
-    } else {
-      expect(raw.p2Image).toBeUndefined();
-      expect(raw.p2).toBeUndefined();
-    }
+    expect(existsSync(`${ROOT}/${folder}/sheet_p2.png`)).toBe(true);
+    expect(raw.p2Image).toBe('sheet_p2.png');
+    expect(raw.p2?.source).toBe(paletteOf(folder) ? 'artist' : 'generated');
   });
 
-  it.each(FOLDERS.filter((f) => paletteOf(f)))('%s: 1P와 알파가 1비트도 다르지 않다(모양 불변)', (folder) => {
+  it.each(FOLDERS)('%s: 1P와 알파가 1비트도 다르지 않다(모양 불변)', (folder) => {
     const a = readPng(`${ROOT}/${folder}/sheet.png`);
     const b = readPng(`${ROOT}/${folder}/sheet_p2.png`);
     expect([b.width, b.height]).toEqual([a.width, a.height]);
@@ -114,30 +111,27 @@ describe('2P 미러 색의 출처는 아티스트 팔레트 하나뿐', () => {
     expect(alpha(b).equals(alpha(a))).toBe(true);
   });
 
-  it.each(FOLDERS.filter((f) => paletteOf(f)))('%s: 시트 색이 팔레트 p1 안에만 있고, 2P는 p2 그대로다', (folder) => {
-    const palette = paletteOf(folder)!;
+  it.each(FOLDERS)('%s: 색 하나가 색 하나로만 바뀐다(전수 치환)', (folder) => {
     const sheet = readPng(`${ROOT}/${folder}/sheet.png`);
     const alt = readPng(`${ROOT}/${folder}/sheet_p2.png`);
-    const allowed = new Map<string, number[]>();
-    palette.p1.forEach((rgb, i) => allowed.set(rgb.join(','), palette.p2[i]));
-
-    // 느린 전수 비교 대신 위반만 모아서 한 번에 보고한다.
+    const mapping = new Map<string, string>();
+    const conflicts: string[] = [];
+    let opaque = 0;
     let changed = 0;
-    const outside = new Set<string>();
-    const wrong: string[] = [];
     for (let i = 0; i < sheet.rgba.length; i += 4) {
       if (sheet.rgba[i + 3] === 0) continue;
-      const key = `${sheet.rgba[i]},${sheet.rgba[i + 1]},${sheet.rgba[i + 2]}`;
-      const target = allowed.get(key);
-      if (!target) { outside.add(key); continue; }
-      if (alt.rgba[i] !== target[0] || alt.rgba[i + 1] !== target[1] || alt.rgba[i + 2] !== target[2]) {
-        if (wrong.length < 3) wrong.push(`${key} -> ${[alt.rgba[i], alt.rgba[i + 1], alt.rgba[i + 2]].join(',')}`);
-      }
-      if (key !== target.join(',')) changed++;
+      opaque++;
+      const from = `${sheet.rgba[i]},${sheet.rgba[i + 1]},${sheet.rgba[i + 2]}`;
+      const to = `${alt.rgba[i]},${alt.rgba[i + 1]},${alt.rgba[i + 2]}`;
+      const seen = mapping.get(from);
+      if (seen && seen !== to && conflicts.length < 3) conflicts.push(`${from} -> ${seen} | ${to}`);
+      else mapping.set(from, to);
+      if (from !== to) changed++;
     }
-    expect([...outside]).toEqual([]);
-    expect(wrong).toEqual([]);
-    expect(changed).toBeGreaterThan(1000);
+    expect(conflicts).toEqual([]);
+    expect(opaque).toBeGreaterThan(2000);
+    // 몸통 색이 실제로 바뀌어야 1P/2P가 눈으로 구분된다(윤곽선만 남기고 다 바꾸는 것 금지).
+    expect(changed / opaque).toBeGreaterThan(0.4);
   });
 });
 
