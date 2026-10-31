@@ -344,17 +344,83 @@ const BOARD_PATH: Record<UiBoard, string> = {
   stage: 'dev-art/ui/stage_640x360.png',
 };
 
-const boardCache = new Map<UiBoard, HTMLImageElement | null>();
+/**
+ * 보드마다 '도트 알갱이' 배수. 1 = 원본 픽셀 그대로, 2 = 2×2 블록을 한 색으로 눌러 굵게.
+ *
+ * 타이틀 보드는 나뭇잎·폭포·안개가 1px 단위로 흩어져 있어, 같은 640×360 격자인데도 화면에서는
+ * 일러스트처럼 보였다(검수 지적 2026-10-31: "타이틀은 일러스트, 대전은 굵은 도트").
+ * 2×2 다수색 양자화로 알갱이를 화면 6px(아트 2px)로 키워 다른 화면과 같은 도트 언어로 맞춘다.
+ */
+const BOARD_BLOCK: Record<UiBoard, number> = { title: 2, menu: 1, select: 1, stage: 1 };
+
+const boardCache = new Map<UiBoard, CanvasImageSource | null>();
 const boardPending = new Set<UiBoard>();
 
+/** 2×2 블록을 다수색 하나로 눌러 굵은 도트로 만든다(원본 그림은 건드리지 않는다). */
+function quantizeBlocks(image: HTMLImageElement | HTMLCanvasElement | ImageBitmap, block: number): CanvasImageSource {
+  if (block <= 1 || !hasDocument()) return image;
+  const w = 640;
+  const h = 360;
+  const src = document.createElement('canvas');
+  src.width = w;
+  src.height = h;
+  const sctx = src.getContext('2d');
+  if (!sctx) return image;
+  sctx.imageSmoothingEnabled = false;
+  sctx.drawImage(image, 0, 0, w, h);
+  const data = sctx.getImageData(0, 0, w, h);
+  const out = sctx.createImageData(w, h);
+  for (let by = 0; by < h; by += block) {
+    for (let bx = 0; bx < w; bx += block) {
+      // 블록 안에서 가장 많이 나온 색을 고른다(동수는 먼저 만난 색).
+      const tally = new Map<number, number>();
+      for (let dy = 0; dy < block; dy++) {
+        for (let dx = 0; dx < block; dx++) {
+          const x = Math.min(bx + dx, w - 1);
+          const y = Math.min(by + dy, h - 1);
+          const i = (y * w + x) * 4;
+          const key = (data.data[i] << 16) | (data.data[i + 1] << 8) | data.data[i + 2];
+          tally.set(key, (tally.get(key) ?? 0) + 1);
+        }
+      }
+      let best = 0;
+      let bestCount = -1;
+      for (const [key, count] of tally) {
+        if (count > bestCount) { best = key; bestCount = count; }
+      }
+      const r = (best >> 16) & 0xff;
+      const gg = (best >> 8) & 0xff;
+      const b = best & 0xff;
+      for (let dy = 0; dy < block; dy++) {
+        for (let dx = 0; dx < block; dx++) {
+          const x = Math.min(bx + dx, w - 1);
+          const y = Math.min(by + dy, h - 1);
+          const i = (y * w + x) * 4;
+          out.data[i] = r;
+          out.data[i + 1] = gg;
+          out.data[i + 2] = b;
+          out.data[i + 3] = 255;
+        }
+      }
+    }
+  }
+  const done = document.createElement('canvas');
+  done.width = w;
+  done.height = h;
+  const dctx = done.getContext('2d');
+  if (!dctx) return image;
+  dctx.putImageData(out, 0, 0);
+  return done;
+}
+
 /** 보드 그림을 한 번만 받아 둔다(없으면 null → 절차적 도트 배경으로 대체). */
-export function uiBoard(loader: AssetLoader, board: UiBoard): HTMLImageElement | null {
+export function uiBoard(loader: AssetLoader, board: UiBoard): CanvasImageSource | null {
   const cached = boardCache.get(board);
   if (cached !== undefined) return cached;
   if (!boardPending.has(board)) {
     boardPending.add(board);
     void loader.loadImage(BOARD_PATH[board]).then((image) => {
-      boardCache.set(board, image);
+      if (image) boardCache.set(board, quantizeBlocks(image, BOARD_BLOCK[board]));
       boardPending.delete(board);
     }).catch(() => boardPending.delete(board));
   }

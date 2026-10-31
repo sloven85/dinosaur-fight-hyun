@@ -167,26 +167,27 @@ export function drawPixelHud(g: CanvasRenderingContext2D, width: number, height:
     for (const { fighter, mirrored, accent } of sides) {
       const ratio = fighter.health / fighter.maxHealth;
 
-      portrait(c, sprites, fighter.data.id, edge(mirrored, 4, 40), 4, 40, fighter.useAlternatePalette, accent);
+      // 초상은 머리가 들어오는 크기(52)로. 40 이면 머리가 잘려 턱·목만 남았다(검수 2026-10-31).
+      portrait(c, sprites, fighter.data.id, edge(mirrored, 4, 52), 4, 52, fighter.useAlternatePalette, accent);
 
       // 체력: 가운데에서 바깥으로 줄어드는 방향(1P 왼쪽 정렬, 2P 오른쪽 정렬).
-      blockBar(c, edge(mirrored, 48, 150), 6, 150, 12, ratio, DOT.hp, mirrored);
+      blockBar(c, edge(mirrored, 62, 138), 6, 138, 12, ratio, DOT.hp, mirrored);
 
       // 1P/2P 색 표식(체력바 바로 아래 얇은 띠).
-      box(c, edge(mirrored, 48, 34), 19, 34, 2, accent);
+      box(c, edge(mirrored, 62, 34), 19, 34, 2, accent);
 
       // 게이지: 얇은 블록 눈금. 꽉 차면 색이 금색으로 바뀌고 옆에 '특수기 준비'.
       const meterW = 70;
       const ready = fighter.meter >= MAX_METER;
-      blockBar(c, edge(mirrored, 48, meterW), 23, meterW, 6, fighter.meter / MAX_METER, ready ? DOT.gold : DOT.moss, mirrored);
+      blockBar(c, edge(mirrored, 62, meterW), 23, meterW, 6, fighter.meter / MAX_METER, ready ? DOT.gold : DOT.moss, mirrored);
       if (ready) {
-        text(c, SPECIAL_READY_LABEL, anchor(mirrored, 122), 21, {
+        text(c, SPECIAL_READY_LABEL, anchor(mirrored, 136), 21, {
           size: 9, color: DOT.gold, align: mirrored ? 'right' : 'left',
         });
       }
 
       // 이름표(라운드 점과 같은 줄, 서로 겹치지 않는 폭).
-      text(c, fighter.data.name, anchor(mirrored, 48), 38, { size: 10, color: DOT.white, align: mirrored ? 'right' : 'left' });
+      text(c, fighter.data.name, anchor(mirrored, 62), 38, { size: 10, color: DOT.white, align: mirrored ? 'right' : 'left' });
 
       // 라운드 점: 0승에서도 보이는 점.
       roundPips(c, fighter.roundWins, mirrored);

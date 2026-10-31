@@ -126,8 +126,9 @@ export function drawTitleScreen(g: CanvasRenderingContext2D, view: TitleView): v
     board(c, view.loader, 'title', DOT.shade);
     // 상단 배너(아티스트가 비워 둔 자리)에 로고를 도트 글자로 앉힌다.
     // 글자는 잉크 기준으로 가운데를 맞추므로(TextCenter) 두 줄 모두 배너 안쪽에 들어온다.
-    textCenter(c, '다이노 파이터즈', W / 2, 51, { size: 22, color: DOT.ink });
-    textCenter(c, 'DINO  FIGHTERS', W / 2, 72, { size: 11, color: DOT.goldDark });
+    // 배경을 2×2 블록(화면 6px)으로 눌렀으므로 로고도 굵게: 1px 오프셋 한 번(2아트px 획).
+    textCenter(c, '다이노 파이터즈', W / 2, 51, { size: 22, color: DOT.ink, weight: 2 });
+    textCenter(c, 'DINO  FIGHTERS', W / 2, 73, { size: 11, color: DOT.ink, weight: 2 });
 
     // 메뉴: 배너 바로 위 풀밭 줄에 가로 탭. 아래 양피지 배너와 9아트px 띄운다.
     const tabH = 26;
@@ -241,9 +242,9 @@ export function drawSelectScreen(g: CanvasRenderingContext2D, view: SelectView):
   inDotGrid(g, DOT_K_UI, (c) => {
     board(c, view.loader, 'select', DOT.shade);
     // 상단 배너: 왼쪽에 제목, 오른쪽에 지금 적용되는 난이도·도움(기존판과 같은 정보).
-    text(c, '공룡을 고르세요', SELECT_BANNER.left + 26, SELECT_BANNER.y, { size: 13, color: DOT.ink });
+    text(c, '공룡을 고르세요', SELECT_BANNER.left + 40, SELECT_BANNER.y, { size: 13, color: DOT.ink });
     // 오른쪽 칩은 배너 안쪽(양피지)에서 끝나게 자른다 — 넘치면 횃불 그림 위로 나간다.
-    text(c, clipText(selectSettingsChip(view.settings, view.twoPlayer), 10, 150), SELECT_BANNER.right - 26, SELECT_BANNER.y + 2, {
+    text(c, clipText(selectSettingsChip(view.settings, view.twoPlayer), 10, 150), SELECT_BANNER.right - 40, SELECT_BANNER.y + 2, {
       size: 10, color: view.twoPlayer ? DOT.parchmentDark : DOT.ink, align: 'right',
     });
 
@@ -276,28 +277,28 @@ export function drawSelectScreen(g: CanvasRenderingContext2D, view: SelectView):
     });
 
     // 하단 정보 띠: 고른 공룡 이름·설명·능력 눈금·특수기.
-    panel(c, 20, 276, 600, 80, { fill: DOT.panel, top: DOT.panelTop, side: DOT.ink, border: DOT.ink });
-    panel(c, 24, 280, 592, 72, { fill: DOT.deep, top: DOT.shade, side: DOT.ink, border: DOT.stone });
+    panel(c, 20, 272, 600, 84, { fill: DOT.panel, top: DOT.panelTop, side: DOT.ink, border: DOT.ink });
+    panel(c, 24, 276, 592, 76, { fill: DOT.deep, top: DOT.shade, side: DOT.ink, border: DOT.stone });
     if (view.hovered) {
-      text(c, view.hovered.name, 34, 286, { size: 18, color: DOT.gold });
-      text(c, view.hovered.archetype, 44 + dotTextWidth(view.hovered.name, 18), 292, { size: 13, color: DOT.moss });
-      text(c, clipText(view.hovered.description, 13, 470), 34, 306, { size: 13, color: DOT.white });
+      text(c, view.hovered.name, 34, 281, { size: 18, color: DOT.gold });
+      text(c, view.hovered.archetype, 44 + dotTextWidth(view.hovered.name, 18), 288, { size: 13, color: DOT.moss });
+      text(c, clipText(view.hovered.description, 13, 470), 34, 305, { size: 13, color: DOT.white });
       const pips = (label: string, value: number, x: number, y: number): void => {
         text(c, label, x, y, { size: 13, color: DOT.dim });
         const px = x + dotTextWidth(label, 13) + 6;
         for (let i = 0; i < 5; i++) box(c, px + i * 10, y + 2, 8, 9, i < value ? DOT.gold : DOT.hpBack);
       };
-      pips('빠름', view.hovered.speed, 34, 322);
-      pips('힘', view.hovered.power, 140, 322);
-      pips('단단함', view.hovered.toughness, 222, 322);
-      text(c, `특수기 · ${clipText(view.hovered.special, 13, 130)}`, 384, 322, { size: 13, color: DOT.dim });
+      pips('빠름', view.hovered.speed, 34, 321);
+      pips('힘', view.hovered.power, 140, 321);
+      pips('단단함', view.hovered.toughness, 222, 321);
+      text(c, `특수기 · ${clipText(view.hovered.special, 13, 130)}`, 384, 321, { size: 13, color: DOT.dim });
 
     }
-    text(c, '이동 방향키 · 확인 F/J · 취소 G/K', 34, 337, { size: 11, color: DOT.stoneLight });
+    text(c, '이동 방향키 · 확인 F/J · 취소 G/K', 34, 339, { size: 11, color: DOT.stoneLight });
     const p1State = `1P ${view.picks[0].locked ? '확정' : '고르는 중'}`;
     const p2State = `2P ${view.picks[1].locked ? '확정' : '고르는 중'}`;
-    text(c, p2State, 606, 337, { size: 11, color: DOT.p2, align: 'right' });
-    text(c, p1State, 606 - dotTextWidth(p2State, 11) - 12, 337, { size: 11, color: DOT.p1, align: 'right' });
+    text(c, p2State, 606, 339, { size: 11, color: DOT.p2, align: 'right' });
+    text(c, p1State, 606 - dotTextWidth(p2State, 11) - 12, 339, { size: 11, color: DOT.p1, align: 'right' });
   });
 }
 
