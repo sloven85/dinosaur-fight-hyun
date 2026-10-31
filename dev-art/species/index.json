@@ -10,10 +10,10 @@
  "species": {
   "anky": {
    "character": "ankylosaurus",
-   "frames": 40,
+   "frames": 42,
    "sheet": [
     1504,
-    425
+    540
    ],
    "idle": {
     "h": [
