@@ -43,6 +43,22 @@ export function contactFront(move: MoveData, bodyFront: number): number {
   return Math.max(...windows.map((hit) => bodyFront + hit.box.x + hit.box.w));
 }
 
+/**
+ * 접촉 프레임 상자가 몸 뒤쪽까지 걸친 광역·회전 기술인가.
+ *
+ * 이런 기술(브라키오·안킬로·테리지노·트리케라 특수)은 상자 폭이 400~4800px이고 뒤끝이 몸 중심보다
+ * 뒤에 있다. 상자 '앞끝'은 사거리가 아니라 판정 범위의 오른쪽 끝일 뿐이라, 그림을 그 끝까지 밀면
+ * 몸이 화면 밖으로 날아간다(브라키오 특수 2574px · 안킬로 특수 2136px 실측).
+ * 그림 내밀기는 앞으로 뻗는 기술에만 적용한다.
+ */
+export function isAreaContact(move: MoveData, bodyFront: number): boolean {
+  const frame = contactFrame(move);
+  const hits = (move.script?.hits ?? []) as ScriptHitWindow[];
+  return hits
+    .filter((hit) => !!hit.box && hit.target !== 'held')
+    .some((hit) => hit.from === frame && bodyFront + hit.box.x <= 0);
+}
+
 /** 접촉 프레임에 그려지는 그림의 주둥이 끝(아트 px, 중심 기준). */
 export function contactTipArt(manifest: SpriteManifest, kind: AttackKind, move: MoveData): number {
   const state = stateFor(kind);
@@ -56,6 +72,8 @@ export function contactTipArt(manifest: SpriteManifest, kind: AttackKind, move: 
 
 /** 접촉 순간에 그림을 얼마나 앞으로 내밀어야 하는가(화면 px, facing=1 기준). */
 export function contactGap(fighter: Fighter, move: MoveData, manifest: SpriteManifest): number {
+  // 광역·회전 상자는 '앞끝'이 사거리가 아니므로 그림을 밀지 않는다(몸이 화면 밖으로 나간다).
+  if (isAreaContact(move, fighter.bodyFront)) return 0;
   return contactFront(move, fighter.bodyFront) - contactTipArt(manifest, move.kind, move) * PIXEL_ART_SCALE;
 }
 
