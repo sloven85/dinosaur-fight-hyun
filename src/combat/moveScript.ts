@@ -89,6 +89,11 @@ export interface ScriptHit extends HitParams {
   /** target=held면 상자 대신 잡고 있는 상대에게 바로 들어간다(물고 흔들기). */
   target?: 'box' | 'held';
   box?: ScriptBox;
+  /**
+   * 반격이 성공한 실행에서만 들어가는 판정. 반격 구간(script.counter)을 넘겨
+   * 헛휘두름으로 이어진 실행에서는 피해·발사체가 없고 그림만 끝까지 돈다.
+   */
+  onCounter?: boolean;
 }
 
 export interface ScriptGrab {
@@ -153,9 +158,14 @@ export interface ScriptCounter {
   success: number;
 }
 
+/** 반격 성공 실행에서만 터지는 사건. 헛휘두름 실행에서는 건너뛴다. */
+export interface CounterGate {
+  onCounter?: boolean;
+}
+
 export type ScriptEvent =
-  | ({ f: number; type: 'projectile' } & ProjectileSpec)
-  | {
+  | ({ f: number; type: 'projectile' } & ProjectileSpec & CounterGate)
+  | ({
       f: number;
       type: 'throw';
       vx: number;
@@ -164,9 +174,9 @@ export type ScriptEvent =
       knockdown: number;
       /** true면 뒤로 넘긴다(위치 바꾸기). */
       behind?: boolean;
-    }
+    } & CounterGate)
   | { f: number; type: 'swap' }
-  | {
+  | ({
       f: number;
       type: 'fx';
       fx: 'shake' | 'dust' | 'shockwave' | 'splash' | 'flash' | 'slash' | 'feathers';
@@ -174,7 +184,7 @@ export type ScriptEvent =
       /** 몸 앞끝 기준 위치. */
       x?: number;
       y?: number;
-    }
+    } & CounterGate)
   | { f: number; type: 'end' };
 
 export interface MoveScript {

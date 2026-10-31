@@ -3257,6 +3257,7 @@
             },
             "knockdown": 60,
             "unguardable": true,
+            "onCounter": true,
             "fx": "special"
           }
         ],
@@ -3276,10 +3277,6 @@
             "y": 0
           },
           {
-            "f": 97,
-            "type": "end"
-          },
-          {
             "f": 108,
             "type": "projectile",
             "x": -112.5,
@@ -3293,6 +3290,7 @@
             "noTrail": true,
             "spin": 0,
             "fade": true,
+            "onCounter": true,
             "damage": 0,
             "knockback": 0,
             "hitstun": 0,
@@ -3302,13 +3300,15 @@
             "f": 112,
             "type": "fx",
             "fx": "shake",
-            "strength": 2
+            "strength": 2,
+            "onCounter": true
           },
           {
             "f": 112,
             "type": "fx",
             "fx": "flash",
-            "strength": 1.4
+            "strength": 1.4,
+            "onCounter": true
           }
         ]
       }

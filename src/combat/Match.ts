@@ -667,6 +667,8 @@ export class Match {
       // 다단히트: 판정마다 한 번씩.
       (script.hits ?? []).forEach((hit, index) => {
         if (run.landed.has(index) || f < hit.from || f > hit.to) return;
+        // 반격 성공 실행에서만 들어가는 판정(안킬로 철벽 반격의 후속타).
+        if (hit.onCounter && !run.countered) return;
         if (hit.target === 'held') {
           if (attacker.holding === defender) {
             if (supportsContact(attacker) && defender.lastContact) {
@@ -692,6 +694,8 @@ export class Match {
       (script.events ?? []).forEach((event, index) => {
         if (event.f !== f || run.fired.has(index)) return;
         run.fired.add(index);
+        // 반격 성공 실행에서만 터지는 사건(후속타 궤적·충격 연출).
+        if ('onCounter' in event && event.onCounter && !run.countered) return;
         switch (event.type) {
           case 'projectile':
             this.projectiles.push({

@@ -64,7 +64,7 @@ const startRec = `(()=>{const c=document.getElementById('game');window.__rec=[];
 const loop=()=>{if(!window.__recOn)return;window.__rec.push([performance.now(),c.toDataURL('image/png')]);requestAnimationFrame(loop);};requestAnimationFrame(loop);return true;})()`;
 await ev(startRec);
 await kd('KeyH'); await sleep(100); await ku('KeyH');
-await sleep(2500);
+await sleep(Number(process.env.CAPTURE_MS ?? 2500));
 await ev('window.__recOn=false');
 const n = await ev('window.__rec.length');
 mkdirSync(OUT, { recursive: true });
