@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import type { AssetLoader } from '../AssetLoader';
 import { dotUiEnabled } from './pilotFlag';
 import {
-  drawModeScreen, drawPauseScreen, drawResultScreen, drawSelectScreen, drawSettingsScreen, drawStageScreen, drawTitleScreen, drawVsScreen,
+  RESULT_GROUND_Y, drawModeScreen, drawPauseScreen, drawResultScreen, drawSelectScreen, drawSettingsScreen, drawStageScreen, drawTitleScreen, drawVsScreen,
 } from './PixelScreens';
 import { drawPixelCallout, drawPixelHud } from './PixelHud';
 import { renderDotBackdrop } from './PixelStageFallback';
@@ -137,6 +137,34 @@ describe('도트 화면 그리기(벡터 UI 없음)', () => {
     const { ctx, calls } = recorder();
     drawResultScreen(ctx, { loader, winner: 0, winnerId: CHARACTERS[0].id, options: ['다시 할래', '공룡 바꾸기', '처음으로'], index: 0 });
     assertDotOnly(calls, '결과');
+  });
+
+  it('결과 — 경기장 밀림 배경 위에 어둡게 깔고 승자·문구를 올린다', () => {
+    const { ctx, calls } = recorder();
+    const asked: string[] = [];
+    drawResultScreen(ctx, {
+      loader, winner: 1, winnerId: CHARACTERS[1].id, winnerName: CHARACTERS[1].name,
+      options: ['다시 할래', '공룡 바꾸기', '처음으로'], index: 1, stage: 'jungle',
+      // 배경은 실제 레이어 대신 drawImage 한 번으로 자리를 표시한다(그리기 순서 확인용).
+      background: {
+        renderArt: (g, stage: string) => {
+          asked.push(stage);
+          (g as unknown as { drawImage: (...args: unknown[]) => void }).drawImage({}, 0, 0, 640, 360);
+          return true;
+        },
+      },
+    });
+    assertDotOnly(calls, '결과(배경)');
+    // 배경은 그 경기장 레이어로 한 번만 요청한다.
+    expect(asked).toEqual(['jungle']);
+    // 배경을 먼저 그리고, 화면 전체(아트 좌표 0,0,640,360)를 어둡게 누르는 채우기가 그 뒤에 온다.
+    const backdropAt = calls.findIndex((call) => call.name === 'drawImage');
+    const dimAt = calls.findIndex((call) => call.name === 'fillRect'
+      && call.args[0] === 0 && call.args[1] === 0 && call.args[2] === 640 && call.args[3] === 360);
+    expect(backdropAt).toBeGreaterThanOrEqual(0);
+    expect(dimAt).toBeGreaterThan(backdropAt);
+    // 승자 스프라이트는 배경 지면선(298)에 발을 맞춘다.
+    expect(RESULT_GROUND_Y).toBe(298);
   });
 
   it('어른 설정', () => {

@@ -9,6 +9,8 @@ import { moveListIndex } from '../ui/menu';
 import { COLORS, FONTS } from '../ui/theme';
 import { dotUiEnabled } from '../rendering/pixel/pilotFlag';
 import { drawResultScreen } from '../rendering/pixel/PixelScreens';
+import { PixelBackground } from '../rendering/pixel/PixelBackground';
+import { CHARACTERS } from '../data';
 
 interface ResultOption {
   label: string;
@@ -19,6 +21,8 @@ export class ResultScene extends BaseScene {
   /** 캡처 스크립트·진단용 고정 이름(번들에서 클래스 이름이 압축되어도 유지). */
   readonly sceneId = 'ResultScene';
   private index = 0;
+  /** 결과 화면 뒤에 깔 경기장 밀림 배경(전투와 같은 레이어·같은 시차). */
+  private backdrop: PixelBackground | null = null;
 
   constructor(
     private readonly winner: PlayerIndex | null,
@@ -48,12 +52,17 @@ export class ResultScene extends BaseScene {
 
   render(g: CanvasRenderingContext2D, width: number, height: number): void {
     if (dotUiEnabled(import.meta.env.DEV, typeof location === 'undefined' ? '' : location.search)) {
+      this.backdrop ??= new PixelBackground(this.context.assets);
+      const winnerId = this.winner === null ? null : this.context.session.characters[this.winner];
       drawResultScreen(g, {
         loader: this.context.assets,
         winner: this.winner,
-        winnerId: this.winner === null ? null : this.context.session.characters[this.winner],
+        winnerId,
+        winnerName: winnerId ? CHARACTERS.find((character) => character.id === winnerId)?.name : undefined,
         options: this.options.map((option) => option.label),
         index: this.index,
+        stage: this.context.session.stage,
+        background: this.backdrop,
       });
       return;
     }

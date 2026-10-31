@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
-  PIXEL_LAYER_H, PIXEL_LAYER_W, PIXEL_VIEW_W, PixelBackground, drawCenteredLayer, drawTiledLayer, pixelScaleFor,
+  LAYER_PARALLAX, PIXEL_LAYER_H, PIXEL_LAYER_W, PIXEL_VIEW_W, PixelBackground, drawCenteredLayer, drawTiledLayer, pixelScaleFor,
 } from './PixelBackground';
 
 // jk 확정 2026-10-29: 아트 1px = 화면 4px. 창은 480×270 아트 px(1920×1080 ÷ 4),
@@ -182,5 +182,34 @@ describe('지면 레이어는 카메라와 1:1로 움직인다(발 미끄러짐 
     // 원경·중경은 계수만큼 움직이되 4px 격자로 반올림된다(0.25×100=25 → -24).
     expect(Math.abs((right[0] - base[0]) + 25)).toBeLessThanOrEqual(2);
     expect(right[1] - base[1]).toBe(-60);
+  });
+});
+
+describe('결과 화면용 아트 격자 렌더(전투와 같은 레이어·같은 시차)', () => {
+  it('640×360 아트 격자에 3레이어를 1:1로 깐다', async () => {
+    const bg = new PixelBackground(fakeLoader() as never);
+    const { ctx, calls } = recordingCtx();
+    expect(bg.renderArt(ctx, 'jungle', 320, 640)).toBe(false); // 첫 호출은 로딩만
+    await new Promise((r) => setTimeout(r, 0));
+    expect(bg.renderArt(ctx, 'jungle', 320, 640)).toBe(true);
+    expect(calls).toHaveLength(3);
+    for (const call of calls) {
+      expect(call.y).toBe(0);
+      expect(call.h).toBe(PIXEL_LAYER_H);
+      expect(Number.isInteger(call.x)).toBe(true);
+    }
+    // 블리드 pad만큼 레이어가 넓고, 화면 가운데 정렬(시차 0 = 화면 중심).
+    expect(calls.map((call) => call.w)).toEqual([640 + 320, 640 + 96, 640 + 192]);
+    expect(calls.map((call) => call.x)).toEqual([-160, -48, -96]);
+  });
+
+  it('도트 레이어가 없는 경기장은 false를 돌려 호출부가 도트 판으로 대신하게 한다', () => {
+    const bg = new PixelBackground(fakeLoader() as never);
+    const { ctx } = recordingCtx();
+    expect(bg.renderArt(ctx, 'desert', 320, 640)).toBe(false);
+  });
+
+  it('전투·결과 화면 시차 비율의 출처는 하나다', () => {
+    expect(LAYER_PARALLAX).toEqual({ far: 0.25, mid: 0.6, ground: 1 });
   });
 });
