@@ -5,9 +5,10 @@
  * 아티스트가 준 보드 그림을 바탕으로 그 위에 도트 글자·판·커서만 얹는다(보드에 글자는 없다).
  * 보드가 아직 안 왔으면 같은 팔레트의 도트 판으로 대신한다 — 매끈한 벡터 UI는 한 화면도 없다.
  */
-import { CHARACTERS } from '../../data';
+import { CHARACTERS, getStage } from '../../data';
 import type { AssetLoader } from '../AssetLoader';
 import { dotSprites, PORTRAIT_SIZE } from './DotSprites';
+import { renderDotBackdropArt } from './PixelStageFallback';
 import {
   DOT, DOT_K_UI, box, cursor, dither, dotTextWidth, drawUiBoard, inDotGrid, outline, panel, parchment,
   text, textCenter, textLines, uiBoard,
@@ -403,33 +404,72 @@ export function drawVsScreen(g: CanvasRenderingContext2D, view: VsView): void {
 
 // --- 결과 ---
 
+/** 결과 화면에서 승자가 서는 지면선(아트 px) — 배경 레이어의 standLine(298)과 같은 행. */
+export const RESULT_GROUND_Y = 298;
+/** 아래 선택 띠의 위쪽 경계. 승자 발(298) 아래에서 시작해 배경을 가리지 않는다. */
+const RESULT_DOCK_TOP = 300;
+
+/** 결과 화면 뒤에 깔 도트 배경(경기장 3레이어). 없으면 어두운 도트 판으로 대신한다. */
+export interface ResultBackdrop {
+  renderArt(g: CanvasRenderingContext2D, stage: string, focusX: number, width: number): boolean;
+}
+
 export interface ResultView {
   loader: AssetLoader;
   winner: 0 | 1 | null;
   winnerId: string | null;
+  /** 승자 종 이름(제목 아래 한 줄). */
+  winnerName?: string;
   options: string[];
   index: number;
+  /** 경기장 id — 결과 화면은 그 무대의 밀림 배경을 이어서 깐다. */
+  stage?: string;
+  background?: ResultBackdrop;
 }
 
 export function drawResultScreen(g: CanvasRenderingContext2D, view: ResultView): void {
   const sprites = dotSprites(view.loader);
   inDotGrid(g, DOT_K_UI, (c) => {
-    box(c, 0, 0, W, H, DOT.deep);
-    // 위/아래 띠만 살짝 밝게(그라디언트 없이).
-    box(c, 0, 0, W, 92, DOT.ink);
-    box(c, 0, 92, W, 1, DOT.stone);
+    // 1) 전투가 끝난 경기장의 밀림 배경 3레이어 → 2) 어둡게 눌러 → 3) 승자·문구를 위에.
+    const backdrop = view.stage && view.background
+      ? view.background.renderArt(c, view.stage, 0, W)
+      : false;
+    if (!backdrop) {
+      // 레이어 아트가 없는 경기장은 전투와 같은 절차적 도트 배경을 이어서 깐다
+      // (평평한 판을 깔면 "그 경기장에서 끝난 판"이 아니라 다른 화면처럼 보인다).
+      const stage = view.stage ? getStage(view.stage) : null;
+      if (stage) {
+        renderDotBackdropArt(
+          c,
+          { id: stage.id, groundY: stage.groundY, placeholderColor: stage.placeholderColor },
+          RESULT_GROUND_Y,
+        );
+      } else {
+        fallbackBackdrop(c, DOT.shade);
+      }
+    }
+    // 배경 위에 글자·스프라이트가 묻히지 않게 한 겹 눌러 준다(그라디언트 없이 단색 한 겹).
+    box(c, 0, 0, W, H, 'rgba(8, 14, 16, 0.58)');
+    // 제목 띠와 아래 선택 띠는 조금 더 눌러 경계를 만든다(제목 잉크 28px + 이름 11px이 안에 들어온다).
+    box(c, 0, 0, W, 66, 'rgba(8, 14, 16, 0.45)');
+    box(c, 0, 66, W, 1, DOT.stone);
+    box(c, 0, RESULT_DOCK_TOP, W, H - RESULT_DOCK_TOP, 'rgba(8, 14, 16, 0.78)');
+    box(c, 0, RESULT_DOCK_TOP, W, 1, DOT.stone);
 
     const color = view.winner === 0 ? DOT.p1 : view.winner === 1 ? DOT.p2 : DOT.dim;
-    textCenter(c, view.winner === null ? '무승부' : `${view.winner + 1}P 승리`, W / 2, 26, { size: 28, color });
+    textCenter(c, view.winner === null ? '무승부' : `${view.winner + 1}P 승리`, W / 2, 30, { size: 28, color, weight: 2 });
+    if (view.winnerName) {
+      textCenter(c, clipText(view.winnerName, 11, 360), W / 2, 54, { size: 11, color: DOT.white });
+    }
 
     if (view.winnerId) {
       sprites.request(view.winnerId);
-      // 승리 포즈 1:1, 발을 화면 아래 지면선에.
-      sprites.drawState(c, view.winnerId, 'victory', 0, W / 2, 258, view.winner === 1 ? -1 : 1);
+      // 승리 포즈 1:1, 발을 배경 지면선(298)에 맞춘다. 발밑 그림자는 판이 아니라 2px 막대 하나.
+      box(c, W / 2 - 46, RESULT_GROUND_Y - 3, 92, 3, 'rgba(0, 0, 0, 0.38)');
+      sprites.drawState(c, view.winnerId, 'victory', 0, W / 2, RESULT_GROUND_Y, view.winner === 1 ? -1 : 1);
     }
-    box(c, 40, 258, W - 80, 2, DOT.stone);
-    tabRow(c, view.options.map((label) => ({ label })), view.index, W / 2, 272, 26);
-    textCenter(c, '위아래 이동 · 확인 선택', W / 2, 316, { size: 11, color: DOT.dim });
+    tabRow(c, view.options.map((label) => ({ label })), view.index, W / 2, RESULT_DOCK_TOP + 14, 26);
+    textCenter(c, '위아래 이동 · 확인 선택', W / 2, 346, { size: 10, color: DOT.dim });
   });
 }
 

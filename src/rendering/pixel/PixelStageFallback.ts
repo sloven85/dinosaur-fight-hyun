@@ -6,6 +6,7 @@
  * 시차 계수는 아티스트 배경과 동일하다(원경 0.25 / 중경 0.60 / 지면 1.00).
  */
 import { DOT_K_BATTLE } from './PixelStyle';
+import { PIXEL_LAYER_H, PIXEL_LAYER_W } from './PixelBackground';
 
 export interface DotBackdropStage {
   id: string;
@@ -81,8 +82,39 @@ export function renderDotBackdrop(
   const k = DOT_K_BATTLE;
   if (width % k !== 0) return;
   void height;
-  const camX = focusX / k - VIEW_W / 2;
-  const groundArt = Math.round(stage.groundY / k);
+  g.save();
+  g.setTransform(1, 0, 0, 1, 0, 0);
+  g.imageSmoothingEnabled = false;
+  g.scale(k, k);
+  paintDotBackdrop(g, stage, focusX / k - VIEW_W / 2, VIEW_W, VIEW_H, Math.round(stage.groundY / k));
+  g.restore();
+}
+
+/**
+ * 메뉴 계열 화면(640×360 아트 격자)용 — **지금 변환 위에** 그대로 그린다(배율은 호출부 몫).
+ *
+ * 결과 화면은 도트 배경 레이어 아트가 없는 경기장(8곳 중 6곳)에서도 그 경기장의 절차적 도트
+ * 배경을 이어서 보여 줘야 한다(전투와 같은 그림·같은 톤). 카메라는 화면 가운데 고정.
+ */
+export function renderDotBackdropArt(
+  g: CanvasRenderingContext2D,
+  stage: DotBackdropStage,
+  groundArt = 298,
+  viewW = PIXEL_LAYER_W,
+  viewH = PIXEL_LAYER_H,
+): void {
+  paintDotBackdrop(g, stage, 0, viewW, viewH, groundArt);
+}
+
+/** 배경 한 장을 아트 좌표에 그린다(변환·배율은 호출부가 정한다). */
+function paintDotBackdrop(
+  g: CanvasRenderingContext2D,
+  stage: DotBackdropStage,
+  camX: number,
+  VIEW_W: number,
+  VIEW_H: number,
+  groundArt: number,
+): void {
   const base = hexToTone(stage.placeholderColor);
   const rand = rng(seedOf(stage.id));
   const skyTop = tone(base, 0.28, 0.35);
@@ -92,11 +124,6 @@ export function renderDotBackdrop(
   const midColor = tone(base, 0.24, 0.1);
   const groundColor = tone(base, 0.5, 0.05);
   const groundDark = tone(base, 0.32, 0);
-
-  g.save();
-  g.setTransform(1, 0, 0, 1, 0, 0);
-  g.imageSmoothingEnabled = false;
-  g.scale(k, k);
 
   // 하늘: 3단 띠 + 띠 경계 디더(그라디언트 대신).
   const bands = [skyTop, skyMid, skyLow];
@@ -177,6 +204,4 @@ export function renderDotBackdrop(
   }
   speckle(g, rand, 0, groundArt + 4, VIEW_W, VIEW_H - groundArt - 4, css(tone(groundColor, 1.3, 0.2)), 90);
   speckle(g, rand, 0, groundArt + 8, VIEW_W, VIEW_H - groundArt - 8, css(tone(groundDark, 0.8, 0)), 60);
-
-  g.restore();
 }

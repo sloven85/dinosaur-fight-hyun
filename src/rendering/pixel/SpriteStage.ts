@@ -2,7 +2,7 @@ import type { Fighter } from '../../combat/Fighter';
 import type { Match } from '../../combat/Match';
 import type { AssetLoader } from '../AssetLoader';
 import { renderPlaceholder, renderShadow } from '../FighterRenderer';
-import { PIXEL_ART_SCALE, PIXEL_VIEW_H, PIXEL_VIEW_W, PixelBackground, pixelScaleFor } from './PixelBackground';
+import { LAYER_PARALLAX, PIXEL_ART_SCALE, PIXEL_VIEW_H, PIXEL_VIEW_W, PixelBackground, pixelScaleFor } from './PixelBackground';
 import {
   ART_CLIPS, SPRITE_STATES, STATE_LABELS, SpriteClock, drawSpriteFrame, sampleFighter,
   parseSpriteManifest, type SpriteAssets, type SpriteState,
@@ -342,7 +342,8 @@ export class SpriteStage {
  * 지면이 1.00이어야 접지한 발이 지면 위를 미끄러지지 않는다(카메라 중심 = 두 캐릭터 중점).
  * 0.30이면 지면 텍스처가 캐릭터 이동의 30%만 따라가 발이 흘러 보인다.
  */
-export const PARALLAX = { far: 0.25, mid: 0.6, ground: 1 };
+/** 배경 3레이어 시차 — 단일 출처는 PixelBackground.LAYER_PARALLAX(결과 화면도 같은 값을 쓴다). */
+export const PARALLAX = LAYER_PARALLAX;
 
 /** 경기장 대표색(절차적 도트 배경용). 데이터 stages.json의 placeholderColor를 쓴다. */
 function stageTint(stage: string): string {

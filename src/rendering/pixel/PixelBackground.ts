@@ -22,6 +22,13 @@ export const PIXEL_VIEW_H = 270;
 export const PIXEL_LAYER_W = 640;
 export const PIXEL_LAYER_H = 360;
 
+/**
+ * 도트 3레이어 시차 비율 — 전투 화면과 결과 화면이 같은 값을 쓴다(한 곳만 고치면 둘 다 따라온다).
+ * 전투는 화면 px로 그리고 결과 화면은 아트 px로 그리지만, '얼마나 밀리는가'는 같은 비율이어야
+ * 같은 경기장 위에 서 있는 것처럼 보인다.
+ */
+export const LAYER_PARALLAX = { far: 0.25, mid: 0.6, ground: 1 } as const;
+
 /** 레이어 파일과 좌우 블리드 폭(원본 px). pad가 0이면 타일로 깐다. */
 export interface PixelLayerRef { file: string; pad?: number }
 
@@ -116,6 +123,13 @@ export function drawTiledLayer(
 /**
  * 배경 3레이어를 읽어 그린다. 아트가 없으면 false를 돌려 호출부가 기존 배경으로 넘어간다.
  */
+export interface PixelLayerSet {
+  spec: PixelStageLayers;
+  far: CanvasImageSource;
+  mid: CanvasImageSource;
+  ground: CanvasImageSource;
+}
+
 export class PixelBackground {
   private readonly images = new Map<string, CanvasImageSource>();
   private readonly specs = new Map<string, PixelStageLayers>();
@@ -123,6 +137,20 @@ export class PixelBackground {
   private disposed = false;
 
   constructor(private readonly loader: AssetLoader, private readonly root = 'dev-art/stages/') {}
+
+  /** 무대의 3레이어를 꺼낸다. 아직 없으면 로딩을 걸고 null(호출부는 대체 배경을 쓴다). */
+  private layersFor(stage: string): PixelLayerSet | null {
+    if (!hasDotStageLayers(stage)) return null;
+    const spec = this.specs.get(stage);
+    if (!spec) { this.ensure(stage); return null; }
+    // 이미지는 '폴더/파일' 전체 경로로 보관한다 — 파일 이름만으로 찾으면 영원히 못 찾는다.
+    const pathFor = (name: 'far' | 'mid' | 'ground'): string => `${this.root}${stage}/${layerRef(spec.layers[name]).file}`;
+    const far = this.images.get(pathFor('far'));
+    const mid = this.images.get(pathFor('mid'));
+    const ground = this.images.get(pathFor('ground'));
+    if (!far || !mid || !ground) { this.ensure(stage); return null; }
+    return { spec, far, mid, ground };
+  }
 
   /** 이 무대의 도트 배경을 그릴 수 있으면 true. */
   render(
@@ -136,15 +164,9 @@ export class PixelBackground {
   ): boolean {
     const k = pixelScaleFor(width);
     if (!k) return false;
-    if (!hasDotStageLayers(stage)) return false;
-    const spec = this.specs.get(stage);
-    if (!spec) { this.ensure(stage); return false; }
-    // 이미지는 '폴더/파일' 전체 경로로 보관한다 — 파일 이름만으로 찾으면 영원히 못 찾는다.
-    const pathFor = (name: 'far' | 'mid' | 'ground'): string => `${this.root}${stage}/${layerRef(spec.layers[name]).file}`;
-    const far = this.images.get(pathFor('far'));
-    const mid = this.images.get(pathFor('mid'));
-    const ground = this.images.get(pathFor('ground'));
-    if (!far || !mid || !ground) { this.ensure(stage); return false; }
+    const layers = this.layersFor(stage);
+    if (!layers) return false;
+    const { spec } = layers;
 
     // 지면선을 캐릭터 발 높이에 맞춘다. k=4면 레이어(1440)가 화면(1080)보다 커서 위가 잘린다 — 정상.
     // top도 배율 격자에 맞춘다(지면선 행이 격자에 걸쳐 있으면 아트 픽셀이 반 칸 어긋난다).
@@ -160,9 +182,9 @@ export class PixelBackground {
       g.fillRect(0, 0, width, top);
     }
     for (const [ref, image, coef] of [
-      [layerRef(spec.layers.far), far, parallax.far],
-      [layerRef(spec.layers.mid), mid, parallax.mid],
-      [layerRef(spec.layers.ground), ground, parallax.ground],
+      [layerRef(spec.layers.far), layers.far, parallax.far],
+      [layerRef(spec.layers.mid), layers.mid, parallax.mid],
+      [layerRef(spec.layers.ground), layers.ground, parallax.ground],
     ] as const) {
       drawCenteredLayer(g, image, k, offset(coef), ref.pad ?? 0, top, width);
     }
@@ -171,6 +193,38 @@ export class PixelBackground {
     // 캐릭터가 배경에서 떠 보이지 않게 아주 옅게 눌러 준다(기존 배경과 같은 처리).
     g.fillStyle = 'rgba(20, 24, 30, 0.12)';
     g.fillRect(-60, -60, width + 120, height + 120);
+    return true;
+  }
+
+  /**
+   * 메뉴 계열 화면(640×360 아트 격자)용 렌더 — 같은 3레이어를 **아트 1px = 1px**로 깐다.
+   *
+   * 결과 화면은 전투가 끝난 그 경기장 위에 이어 서야 한다(마스터 2026-10-31: "결과 화면 배경을
+   * 밀림 배경 위에 어둡게"). 그래서 전투와 같은 레이어·같은 시차 비율을 쓰고, 배율만 화면 격자에
+   * 맞춘다. 레이어 원본이 640×360이라 아트 격자에 정확히 들어간다(확대·축소 없음).
+   * 그릴 수 없으면 false — 호출부가 같은 팔레트의 도트 판으로 대신한다.
+   */
+  renderArt(
+    g: CanvasRenderingContext2D,
+    stage: string,
+    focusX: number,
+    width: number,
+    parallax: { far: number; mid: number; ground: number } = LAYER_PARALLAX,
+  ): boolean {
+    const layers = this.layersFor(stage);
+    if (!layers) return false;
+    const center = width / 2;
+    const offset = (coef: number): number => -clampInt((focusX - center) * coef);
+    g.save();
+    g.imageSmoothingEnabled = false;
+    for (const [ref, image, coef] of [
+      [layerRef(layers.spec.layers.far), layers.far, parallax.far],
+      [layerRef(layers.spec.layers.mid), layers.mid, parallax.mid],
+      [layerRef(layers.spec.layers.ground), layers.ground, parallax.ground],
+    ] as const) {
+      drawCenteredLayer(g, image, 1, offset(coef), ref.pad ?? 0, 0, width);
+    }
+    g.restore();
     return true;
   }
 
