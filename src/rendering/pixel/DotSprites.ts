@@ -26,7 +26,7 @@ export interface DotPortrait {
 
 export interface DotSpritesApi {
   request(characterId: string): void;
-  portrait(characterId: string, alternatePalette?: boolean): DotPortrait | null;
+  portrait(characterId: string, alternatePalette?: boolean, size?: number): DotPortrait | null;
   drawPortrait(g: CanvasRenderingContext2D, characterId: string, x: number, y: number, size: number, alternatePalette?: boolean): boolean;
   drawState(
     g: CanvasRenderingContext2D, characterId: string, state: SpriteState, step: number,
@@ -102,22 +102,24 @@ class DotSpriteSet implements DotSpritesApi {
     return (alternatePalette ? this.p2Sheets.get(characterId) ?? this.sheets.get(characterId) : this.sheets.get(characterId)) ?? null;
   }
 
-  portrait(characterId: string, alternatePalette = false): DotPortrait | null {
+  portrait(characterId: string, alternatePalette = false, size = PORTRAIT_SIZE): DotPortrait | null {
     const manifest = this.manifests.get(characterId);
     if (!manifest) { this.request(characterId); return null; }
     const image = this.sheet(characterId, alternatePalette);
     const frame = manifest.frames[manifest.clips.idle.frames[0]];
     if (!image || !frame) return null;
     // 머리는 앞쪽(오른쪽)·위쪽. 상자를 프레임 안으로 밀어 넣는다(1:1 그대로, 확대 없음).
-    const sw = Math.min(PORTRAIT_SIZE, frame.w);
-    const sh = Math.min(PORTRAIT_SIZE, Math.round(frame.h * 0.78), frame.h);
+    // 자르는 크기는 **요청한 상자 크기**를 따른다: 66 으로 잘라 놓고 36 상자에 가운데만 클립하면
+    // 머리가 아니라 목·턱만 남는다(HUD 초상 결함 2026-10-31).
+    const sw = Math.min(size, frame.w);
+    const sh = Math.min(size, Math.round(frame.h * 0.78), frame.h);
     const sx = clamp(frame.x + frame.w - sw, frame.x, frame.x + frame.w - sw);
     const sy = clamp(frame.y + Math.round(frame.h * 0.02), frame.y, frame.y + frame.h - sh);
     return { image, sx, sy, sw, sh };
   }
 
   drawPortrait(g: CanvasRenderingContext2D, characterId: string, x: number, y: number, size: number, alternatePalette = false): boolean {
-    const portrait = this.portrait(characterId, alternatePalette);
+    const portrait = this.portrait(characterId, alternatePalette, size);
     if (!portrait) return false;
     g.save();
     g.imageSmoothingEnabled = false;
