@@ -115,6 +115,9 @@ export interface TitleView {
 /** 아래 양피지 배너(아티스트 보드 실측) 안쪽 행. */
 export const TITLE_BANNER_TOP = 311;
 export const TITLE_BANNER_BOTTOM = 341;
+/** 위쪽 양피지 배너(보드 실측 y 35..88). 로고는 이 안쪽에만 앉힌다. */
+export const TITLE_HEAD_TOP = 35;
+export const TITLE_HEAD_BOTTOM = 88;
 /** 메뉴 탭 줄과 그 아래 안내문 사이 간격(아트 px). */
 export const TITLE_TAB_GAP = 9;
 
@@ -122,8 +125,9 @@ export function drawTitleScreen(g: CanvasRenderingContext2D, view: TitleView): v
   inDotGrid(g, DOT_K_UI, (c) => {
     board(c, view.loader, 'title', DOT.shade);
     // 상단 배너(아티스트가 비워 둔 자리)에 로고를 도트 글자로 앉힌다.
-    textCenter(c, '다이노 파이터즈', W / 2, 44, { size: 24, color: DOT.ink });
-    textCenter(c, 'DINO  FIGHTERS', W / 2, 74, { size: 10, color: DOT.goldDark });
+    // 글자는 잉크 기준으로 가운데를 맞추므로(TextCenter) 두 줄 모두 배너 안쪽에 들어온다.
+    textCenter(c, '다이노 파이터즈', W / 2, 51, { size: 22, color: DOT.ink });
+    textCenter(c, 'DINO  FIGHTERS', W / 2, 72, { size: 11, color: DOT.goldDark });
 
     // 메뉴: 배너 바로 위 풀밭 줄에 가로 탭. 아래 양피지 배너와 9아트px 띄운다.
     const tabH = 26;
@@ -132,16 +136,21 @@ export function drawTitleScreen(g: CanvasRenderingContext2D, view: TitleView): v
     // 안내문은 아래 양피지 배너 안에 한 줄로 넣고 위아래 여백을 남긴다(겹침 없음).
     textCenter(c, view.controls, W / 2, TITLE_BANNER_TOP + 12, { size: 11, color: DOT.ink });
 
-    // 패드·소리·참가 상태는 우상단 판 위에(그림 위에 글자를 직접 얹지 않는다).
-    const statusLine = `${view.sound} · 1P ${view.p1} · 2P ${view.p2}`;
-    const padLines = wrap(view.padHint, 10, 250).split('\n');
-    const padW = Math.max(...padLines.map((line) => dotTextWidth(line, 10)), dotTextWidth(statusLine, 10)) + 12;
-    const lineH = 13;
-    panel(c, W - padW - 8, 8, padW, (padLines.length + 1) * lineH + 8, {
+    // 패드·소리·참가 상태: 우상단 판. 위쪽 배너(x≈450)와 겹치지 않게 폭을 좁게 잡는다.
+    const statusLine = `1P ${view.p1} · 2P ${view.p2}`;
+    // '·' 로 나뉜 안내는 각각 따로 줄바꿈한다(단어 중간에서 끊기지 않게).
+    const padLines = view.padHint.split(' · ').flatMap((part) => wrap(part, 9, 150).split('\n'));
+    const statusLines = [statusLine, view.sound];
+    const padW = Math.max(
+      ...padLines.map((line) => dotTextWidth(line, 9)),
+      ...statusLines.map((line) => dotTextWidth(line, 9)),
+    ) + 12;
+    const lineH = 11;
+    panel(c, W - padW - 6, 6, padW, (padLines.length + statusLines.length) * lineH + 8, {
       fill: DOT.deep, top: DOT.shade, side: DOT.ink, border: DOT.stone,
     });
-    textLines(c, padLines.join('\n'), W - 14, 13, { size: 10, color: DOT.parchment, align: 'right' }, 3);
-    text(c, statusLine, W - 14, 13 + padLines.length * lineH, { size: 10, color: DOT.gold, align: 'right' });
+    textLines(c, padLines.join('\n'), W - 12, 11, { size: 9, color: DOT.parchment, align: 'right' }, 2);
+    textLines(c, statusLines.join('\n'), W - 12, 11 + padLines.length * lineH, { size: 9, color: DOT.gold, align: 'right' }, 2);
   });
 }
 
@@ -232,8 +241,9 @@ export function drawSelectScreen(g: CanvasRenderingContext2D, view: SelectView):
   inDotGrid(g, DOT_K_UI, (c) => {
     board(c, view.loader, 'select', DOT.shade);
     // 상단 배너: 왼쪽에 제목, 오른쪽에 지금 적용되는 난이도·도움(기존판과 같은 정보).
-    text(c, '공룡을 고르세요', SELECT_BANNER.left, SELECT_BANNER.y, { size: 13, color: DOT.ink });
-    text(c, selectSettingsChip(view.settings, view.twoPlayer), SELECT_BANNER.right, SELECT_BANNER.y + 2, {
+    text(c, '공룡을 고르세요', SELECT_BANNER.left + 26, SELECT_BANNER.y, { size: 13, color: DOT.ink });
+    // 오른쪽 칩은 배너 안쪽(양피지)에서 끝나게 자른다 — 넘치면 횃불 그림 위로 나간다.
+    text(c, clipText(selectSettingsChip(view.settings, view.twoPlayer), 10, 150), SELECT_BANNER.right - 26, SELECT_BANNER.y + 2, {
       size: 10, color: view.twoPlayer ? DOT.parchmentDark : DOT.ink, align: 'right',
     });
 
@@ -271,21 +281,23 @@ export function drawSelectScreen(g: CanvasRenderingContext2D, view: SelectView):
     if (view.hovered) {
       text(c, view.hovered.name, 34, 286, { size: 18, color: DOT.gold });
       text(c, view.hovered.archetype, 44 + dotTextWidth(view.hovered.name, 18), 292, { size: 13, color: DOT.moss });
-      text(c, clipText(view.hovered.description, 13, 470), 34, 308, { size: 13, color: DOT.white });
+      text(c, clipText(view.hovered.description, 13, 470), 34, 306, { size: 13, color: DOT.white });
       const pips = (label: string, value: number, x: number, y: number): void => {
         text(c, label, x, y, { size: 13, color: DOT.dim });
         const px = x + dotTextWidth(label, 13) + 6;
         for (let i = 0; i < 5; i++) box(c, px + i * 10, y + 2, 8, 9, i < value ? DOT.gold : DOT.hpBack);
       };
-      pips('빠름', view.hovered.speed, 34, 326);
-      pips('힘', view.hovered.power, 140, 326);
-      pips('단단함', view.hovered.toughness, 222, 326);
-      text(c, `특수기 · ${clipText(view.hovered.special, 13, 130)}`, 384, 326, { size: 13, color: DOT.dim });
+      pips('빠름', view.hovered.speed, 34, 322);
+      pips('힘', view.hovered.power, 140, 322);
+      pips('단단함', view.hovered.toughness, 222, 322);
+      text(c, `특수기 · ${clipText(view.hovered.special, 13, 130)}`, 384, 322, { size: 13, color: DOT.dim });
 
     }
-    text(c, '이동 방향키 · 확인 F/J · 취소 G/K', 34, 342, { size: 11, color: DOT.stoneLight });
-    text(c, `1P ${view.picks[0].locked ? '확정' : '고르는 중'}`, 452, 342, { size: 12, color: DOT.p1 });
-    text(c, `2P ${view.picks[1].locked ? '확정' : '고르는 중'}`, 596, 342, { size: 12, color: DOT.p2, align: 'right' });
+    text(c, '이동 방향키 · 확인 F/J · 취소 G/K', 34, 337, { size: 11, color: DOT.stoneLight });
+    const p1State = `1P ${view.picks[0].locked ? '확정' : '고르는 중'}`;
+    const p2State = `2P ${view.picks[1].locked ? '확정' : '고르는 중'}`;
+    text(c, p2State, 606, 337, { size: 11, color: DOT.p2, align: 'right' });
+    text(c, p1State, 606 - dotTextWidth(p2State, 11) - 12, 337, { size: 11, color: DOT.p1, align: 'right' });
   });
 }
 

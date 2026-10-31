@@ -9,6 +9,7 @@
  *  - 어떤 것도 '필터'로 도트처럼 보이게 하지 않는다. 처음부터 도트로 그린다.
  */
 import type { AssetLoader } from '../AssetLoader';
+import { pixelFaceFor } from './PixelFont';
 
 /** 메뉴·선택 화면: 아티스트 UI 원본 640×360 → 1920×1080. */
 export const DOT_K_UI = 3;
@@ -160,62 +161,113 @@ interface BakedText {
   height: number;
 }
 
-const FONT_STACK = '"NanumSquare_ac", "Nanum Square", "Noto Sans CJK KR", "Noto Sans KR", system-ui, sans-serif';
+/**
+ * 픽셀 글꼴 폴백 체인. Galmuri(9/11/14)가 이 게임의 도트 글꼴이고,
+ * 글꼴이 늦게 와도 글자가 사라지지 않도록 시스템 한글 글꼴을 뒤에 둔다.
+ */
+const FONT_STACK = '"Galmuri11", "Galmuri9", "Galmuri14", "NanumSquare", "Noto Sans CJK KR", system-ui, sans-serif';
 const baked = new Map<string, BakedText>();
 
 function hasDocument(): boolean {
   return typeof document !== 'undefined' && typeof document.createElement === 'function';
 }
 
-/** 글자 폭(아트 px). 캔버스가 없는 테스트 환경에서는 글자당 0.62em으로 어림한다. */
+/** 글꼴이 로드되면 이전(폴백 글꼴로 구운) 글자 캐시를 버린다. */
+export function clearBakedText(): void {
+  baked.clear();
+}
+
+/** 글자 폭(아트 px). 캔버스가 없는 테스트 환경에서는 글자당 픽셀크기만큼으로 어림한다. */
 export function dotTextWidth(text: string, size: number): number {
   return bake(text, size).width;
 }
 
+/** 글자 높이(아트 px, 잉크 기준). */
+export function dotTextHeight(text: string, size: number): number {
+  return bake(text, size).height;
+}
+
 /**
  * 글자 하나를 1비트 비트맵으로 굽는다.
- * 알파 50% 이상만 남기고 색은 style.color로 채운다 → 안티에일리어싱이 사라져 도트 글자가 된다.
- * 한글은 13px 이상에서 획이 살아남는다(그 아래 크기는 짧은 라틴·숫자에만 쓴다).
+ *
+ * - 글꼴은 Galmuri 픽셀 글꼴을 요청 크기에 가장 가까운 고유 크기(9/11/14 정수배)로 고른다.
+ * - 알파 50% 이상만 남기고 색을 채운 뒤(안티에일리어싱 제거), 잉크 영역만 남기도록 잘라 낸다.
+ *   그래야 textCenter 가 '글자 위/아래 여백'이 아니라 실제 잉크를 기준으로 가운데를 맞춘다.
  */
 function bake(text: string, size: number, color = '#ffffff'): BakedText {
-  const key = `${size}|${color}|${text}`;
+  const face = pixelFaceFor(size);
+  const key = `${face.family}|${face.px}|${color}|${text}`;
   const hit = baked.get(key);
   if (hit) return hit;
   if (!hasDocument()) {
-    const width = Math.max(1, Math.round(text.length * size * 0.62));
-    const fallback = { canvas: null, width, height: size + 2 };
+    const perChar = /[\u3131-\uD7A3]/.test(text) ? face.px : Math.round(face.px * 0.62);
+    const fallback = { canvas: null, width: Math.max(1, text.length * perChar), height: face.ink };
     baked.set(key, fallback);
     return fallback;
   }
   const probe = document.createElement('canvas').getContext('2d');
   if (!probe) return { canvas: null, width: 0, height: size };
-  probe.font = `${size}px ${FONT_STACK}`;
-  const width = Math.max(1, Math.ceil(probe.measureText(text).width) + 2);
-  const height = Math.ceil(size * 1.35) + 2;
+  const font = `${face.px}px ${FONT_STACK}`;
+  probe.font = font;
+  const m = probe.measureText(text);
+  const left = Number.isFinite(m.actualBoundingBoxLeft) ? Math.ceil(m.actualBoundingBoxLeft) : 0;
+  const right = Number.isFinite(m.actualBoundingBoxRight) ? Math.ceil(m.actualBoundingBoxRight) : Math.ceil(m.width);
+  const asc = Number.isFinite(m.actualBoundingBoxAscent) ? Math.ceil(m.actualBoundingBoxAscent) : face.ink;
+  const desc = Number.isFinite(m.actualBoundingBoxDescent) ? Math.ceil(m.actualBoundingBoxDescent) : 0;
+  const pad = 1;
+  const width = Math.max(1, right + left + pad * 2);
+  const height = Math.max(1, asc + desc + pad * 2);
   const canvas = document.createElement('canvas');
   canvas.width = width;
   canvas.height = height;
   const ctx = canvas.getContext('2d');
   if (!ctx) return { canvas: null, width, height };
-  ctx.font = `${size}px ${FONT_STACK}`;
-  ctx.textBaseline = 'top';
+  ctx.font = font;
+  ctx.textBaseline = 'alphabetic';
+  ctx.textAlign = 'left';
   ctx.fillStyle = '#ffffff';
-  ctx.fillText(text, 1, 1);
+  ctx.fillText(text, left + pad, asc + pad);
+
+  // 1비트로 만든다: 알파 50% 미만은 지우고, 남은 픽셀은 지정 색으로 채운다.
   const image = ctx.getImageData(0, 0, width, height);
   const rgb = parseHex(color);
-  for (let i = 0; i < width * height; i++) {
-    const alpha = image.data[i * 4 + 3];
-    if (alpha >= 100) {
-      image.data[i * 4] = rgb[0];
-      image.data[i * 4 + 1] = rgb[1];
-      image.data[i * 4 + 2] = rgb[2];
-      image.data[i * 4 + 3] = 255;
-    } else {
-      image.data[i * 4 + 3] = 0;
+  let minX = width;
+  let minY = height;
+  let maxX = -1;
+  let maxY = -1;
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const i = (y * width + x) * 4;
+      if (image.data[i + 3] >= 100) {
+        image.data[i] = rgb[0];
+        image.data[i + 1] = rgb[1];
+        image.data[i + 2] = rgb[2];
+        image.data[i + 3] = 255;
+        if (x < minX) minX = x;
+        if (y < minY) minY = y;
+        if (x > maxX) maxX = x;
+        if (y > maxY) maxY = y;
+      } else {
+        image.data[i + 3] = 0;
+      }
     }
   }
   ctx.putImageData(image, 0, 0);
-  const result = { canvas, width, height };
+  if (maxX < 0) {
+    // 공백뿐인 문자열: 잉크가 없으니 폭만 돌려준다.
+    const blank = { canvas: null, width: Math.ceil(m.width), height: face.ink };
+    baked.set(key, blank);
+    return blank;
+  }
+  const inkW = maxX - minX + 1;
+  const inkH = maxY - minY + 1;
+  const trimmed = document.createElement('canvas');
+  trimmed.width = inkW;
+  trimmed.height = inkH;
+  const tctx = trimmed.getContext('2d');
+  if (!tctx) return { canvas: null, width: inkW, height: inkH };
+  tctx.drawImage(canvas, minX, minY, inkW, inkH, 0, 0, inkW, inkH);
+  const result = { canvas: trimmed, width: inkW, height: inkH };
   baked.set(key, result);
   return result;
 }
@@ -231,8 +283,8 @@ function parseHex(color: string): [number, number, number] {
 }
 
 /**
- * 도트 글자. 좌표는 아트 px이고 (x, y)는 style.align 기준의 글자 상자 위/아래 중앙이 아니라
- * **글자 위쪽**이다. 모든 위치를 정수 아트 px로 맞춰 반 픽셀 흐림을 만들지 않는다.
+ * 도트 글자. 좌표는 아트 px이고 (x, y)는 style.align 기준의 **글자 잉크 위쪽**이다.
+ * 모든 위치를 정수 아트 px로 맞춰 반 픽셀 흐림을 만들지 않는다.
  */
 export function text(
   g: CanvasRenderingContext2D,
@@ -254,7 +306,7 @@ export function text(
   if (style.weight === 2) g.drawImage(b.canvas, dx + 1, dy, b.width, b.height);
 }
 
-/** 가운데 정렬 글자(세로 중앙 기준). */
+/** 가운데 정렬 글자(잉크 높이의 세로 중앙 기준). */
 export function textCenter(
   g: CanvasRenderingContext2D,
   value: string,
@@ -262,8 +314,8 @@ export function textCenter(
   cy: number,
   style: DotTextStyle = {},
 ): void {
-  const size = style.size ?? 12;
-  text(g, value, cx, cy - (size * 0.75), { ...style, align: 'center' });
+  const b = bake(value, style.size ?? 12, style.color ?? DOT.white);
+  text(g, value, cx, cy - Math.round(b.height / 2), { ...style, align: 'center' });
 }
 
 /** 여러 줄(줄바꿈 문자 기준). */
