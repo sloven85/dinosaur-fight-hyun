@@ -7,7 +7,7 @@ import type { RigData } from '../rig';
 import { Match } from '../../combat/Match';
 import { ScriptInput } from '../../combat/ScriptInput';
 import { parseSpriteManifest, type SpriteManifest } from './SpeciesSprite';
-import { contactFront, contactOffsetArt, contactTipArt } from './ContactAlign';
+import { contactFront, contactGap, contactOffsetArt, contactTipArt, isAreaContact } from './ContactAlign';
 import { PIXEL_ART_SCALE } from './PixelBackground';
 
 /**
@@ -197,6 +197,63 @@ describe('공격 판정 정합(그림 → 판정)', () => {
     expect(contactOffsetArt(match.p1, match.p1.moves.light, manifest)).toBe(0);
     // 회수 구간에서 보정이 줄어든다(단조 증가만 하지 않는다).
     expect(offsets[offsets.length - 1]).toBeLessThan(peak);
+  });
+});
+
+
+describe('12종 × 전 기술 접촉 게이트(그림 → 판정)', () => {
+  const map = folders();
+
+  it('접촉 프레임에서 그림 주둥이 + 보정 = 판정 앞끝 (±1아트px)', () => {
+    const off: string[] = [];
+    for (const character of CHARACTERS) {
+      const manifest = manifestOf(character.id, map);
+      const match = new Match('versus', [character.id, character.id], [realAssets(character.id), realAssets(character.id)]);
+      const idle = new ScriptInput();
+      for (let i = 0; i < ROUND_INTRO_FRAMES; i++) match.step(idle, FIXED_DT);
+      for (const kind of ['light', 'heavy', 'special'] as const) {
+        const move = match.p1.moves[kind];
+        if (isAreaContact(move, match.p1.bodyFront)) continue;
+        const front = contactFront(move, match.p1.bodyFront);
+        const tip = contactTipArt(manifest, kind, move) * PIXEL_ART_SCALE;
+        const push = Math.round(contactGap(match.p1, move, manifest) / PIXEL_ART_SCALE) * PIXEL_ART_SCALE;
+        const delta = tip + push - front;
+        if (Math.abs(delta) > PIXEL_ART_SCALE) off.push(`${character.id}/${kind} ${delta.toFixed(1)}px`);
+      }
+    }
+    expect(off).toEqual([]);
+  });
+
+  it('광역 상자 기술은 그림을 밀지 않는다(몸이 화면 밖으로 나가지 않게)', () => {
+    const pushed: string[] = [];
+    for (const character of CHARACTERS) {
+      const manifest = manifestOf(character.id, map);
+      const match = new Match('versus', [character.id, character.id], [realAssets(character.id), realAssets(character.id)]);
+      const idle = new ScriptInput();
+      for (let i = 0; i < ROUND_INTRO_FRAMES; i++) match.step(idle, FIXED_DT);
+      for (const kind of ['light', 'heavy', 'special'] as const) {
+        const move = match.p1.moves[kind];
+        if (!isAreaContact(move, match.p1.bodyFront)) continue;
+        match.p1.state = 'attack';
+        match.p1.attack = { move, frame: 999 } as unknown as typeof match.p1.attack;
+        const offset = contactOffsetArt(match.p1, move, manifest);
+        if (offset !== 0) pushed.push(`${character.id}/${kind} ${offset}아트px`);
+      }
+      match.p1.state = 'idle';
+      match.p1.attack = null;
+    }
+    expect(pushed).toEqual([]);
+  });
+
+  it('브라키오·안킬로·테리지노·트리케라 특수가 광역 상자로 분류된다', () => {
+    const area: string[] = [];
+    for (const character of CHARACTERS) {
+      const match = new Match('versus', [character.id, 'tyrannosaurus'], [realAssets(character.id), realAssets('tyrannosaurus')]);
+      const idle = new ScriptInput();
+      for (let i = 0; i < ROUND_INTRO_FRAMES; i++) match.step(idle, FIXED_DT);
+      if (isAreaContact(match.p1.moves.special, match.p1.bodyFront)) area.push(character.id);
+    }
+    expect(area.sort()).toEqual(['ankylosaurus', 'brachiosaurus', 'therizinosaurus', 'triceratops']);
   });
 });
 
