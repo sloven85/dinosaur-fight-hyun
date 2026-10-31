@@ -5,6 +5,7 @@ import {
   SPECIAL_READY_LABEL, drawPixelHud, emotionMark, roundPipRects,
 } from './PixelHud';
 import { SELECT_BANNER, TITLE_BANNER_BOTTOM, TITLE_BANNER_TOP, TITLE_TAB_GAP, drawSelectScreen, drawTitleScreen, selectSettingsChip } from './PixelScreens';
+import { dotTextHeight } from './PixelStyle';
 import { DOT, DOT_K_UI } from './PixelStyle';
 import { dotSprites, resetDotSprites } from './DotSprites';
 import { Match } from '../../combat/Match';
@@ -189,9 +190,10 @@ describe('타이틀: 버튼–안내문 간격과 하단 여백', () => {
     const tabH = 26;
     const tabBottom = TITLE_BANNER_TOP - TITLE_TAB_GAP;
     expect(tabBottom + TITLE_TAB_GAP).toBe(TITLE_BANNER_TOP);
-    // textCenter(cy) → 글자 위 = cy - size*0.75, 높이 = ceil(size*1.35) + 2 (PixelStyle.bake).
-    const hintTop = TITLE_BANNER_TOP + 12 - 11 * 0.75;
-    const hintBottom = hintTop + Math.ceil(11 * 1.35) + 2;
+    // textCenter(cy) 는 이제 '잉크 높이'의 절반을 빼서 위쪽을 정한다(PixelStyle.textCenter).
+    const hintHeight = dotTextHeight('위아래 이동', 11);
+    const hintTop = TITLE_BANNER_TOP + 12 - Math.round(hintHeight / 2);
+    const hintBottom = hintTop + hintHeight;
     expect(hintTop - tabBottom, '버튼–안내문 간격').toBeGreaterThanOrEqual(6);
     expect(TITLE_BANNER_BOTTOM - hintBottom, '안내문 아래 여백').toBeGreaterThanOrEqual(6);
     expect(tabH).toBeLessThan(TITLE_BANNER_TOP - 60);
