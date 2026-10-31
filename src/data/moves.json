@@ -532,8 +532,8 @@
         },
         "hits": [
           {
-            "from": 41,
-            "to": 41,
+            "from": 30,
+            "to": 32,
             "target": "held",
             "damage": 2,
             "knockback": 0,
