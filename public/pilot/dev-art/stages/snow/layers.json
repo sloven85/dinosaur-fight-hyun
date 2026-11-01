@@ -1,0 +1,22 @@
+{
+ "stage": "snow",
+ "native": [
+  640,
+  360
+ ],
+ "standLine": 298,
+ "layers": {
+  "far": {
+   "file": "snow_far_960x360.png",
+   "pad": 160
+  },
+  "mid": {
+   "file": "snow_mid_736x360.png",
+   "pad": 48
+  },
+  "ground": {
+   "file": "snow_ground_832x360.png",
+   "pad": 96
+  }
+ }
+}
