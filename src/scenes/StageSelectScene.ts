@@ -19,7 +19,7 @@ const PER_ROW = 4;
 /** 도트 배경이 이미 있는 경기장은 그렇다고 표시한다(없는 곳은 절차적 도트 톤). */
 const DOT_STAGE_NOTE: Record<string, string> = {
   jungle: '도트 배경', volcano: '도트 배경', desert: '도트 톤', museum: '도트 톤',
-  lagoon: '도트 톤', snow: '도트 톤', swamp: '도트 톤', meadow: '도트 톤',
+  lagoon: '도트 배경', snow: '도트 배경', swamp: '도트 배경', meadow: '도트 배경',
 };
 
 export class StageSelectScene extends BaseScene {

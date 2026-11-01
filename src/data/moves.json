@@ -1048,6 +1048,16 @@
       "script": {
         "frames": 104,
         "reach": 140,
+        "clipSpans": [
+          {
+            "from": 30,
+            "to": 70
+          },
+          {
+            "from": 71,
+            "to": 104
+          }
+        ],
         "keys": [
           {
             "f": 0,
@@ -3082,6 +3092,12 @@
       "script": {
         "frames": 146,
         "reach": 160,
+        "clipSpans": [
+          {
+            "from": 0,
+            "to": 97
+          }
+        ],
         "keys": [
           {
             "f": 0,
@@ -3275,6 +3291,10 @@
             "strength": 1.6,
             "x": -900,
             "y": 0
+          },
+          {
+            "f": 97,
+            "type": "end"
           },
           {
             "f": 108,

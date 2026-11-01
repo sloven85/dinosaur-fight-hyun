@@ -9,16 +9,15 @@ import { moveTotalFrames } from './types';
 import { parseSpriteManifest, sampleFighter, SpriteClock, type SpriteManifest } from '../rendering/pixel/SpeciesSprite';
 
 /**
- * 안킬로 특수기 '철벽 반격' 재생 게이트 (게임 제작 마스터 8244623 — "f0~f3만 나오고 f4·f5가 빠진 채 서기로").
+ * 안킬로 특수기 '철벽 반격' 재생 게이트.
  *
- * 원인은 그림이 아니라 스크립트였다: 기술이 `frames:146` 을 선언했는데 97프레임에 `end` 사건이 있어
- * 클립 6장 중 f4·f5(98~146 구간)가 그려질 구간이 잘렸다. 함께 잘려 있던 후속타(109~116)는
- * 반격 성공 실행에서만 들어가도록 `onCounter` 로 잠갔다.
+ * 진단 이력: 첫 수정(8244623)은 `end@97` 을 지워 클립 6장을 살렸지만 **헛휘두름 경직이 97f→146f**
+ * (1.62s→2.43s)로 늘었다. 마스터 판정(2026-11-01)은 "총 길이는 97f를 넘기지 말고 6장은 모두 보이게"다.
  *
- * 고정하는 사실:
- *  1. 헛휘두름(반격 실패)도 선언 프레임을 끝까지 돈다 → 클립 6장이 모두 그려진다.
- *  2. 헛휘두름 피해는 땅 강타 1회뿐 — 후속타·궤적·충격 연출은 반격 성공에서만 터진다.
- *  3. 반격 성공은 success(100)로 건너뛰고 후속타가 f109에 들어간다(기존 동작 불변).
+ * 지금 계약:
+ *  - 헛휘두름은 f96에서 끝난다(97프레임 = 기존 길이). 그림은 `clipSpans: [0,97]` 로 6장을 고르게 재생.
+ *  - 접촉 프레임(80)·피해·사거리·게이트 표 값은 그대로다.
+ *  - 반격 성공은 success(100)로 건너뛰고 후속타가 f109에 들어간다(기존 동작 불변).
  */
 const ROOT = 'dev-art/species';
 
@@ -84,10 +83,11 @@ function specialRun(counter: boolean): Run {
 }
 
 describe('안킬로 특수기 재생', () => {
-  it('헛휘두름도 클립 6장을 끝까지 그린다', () => {
+  it('헛휘두름은 97프레임에서 끝나고 클립 6장을 모두 그린다', () => {
     const run = specialRun(false);
-    // 선언한 146프레임을 실제로 돌았다(예전에는 f96에서 끝나 f4·f5가 잘렸다).
-    expect(run.maxFrame).toBeGreaterThan(140);
+    // 기존 길이(97f)를 넘지 않는다: 마지막으로 돈 프레임이 96(0부터 셈).
+    expect(run.maxFrame).toBe(96);
+    // 그래도 클립 6장(인덱스 0~5)이 모두 화면에 나온다.
     expect(run.framesDrawn).toEqual([22, 23, 24, 25, 26, 27]);
   });
 
@@ -96,6 +96,7 @@ describe('안킬로 특수기 재생', () => {
     expect(run.hitFrames).toHaveLength(1);
     expect(run.hitFrames[0]).toBeGreaterThanOrEqual(80);
     expect(run.hitFrames[0]).toBeLessThanOrEqual(84);
+    expect(run.damage).toBe(7);
   });
 
   it('반격 성공은 후속타가 f109에 들어간다', () => {

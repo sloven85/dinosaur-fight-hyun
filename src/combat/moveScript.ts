@@ -198,8 +198,24 @@ export interface MoveScript {
   passThrough?: boolean;
   overlays?: ScriptOverlay[];
   counter?: ScriptCounter;
+  /**
+   * 그림(클립) 한 사이클을 어느 프레임 구간에 걸쳐 재생할지.
+   *
+   * 기본값은 기술 전체(`frames`)에 걸쳐 재생한다. 그런데 `end` 사건으로 기술이 일찍 끝나거나
+   * 잡기 성공(`grab.success`)·반격 성공(`counter.success`)으로 프레임이 건너뛰는 기술은,
+   * 그 구간이 짧아 클립 뒷장이 화면에 나오지 않는다(안킬로 특수 f4·f5, 트리케라 강 4장 중 3장).
+   * 이 구간을 적으면 그 프레임 안에서 클립 처음~끝을 고르게 재생한다 — 그림만의 문제이고
+   * 판정·피해·사거리·접촉 프레임은 건드리지 않는다.
+   */
+  clipSpans?: ClipSpan[];
   /** CPU 사거리 판단용 도달 거리(중심에서, px). */
   reach: number;
+}
+
+/** 클립을 한 사이클 끝까지 재생할 프레임 구간(양끝 포함). */
+export interface ClipSpan {
+  from: number;
+  to: number;
 }
 
 /** 진행 중 스크립트 상태(공격 1회분). */
@@ -312,6 +328,14 @@ export function sampleChannel(script: MoveScript, channel: Channel, frame: numbe
   return sampleWith(script.keys, frame, (k) => channelValue(k, channel), DEFAULTS[channel]);
 }
 
+/** 이 프레임이 속한 클립 재생 구간(없으면 클립은 기술 전체 길이에 걸쳐 재생된다). */
+export function clipSpanAt(script: MoveScript | undefined, frame: number): ClipSpan | null {
+  for (const span of script?.clipSpans ?? []) {
+    if (frame >= span.from && frame <= span.to) return span;
+  }
+  return null;
+}
+
 export function hasChannel(script: MoveScript, channel: Channel): boolean {
   return script.keys.some((k) => channelValue(k, channel) !== undefined);
 }
@@ -355,6 +379,13 @@ export function validateScript(id: string, script: MoveScript): string[] {
   }
   for (const o of script.overlays ?? []) {
     if (o.from > o.to) errors.push(`${id}: 덧그림 구간 from>to`);
+  }
+  let lastSpanTo = -1;
+  for (const span of script.clipSpans ?? []) {
+    if (!(span.from < span.to)) errors.push(`${id}: 클립 구간 from>=to`);
+    if (span.to > script.frames) errors.push(`${id}: 클립 구간 ${span.to} > frames ${script.frames}`);
+    if (span.from <= lastSpanTo) errors.push(`${id}: 클립 구간이 겹치거나 순서가 뒤집혔다`);
+    lastSpanTo = span.to;
   }
   if (script.grab) {
     const g = script.grab;

@@ -1,4 +1,5 @@
 import type { Fighter } from '../../combat/Fighter';
+import { clipSpanAt } from '../../combat/moveScript';
 import { moveTotalFrames, type MoveData } from '../../combat/types';
 
 /**
@@ -278,8 +279,13 @@ export class SpriteClock {
 export function sampleFighter(manifest: SpriteManifest, fighter: Fighter, clock: SpriteClock): SpriteSample {
   const { state, tick } = clock.read(fighter);
   const move = fighter.state === 'attack' ? fighter.attack?.move : undefined;
+  const frame = fighter.attack?.frame ?? 0;
+  // 기술이 선언한 구간이 있으면 그 구간 안에서 클립 한 사이클을 처음~끝 고르게 재생한다
+  // (end·잡기 점프로 짧아진 구간에서도 클립 뒷장이 나오게). 없으면 기술 전체 길이 기준.
+  const span = fighter.state === 'attack' ? clipSpanAt(move?.script, frame) : null;
+  if (span) return sampleSpriteClip(manifest, state, frame - span.from, span.to - span.from);
   const stretch = stretchTargetFor(fighter, move);
-  if (stretch) return sampleSpriteClip(manifest, state, fighter.attack!.frame, stretch);
+  if (stretch) return sampleSpriteClip(manifest, state, frame, stretch);
   return sampleSpriteClip(manifest, state, tick);
 }
 

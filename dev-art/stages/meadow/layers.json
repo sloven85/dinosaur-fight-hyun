@@ -1,0 +1,22 @@
+{
+ "stage": "meadow",
+ "native": [
+  640,
+  360
+ ],
+ "standLine": 298,
+ "layers": {
+  "far": {
+   "file": "meadow_far_960x360.png",
+   "pad": 160
+  },
+  "mid": {
+   "file": "meadow_mid_736x360.png",
+   "pad": 48
+  },
+  "ground": {
+   "file": "meadow_ground_832x360.png",
+   "pad": 96
+  }
+ }
+}
