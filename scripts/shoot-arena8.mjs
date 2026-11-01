@@ -17,6 +17,9 @@ mkdirSync(outDir, { recursive: true });
 const STAGES = ['jungle', 'volcano', 'desert', 'museum', 'lagoon', 'snow', 'swamp', 'meadow'];
 const CHROME = process.env.CHROME_PATH ?? '/usr/bin/google-chrome';
 const PORT = 9334;
+// 매 실행마다 새 프로필을 쓴다 — 이전 실행의 HTTP 캐시(특히 404)가 남아 있으면
+// 새로 넣은 dev-art 레이어를 못 받아 절차적 배경으로 찍힌다(2026-11-01 실제로 겪음).
+const PROFILE = `/tmp/arena8-profile-${process.pid}`;
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 async function launch() {
@@ -29,7 +32,7 @@ async function launch() {
     '--no-first-run',
     '--no-sandbox',
     '--disable-gpu',
-    '--user-data-dir=/tmp/arena8-profile',
+    `--user-data-dir=${PROFILE}`,
     'about:blank',
   ], { stdio: ['ignore', 'ignore', 'pipe'] });
   child.stderr.on('data', () => {});

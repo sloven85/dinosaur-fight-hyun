@@ -53,7 +53,7 @@ export function layerRef(value: PixelLayerRef | string): PixelLayerRef {
  * 이 목록은 `dev-art/stages/<id>/layers.json`이 있는 폴더와 정확히 같아야 하고,
  * `stageLayers.test.ts`가 디스크와 대조해 어긋나면 실패한다(아트가 늘면 목록도 같이 는다).
  */
-export const DOT_STAGE_LAYER_ART: readonly string[] = ['jungle', 'volcano', 'lagoon', 'snow', 'swamp', 'meadow'];
+export const DOT_STAGE_LAYER_ART: readonly string[] = ['jungle', 'volcano', 'desert', 'museum', 'lagoon', 'snow', 'swamp', 'meadow'];
 
 export function hasDotStageLayers(stage: string): boolean {
   return DOT_STAGE_LAYER_ART.includes(stage);

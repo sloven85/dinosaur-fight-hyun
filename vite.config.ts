@@ -11,12 +11,19 @@ import { defineConfig, type Plugin } from 'vite';
 const allowedHosts = ['.sspark.ai'];
 
 /**
- * public/assets 와 public/dev-art 아래 모든 파일의 내용으로 하나의 버전 해시를 만든다.
+ * public/assets · public/dev-art · dev-art(원본) 아래 모든 파일의 내용으로 하나의 버전 해시를 만든다.
  * 이 값을 에셋 URL 뒤에 `?v=`로 붙이면, 같은 경로의 파일을 교체해도 URL이
  * 바뀌어 브라우저·엣지 캐시(1년 max-age)가 옛 바이트를 계속 쓰는 문제가 없어진다.
  */
 function computeAssetVersion(): string {
-  const roots = [join(process.cwd(), 'public', 'assets'), join(process.cwd(), 'public', 'dev-art')];
+  // dev-art 는 build:pilot 이 빌드 **뒤에** dist 로 복사하므로 public/dev-art 만 보면 도트 아트를
+  // 갈아 끼워도 버전이 그대로다 → 같은 경로의 layers.json·PNG 가 브라우저 캐시(404 포함)에 남는다.
+  // 원본 폴더까지 해시에 넣어야 아트를 바꿀 때 URL 이 바뀐다.
+  const roots = [
+    join(process.cwd(), 'public', 'assets'),
+    join(process.cwd(), 'public', 'dev-art'),
+    join(process.cwd(), 'dev-art'),
+  ];
   const hash = createHash('sha1');
   const walk = (root: string, dir: string): void => {
     for (const name of readdirSync(dir).sort()) {

@@ -78,3 +78,29 @@ node scripts/shoot-arena8.mjs http://127.0.0.1:5199/ evidence-arena8
   또렷한 이중 경계를 만들지는 않는다. 최종 판정은 마스터.
 - 고칠 경우 범위: `dev-art/stages/volcano/volcano_mid_736x360.png` 한 장(295~297행 채우기).
   코드·판정·다른 경기장은 불변.
+
+## 인테이크 결과 (2026-11-01)
+
+납품 `dino_arena_desert_museum_layers_v1.zip`(8273977, 4.4MB) → `desert`, `museum` 6파일 전부 규격 PASS
+(960×360 RGB 불투명 / 736·832×360 RGBA 이진, 중경 끝행 298·지면 298~359, 레이어당 28색, 마젠타 0).
+`--write` 로 `dev-art/stages/{desert,museum}/` + `layers.json` 투입, 코드 두 줄 수정.
+납품 이름이 이미 게임 id와 같아 `--map` 은 쓰지 않았다. `*_x4.png`·합성본·아티스트 `layers.json`(scrollX 등)은
+게임 계약이 아니라 넣지 않았다(시차 0.25/0.60/1.00 은 엔진 `LAYER_PARALLAX` 와 같은 값).
+
+검증: `vitest` **769/769**, `tsc` OK, 접촉 게이트 **36/36 PASS**(`docs/contact-gate-20261031.md` diff 0),
+`build:pilot` 성공, 8곳 캡처 재촬영 → `evidence-arena8/arena8-sheet.png`.
+
+### 도중에 드러난 결함 — 새 아트가 안 뜨고 절차적 배경이 찍혔다
+
+첫 캡처에서 사막·박물관만 절차적 도트 그대로였다. 원인은 아트가 아니라 **브라우저 캐시**:
+`ASSET_VERSION` 해시가 `public/assets`·`public/dev-art` 만 훑는데 `dev-art` 는 빌드 **뒤에** dist 로
+복사되므로 버전이 바뀌지 않는다 → 직전 세션에서 받은 `dev-art/stages/<id>/layers.json` 의 **404 가
+같은 URL(`?v=…`)로 캐시**되어 새 파일을 요청하지 않았다. 캡처용 크롬 프로필(`/tmp/arena8-profile`)도 재사용됐다.
+
+수정 2건:
+1. `vite.config.ts` — 해시 대상에 저장소 루트 `dev-art/` 추가. 아트를 갈아 끼우면 URL 이 바뀐다.
+   (`find` 순서는 정렬 순회라 결정적이다.)
+2. `scripts/shoot-arena8.mjs` — 실행마다 새 프로필(`/tmp/arena8-profile-<pid>`).
+
+재빌드 후 8곳 재촬영 → 사막·박물관 모두 아트 표시. **배포 시에도 같은 함정이 있다**: 이전에 `/pilot/` 을
+열어 404 를 받은 브라우저는 새 빌드의 버전이 바뀌어야 새 레이어를 받는다(이번 수정으로 해소).
