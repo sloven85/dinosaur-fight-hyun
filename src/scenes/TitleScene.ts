@@ -7,6 +7,8 @@ import { SettingsScene } from './SettingsScene';
 import { drawButton, drawText } from '../ui/draw';
 import { moveListIndex } from '../ui/menu';
 import { COLORS, FONTS } from '../ui/theme';
+import { dotUiEnabled } from '../rendering/pixel/pilotFlag';
+import { drawTitleScreen } from '../rendering/pixel/PixelScreens';
 
 interface TitleOption {
   label: string;
@@ -15,6 +17,8 @@ interface TitleOption {
 
 /** 계획서 1절 시작 화면. 시작·어른 설정, 그리고 소리가 막혔을 때 소리 켜기 버튼. */
 export class TitleScene extends BaseScene {
+  /** 캡처 스크립트·진단용 고정 이름(번들에서 클래스 이름이 압축되어도 유지). */
+  readonly sceneId = 'TitleScene';
   private elapsed = 0;
   private index = 0;
 
@@ -48,12 +52,30 @@ export class TitleScene extends BaseScene {
     const options = this.options;
     if (this.index >= options.length) this.index = 0;
 
-    if (input.anyPressed('up')) this.index = moveListIndex(this.index, options.length, -1);
-    if (input.anyPressed('down')) this.index = moveListIndex(this.index, options.length, 1);
+    if (input.anyPressed('up') || input.anyPressed('left')) this.index = moveListIndex(this.index, options.length, -1);
+    if (input.anyPressed('down') || input.anyPressed('right')) this.index = moveListIndex(this.index, options.length, 1);
     if (input.anyPressed('confirm')) options[this.index].run();
   }
 
   render(g: CanvasRenderingContext2D, width: number, height: number): void {
+    // 도트 화면: 아티스트 보드 위에 도트 글자·탭만 얹는다(벡터 UI 없음).
+    if (dotUiEnabled(import.meta.env.DEV, typeof location === 'undefined' ? '' : location.search)) {
+      const seen = this.context.input.connectedPadCount;
+      drawTitleScreen(g, {
+        loader: this.context.assets,
+        options: this.options.map((option) => option.label),
+        index: this.index,
+        padHint: this.context.input.padBlocked
+          ? '브라우저가 패드를 막았습니다 · 게임 주소를 새 탭에서 열어 주세요'
+          : seen === 0 ? '패드: 아직 안 보임 · 패드 버튼을 한 번 눌러 주세요'
+                    : `패드 ${seen}개 보임 · 아래쪽 얼굴 버튼으로 참가`,
+        p1: padLabel(this.context.input.padIndex(0)),
+        p2: padLabel(this.context.input.padIndex(1)),
+        controls: '위아래·좌우 이동 · 확인 F(1P)/J(2P) · 일시정지 Esc',
+        sound: this.soundLabel(),
+      });
+      return;
+    }
     g.fillStyle = COLORS.bg;
     g.fillRect(0, 0, width, height);
 

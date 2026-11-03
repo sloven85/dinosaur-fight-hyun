@@ -532,8 +532,8 @@
         },
         "hits": [
           {
-            "from": 41,
-            "to": 41,
+            "from": 30,
+            "to": 32,
             "target": "held",
             "damage": 2,
             "knockback": 0,
@@ -1048,6 +1048,16 @@
       "script": {
         "frames": 104,
         "reach": 140,
+        "clipSpans": [
+          {
+            "from": 30,
+            "to": 70
+          },
+          {
+            "from": 71,
+            "to": 104
+          }
+        ],
         "keys": [
           {
             "f": 0,
@@ -3082,6 +3092,12 @@
       "script": {
         "frames": 146,
         "reach": 160,
+        "clipSpans": [
+          {
+            "from": 0,
+            "to": 97
+          }
+        ],
         "keys": [
           {
             "f": 0,
@@ -3257,6 +3273,7 @@
             },
             "knockdown": 60,
             "unguardable": true,
+            "onCounter": true,
             "fx": "special"
           }
         ],
@@ -3293,6 +3310,7 @@
             "noTrail": true,
             "spin": 0,
             "fade": true,
+            "onCounter": true,
             "damage": 0,
             "knockback": 0,
             "hitstun": 0,
@@ -3302,13 +3320,15 @@
             "f": 112,
             "type": "fx",
             "fx": "shake",
-            "strength": 2
+            "strength": 2,
+            "onCounter": true
           },
           {
             "f": 112,
             "type": "fx",
             "fx": "flash",
-            "strength": 1.4
+            "strength": 1.4,
+            "onCounter": true
           }
         ]
       }

@@ -1,5 +1,13 @@
 import './style.css';
 import { Game } from './core/Game';
+import { ensurePixelFonts } from './rendering/pixel/PixelFont';
+import { clearBakedText } from './rendering/pixel/PixelStyle';
+
+// 도트 글꼴(Galmuri 9/11/14)을 먼저 적용한다. 글꼴이 도착하면 폴백 글꼴로 구워 둔 글자 캐시를
+// 비워 다음 프레임부터 픽셀 글자로 다시 그린다(그 전 프레임은 짧게 폴백 글자로 보일 수 있다).
+void ensurePixelFonts().then((ok) => {
+  if (ok) clearBakedText();
+});
 
 const canvas = document.querySelector<HTMLCanvasElement>('#game');
 if (!canvas) {

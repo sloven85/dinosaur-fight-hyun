@@ -15,6 +15,12 @@ import { BaseScene } from './BaseScene';
 import { ResultScene } from './ResultScene';
 import { drawText, fillRoundRect } from '../ui/draw';
 import { COLORS, FONTS } from '../ui/theme';
+import type { PixelPilot } from '../rendering/pixel/PixelPilot';
+import { DOT_PILOT_BUILD } from '../rendering/pixel/pilotFlag';
+import type { SpriteStage } from '../rendering/pixel/SpriteStage';
+import { drawPixelCallout, drawPixelHud } from '../rendering/pixel/PixelHud';
+import { dotSprites } from '../rendering/pixel/DotSprites';
+import { DOT } from '../rendering/pixel/PixelStyle';
 
 const HUD_BAR_W = 700;
 const HUD_BAR_H = 42;
@@ -36,6 +42,8 @@ const LOGO_KO = 'assets/ui/logo_ko.png';
 
 /** 계획서 16절 프롬프트 6: 대전 화면. 전투 규칙은 Match, 보이는 모양은 FighterRenderer·EffectSystem이 맡는다. */
 export class BattleScene extends BaseScene {
+  /** 캡처 스크립트·진단용 고정 이름(번들에서 클래스 이름이 압축되어도 유지). */
+  readonly sceneId = 'BattleScene';
   readonly pausable = true;
 
   private match!: Match;
@@ -60,6 +68,9 @@ export class BattleScene extends BaseScene {
   private announcedFight = 0;
   private finishX = 960;
   private finishY = 600;
+  private pixelPilot: PixelPilot | null = null;
+  private spriteStage: SpriteStage | null = null;
+  private disposed = false;
 
   constructor(private readonly characterAssets: [CharacterAssets, CharacterAssets] | null = null) {
     super();
@@ -67,6 +78,23 @@ export class BattleScene extends BaseScene {
 
   enter(context: GameContext): void {
     super.enter(context);
+    this.disposed = false;
+    if (import.meta.env.DEV && typeof location !== 'undefined' && new URLSearchParams(location.search).get('pixelPilot') === '1') {
+      void import('../rendering/pixel/PixelPilot').then(({ PixelPilot }) => {
+        if (!this.disposed) this.pixelPilot = new PixelPilot(context.assets);
+      });
+    }
+    // 12종 도트 재생기. 파일럿 빌드에서는 기본, 개발 서버에서는 ?pixelStage=1.
+    // 두 상수 모두 빌드 시 값으로 인라인되므로, 공개 베타 빌드에서는 이 분기와
+    // SpriteStage 청크가 통째로 빠진다(조건을 함수 호출로 감싸면 청크가 남는다).
+    const dotView = DOT_PILOT_BUILD ||
+      (import.meta.env.DEV && typeof location !== 'undefined' &&
+        new URLSearchParams(location.search).get('pixelStage') === '1');
+    if (dotView) {
+      void import('../rendering/pixel/SpriteStage').then(({ SpriteStage }) => {
+        if (!this.disposed) this.spriteStage = new SpriteStage(context.assets);
+      });
+    }
     const { session, settings } = context;
     this.elapsed = 0;
     this.effects.clear();
@@ -92,6 +120,11 @@ export class BattleScene extends BaseScene {
   }
 
   exit(): void {
+    this.disposed = true;
+    this.pixelPilot?.dispose();
+    this.pixelPilot = null;
+    this.spriteStage?.dispose();
+    this.spriteStage = null;
     this.context.audio.stopBgm();
   }
 
@@ -102,6 +135,10 @@ export class BattleScene extends BaseScene {
     this.elapsed += dt;
 
     if (input.consumeDebugToggle()) this.debugBoxes = !this.debugBoxes;
+    if ((this.pixelPilot && !this.pixelPilot.effects) || (this.spriteStage && !this.spriteStage.effects)) {
+      this.shakeFrames = this.flashFrames = this.finishFrames = this.koFrames = 0;
+      this.effects.clear();
+    }
 
     // 마무리 한 방: 0.15초 멈추고 화면을 살짝 확대한다(그동안 경기는 멈춘다).
     if (this.finishFrames > FINISH_ZOOM_FRAMES) {
@@ -120,9 +157,23 @@ export class BattleScene extends BaseScene {
       }
     }
 
+    const pixelFrozen = this.match.fighters.map(f => f.hitstopFrames > 0 || this.match.cutinFrames > 0);
     this.match.step(input, dt);
+    this.pixelPilot?.step(this.match, pixelFrozen);
+    this.spriteStage?.step(this.match, pixelFrozen);
     // 개발 서버 전용: ?devko=1이면 2P 체력을 1로(KO 연출 확인용). 배포 빌드에는 들어가지 않는다.
     if (import.meta.env.DEV && typeof location !== 'undefined' && location.search.includes('devko=1') && this.match.phase === 'fight') {
+      this.match.p2.health = Math.min(this.match.p2.health, 1);
+    }
+    // 파일럿 빌드: 캡처 스크립트가 '싸움 시작' 시점을 알 수 있게 상태만 노출한다.
+    if (DOT_PILOT_BUILD && typeof window !== 'undefined') {
+      (window as unknown as { __dotPhase?: string }).__dotPhase = this.match.phase;
+      (window as unknown as { __dotHealth?: number[] }).__dotHealth =
+        this.match.fighters.map((fighter) => fighter.health);
+    }
+    // 파일럿 빌드 캡처용: ?koShot=1이면 KO 연출·결과 화면까지 한 번에 찍을 수 있게 2P 체력을 1로.
+    // 공개 베타 빌드에서는 DOT_PILOT_BUILD가 false로 인라인되어 이 분기가 사라진다.
+    if (DOT_PILOT_BUILD && typeof location !== 'undefined' && location.search.includes('koShot=1') && this.match.phase === 'fight') {
       this.match.p2.health = Math.min(this.match.p2.health, 1);
     }
     // 개발 서버 전용: 확인용으로 현재 상태를 창에 노출(배포 빌드에는 없음).
@@ -134,7 +185,7 @@ export class BattleScene extends BaseScene {
       };
     }
     this.consumeMatchEvents(stage.groundY, settings.screenShake, settings.vibration);
-    this.spawnLandingDust(stage.groundY);
+    if (effectsOn(this.pixelPilot, this.spriteStage)) this.spawnLandingDust(stage.groundY);
     this.effects.update(dt);
     if (this.shakeFrames > 0) this.shakeFrames -= 1;
     if (this.flashFrames > 0) this.flashFrames -= 1;
@@ -153,7 +204,7 @@ export class BattleScene extends BaseScene {
         this.context.audio.playSfx('ann_fight');
       }
     }
-    if (this.match.phase === 'roundOver' && this.prevPhase === 'fight') {
+    if (this.match.phase === 'roundOver' && this.prevPhase === 'fight' && effectsOn(this.pixelPilot, this.spriteStage)) {
       this.onRoundFinished(stage.groundY);
     }
     if (this.match.phase === 'matchOver') {
@@ -167,6 +218,12 @@ export class BattleScene extends BaseScene {
 
   /** Match가 남긴 연출 이벤트를 먼지·별·충격파·소리·진동으로 바꾼다(피해와 무관). */
   private consumeMatchEvents(groundY: number, screenShake: boolean, vibration: boolean): void {
+    if ((this.pixelPilot && !this.pixelPilot.effects) || (this.spriteStage && !this.spriteStage.effects)) {
+      this.match.consumeEvents();
+      this.effects.clear();
+      this.shakeFrames = this.flashFrames = this.finishFrames = this.koFrames = 0;
+      return;
+    }
     for (const event of this.match.consumeEvents()) {
       const y = groundY + event.y;
       if (event.type === 'fx') {
@@ -368,12 +425,20 @@ export class BattleScene extends BaseScene {
     }
 
     const focusX = (this.match.p1.x + this.match.p2.x) / 2;
-    renderStage(g, stage, width, height, this.elapsed, focusX);
+    // 도트 배경 3레이어가 준비된 무대는 정수배·타일로 그리고, 없으면 기존 배경을 쓴다.
+    // 빌드 상수를 식에 넣어 공개 베타 번들에서는 이 경로가 통째로 사라지게 한다
+    // (파일럿 빌드에서 빠지면 캐릭터만 도트, 배경만 그림체가 되어 섞인다).
+    const dotBackground = DOT_PILOT_BUILD || import.meta.env.DEV;
+    const pixelBackground = dotBackground &&
+      !!this.spriteStage?.renderBackground(g, stage.id, stage.groundY, focusX, width, height);
+    if (!pixelBackground) renderStage(g, stage, width, height, this.elapsed, focusX);
 
     // 잡힌 쪽은 잡은 쪽 뒤에 그린다(입에 물린 것처럼).
     const order = drawOrder(this.match.fighters);
     for (const fighter of order) {
-      renderFighter(g, fighter, stage.groundY, this.elapsed);
+      if (!this.spriteStage?.render(g, fighter, stage.groundY) && !this.pixelPilot?.render(g, fighter, stage.groundY)) {
+        renderFighter(g, fighter, stage.groundY, this.elapsed, effectsOn(this.pixelPilot, this.spriteStage));
+      }
     }
     for (const projectile of this.match.projectiles) {
       this.renderProjectile(g, projectile, stage.groundY);
@@ -393,7 +458,7 @@ export class BattleScene extends BaseScene {
     }
 
     this.renderHud(g, width);
-    this.renderCutin(g, width, height);
+    if (effectsOn(this.pixelPilot, this.spriteStage)) this.renderCutin(g, width, height);
     this.renderRoundText(g, width, height);
 
     if (this.debugBoxes) {
@@ -408,6 +473,18 @@ export class BattleScene extends BaseScene {
 
   private renderHud(g: CanvasRenderingContext2D, width: number): void {
     const [p1, p2] = this.match.fighters;
+    // 도트 재생기가 켜진 화면은 HUD도 같은 격자·같은 팔레트로 그린다(벡터 HUD가 한 화면도 남지 않게).
+    if (this.spriteStage) {
+      drawPixelHud(g, width, 1080, {
+        p1,
+        p2,
+        timeLeft: this.match.timeLeftSeconds,
+        difficulty: this.match.difficulty,
+        assist: this.match.assistActive,
+        sprites: dotSprites(this.context.assets),
+      });
+      return;
+    }
 
     // 도움 설정으로 최대 체력이 달라질 수 있어 data.baseHealth가 아니라 maxHealth로 나눈다.
     renderBar(g, 60, 60, HUD_BAR_W, HUD_BAR_H, p1.health / p1.maxHealth, COLORS.health, false);
@@ -554,6 +631,10 @@ export class BattleScene extends BaseScene {
 
   private renderRoundText(g: CanvasRenderingContext2D, width: number, height: number): void {
     const { phase, phaseFrames } = this.match;
+    if (this.spriteStage) {
+      this.renderRoundTextPixel(g, width, height, phase, phaseFrames);
+      return;
+    }
 
     if (phase === 'intro') {
       // ROUND N(0~54틱) → FIGHT!(55틱~). 아티스트 로고가 있으면 로고, 없으면 글자.
@@ -622,6 +703,38 @@ export class BattleScene extends BaseScene {
     if (phase === 'matchOver') {
       const label = this.match.matchWinner === null ? '무승부' : `${this.match.matchWinner + 1}P 승리`;
       drawText(g, label, width / 2, height / 2 - 140, { font: FONTS.heading, color: COLORS.text });
+    }
+  }
+
+  /** 도트 화면의 라운드/승부 글자. 로고 이미지·회전·확대 대신 도트 판과 글자만 쓴다. */
+  private renderRoundTextPixel(
+    g: CanvasRenderingContext2D,
+    width: number,
+    height: number,
+    phase: string,
+    phaseFrames: number,
+  ): void {
+    if (phase === 'intro') {
+      const fight = phaseFrames >= 55;
+      drawPixelCallout(g, width, height, fight ? '시작!' : `라운드 ${this.match.roundNumber}`, '', fight ? DOT.p1 : DOT.gold);
+      return;
+    }
+    if (this.koLogoAt >= 0 && this.elapsed - this.koLogoAt < 1.6) {
+      drawPixelCallout(g, width, height, 'K.O.', '', DOT.p1);
+      return;
+    }
+    if (phase === 'roundOver') {
+      drawPixelCallout(
+        g, width, height,
+        this.match.roundWinner === null ? '무승부' : `${this.match.roundWinner + 1}P 라운드 승리`,
+      );
+      return;
+    }
+    if (phase === 'matchOver') {
+      drawPixelCallout(
+        g, width, height,
+        this.match.matchWinner === null ? '무승부' : `${this.match.matchWinner + 1}P 승리`,
+      );
     }
   }
 
@@ -727,3 +840,10 @@ function renderBar(
 }
 
 export type { Fighter };
+
+/** 도트 비교판이 연출을 끄면 이펙트·컷인도 함께 끈다. 비교판이 없으면 배포와 같은 동작. */
+function effectsOn(pilot: PixelPilot | null, stage: SpriteStage | null): boolean {
+  if (stage) return stage.effects;
+  if (pilot) return pilot.effects;
+  return true;
+}

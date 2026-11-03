@@ -89,6 +89,11 @@ export interface ScriptHit extends HitParams {
   /** target=held면 상자 대신 잡고 있는 상대에게 바로 들어간다(물고 흔들기). */
   target?: 'box' | 'held';
   box?: ScriptBox;
+  /**
+   * 반격이 성공한 실행에서만 들어가는 판정. 반격 구간(script.counter)을 넘겨
+   * 헛휘두름으로 이어진 실행에서는 피해·발사체가 없고 그림만 끝까지 돈다.
+   */
+  onCounter?: boolean;
 }
 
 export interface ScriptGrab {
@@ -153,9 +158,14 @@ export interface ScriptCounter {
   success: number;
 }
 
+/** 반격 성공 실행에서만 터지는 사건. 헛휘두름 실행에서는 건너뛴다. */
+export interface CounterGate {
+  onCounter?: boolean;
+}
+
 export type ScriptEvent =
-  | ({ f: number; type: 'projectile' } & ProjectileSpec)
-  | {
+  | ({ f: number; type: 'projectile' } & ProjectileSpec & CounterGate)
+  | ({
       f: number;
       type: 'throw';
       vx: number;
@@ -164,9 +174,9 @@ export type ScriptEvent =
       knockdown: number;
       /** true면 뒤로 넘긴다(위치 바꾸기). */
       behind?: boolean;
-    }
+    } & CounterGate)
   | { f: number; type: 'swap' }
-  | {
+  | ({
       f: number;
       type: 'fx';
       fx: 'shake' | 'dust' | 'shockwave' | 'splash' | 'flash' | 'slash' | 'feathers';
@@ -174,7 +184,7 @@ export type ScriptEvent =
       /** 몸 앞끝 기준 위치. */
       x?: number;
       y?: number;
-    }
+    } & CounterGate)
   | { f: number; type: 'end' };
 
 export interface MoveScript {
@@ -188,8 +198,24 @@ export interface MoveScript {
   passThrough?: boolean;
   overlays?: ScriptOverlay[];
   counter?: ScriptCounter;
+  /**
+   * 그림(클립) 한 사이클을 어느 프레임 구간에 걸쳐 재생할지.
+   *
+   * 기본값은 기술 전체(`frames`)에 걸쳐 재생한다. 그런데 `end` 사건으로 기술이 일찍 끝나거나
+   * 잡기 성공(`grab.success`)·반격 성공(`counter.success`)으로 프레임이 건너뛰는 기술은,
+   * 그 구간이 짧아 클립 뒷장이 화면에 나오지 않는다(안킬로 특수 f4·f5, 트리케라 강 4장 중 3장).
+   * 이 구간을 적으면 그 프레임 안에서 클립 처음~끝을 고르게 재생한다 — 그림만의 문제이고
+   * 판정·피해·사거리·접촉 프레임은 건드리지 않는다.
+   */
+  clipSpans?: ClipSpan[];
   /** CPU 사거리 판단용 도달 거리(중심에서, px). */
   reach: number;
+}
+
+/** 클립을 한 사이클 끝까지 재생할 프레임 구간(양끝 포함). */
+export interface ClipSpan {
+  from: number;
+  to: number;
 }
 
 /** 진행 중 스크립트 상태(공격 1회분). */
@@ -302,6 +328,14 @@ export function sampleChannel(script: MoveScript, channel: Channel, frame: numbe
   return sampleWith(script.keys, frame, (k) => channelValue(k, channel), DEFAULTS[channel]);
 }
 
+/** 이 프레임이 속한 클립 재생 구간(없으면 클립은 기술 전체 길이에 걸쳐 재생된다). */
+export function clipSpanAt(script: MoveScript | undefined, frame: number): ClipSpan | null {
+  for (const span of script?.clipSpans ?? []) {
+    if (frame >= span.from && frame <= span.to) return span;
+  }
+  return null;
+}
+
 export function hasChannel(script: MoveScript, channel: Channel): boolean {
   return script.keys.some((k) => channelValue(k, channel) !== undefined);
 }
@@ -345,6 +379,13 @@ export function validateScript(id: string, script: MoveScript): string[] {
   }
   for (const o of script.overlays ?? []) {
     if (o.from > o.to) errors.push(`${id}: 덧그림 구간 from>to`);
+  }
+  let lastSpanTo = -1;
+  for (const span of script.clipSpans ?? []) {
+    if (!(span.from < span.to)) errors.push(`${id}: 클립 구간 from>=to`);
+    if (span.to > script.frames) errors.push(`${id}: 클립 구간 ${span.to} > frames ${script.frames}`);
+    if (span.from <= lastSpanTo) errors.push(`${id}: 클립 구간이 겹치거나 순서가 뒤집혔다`);
+    lastSpanTo = span.to;
   }
   if (script.grab) {
     const g = script.grab;

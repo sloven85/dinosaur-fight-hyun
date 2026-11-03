@@ -1,5 +1,6 @@
 import type { AudioManager } from '../audio/AudioManager';
 import { SCENE_INPUT_BLOCK_FRAMES } from '../core/constants';
+import { DOT_PILOT_BUILD } from '../rendering/pixel/pilotFlag';
 import type { GameContext } from '../core/GameContext';
 import type { Session } from '../core/session';
 import type { SettingsStore } from '../core/settings';
@@ -41,6 +42,11 @@ export class SceneManager {
   }
 
   update(dt: number): void {
+    // 파일럿 빌드: 캡처 스크립트가 화면 전환을 확인할 수 있게 현재 화면 이름만 노출한다.
+    if (DOT_PILOT_BUILD && typeof window !== 'undefined') {
+      (window as unknown as { __dotScene?: string }).__dotScene =
+        (this.current as unknown as { sceneId?: string })?.sceneId ?? '';
+    }
     this.current?.update(dt, this.context);
   }
 

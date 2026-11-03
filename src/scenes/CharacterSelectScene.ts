@@ -7,9 +7,12 @@ import { StageSelectScene } from './StageSelectScene';
 import { drawText, fillRoundRect } from '../ui/draw';
 import { moveGridIndex } from '../ui/menu';
 import { COLORS, FONTS } from '../ui/theme';
+import { dotUiEnabled } from '../rendering/pixel/pilotFlag';
+import { drawSelectScreen } from '../rendering/pixel/PixelScreens';
 
-const ROWS = 3;
-const COLS = 4;
+/** 아티스트 도트 보드의 빈 슬롯 배치(6열 2행)와 같은 격자. */
+const ROWS = 2;
+const COLS = 6;
 const CELL_COUNT = ROWS * COLS;
 
 const CELL_W = 240;
@@ -25,6 +28,8 @@ interface PlayerPick {
 
 /** 계획서 1절: 3행 4열 공룡 카드, 1P와 2P 표시. */
 export class CharacterSelectScene extends BaseScene {
+  /** 캡처 스크립트·진단용 고정 이름(번들에서 클래스 이름이 압축되어도 유지). */
+  readonly sceneId = 'CharacterSelectScene';
   private readonly picks: [PlayerPick, PlayerPick] = [
     { cursor: 0, locked: false },
     { cursor: 1, locked: false },
@@ -105,6 +110,10 @@ export class CharacterSelectScene extends BaseScene {
   }
 
   render(g: CanvasRenderingContext2D, width: number, height: number): void {
+    if (dotUiEnabled(import.meta.env.DEV, typeof location === 'undefined' ? '' : location.search)) {
+      this.renderDot(g);
+      return;
+    }
     g.fillStyle = COLORS.bg;
     g.fillRect(0, 0, width, height);
 
@@ -139,6 +148,36 @@ export class CharacterSelectScene extends BaseScene {
 
     this.renderSettingsPanel(g);
     this.renderStatus(g, width);
+  }
+
+  /** 도트 선택 화면: 보드 슬롯에 초상을 1:1로 넣고 하단 띠에 정보를 그린다. */
+  private renderDot(g: CanvasRenderingContext2D): void {
+    const settings = this.context.settings.value;
+    const cpuMode = this.context.session.mode === 'cpu';
+    const hovered = CHARACTERS[this.picks[0].cursor];
+    drawSelectScreen(g, {
+      loader: this.context.assets,
+      picks: [
+        { cursor: this.picks[0].cursor, locked: this.picks[0].locked },
+        { cursor: this.picks[1].cursor, locked: this.picks[1].locked },
+      ],
+      hovered: hovered ? {
+        name: hovered.name,
+        archetype: hovered.archetypeLabel,
+        cardNote: hovered.cardNote,
+        description: hovered.description,
+        special: getMove(hovered.moves.special).name,
+        speed: statLevel(hovered.speedScale, 0.68, 1.24),
+        power: statLevel(hovered.damageScale, 0.86, 1.14),
+        toughness: statLevel(hovered.baseHealth, 86, 120),
+      } : null,
+      settings: [
+        `난이도 ${settings.cpuDifficulty === 'easy' ? '쉬움' : '보통'}`,
+        `도움 ${settings.assist ? '켜짐' : '꺼짐'}`,
+        cpuMode ? '1인 대전' : '2인 대전',
+      ],
+      twoPlayer: !cpuMode,
+    });
   }
 
   /**

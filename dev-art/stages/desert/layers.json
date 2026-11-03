@@ -1,0 +1,22 @@
+{
+ "stage": "desert",
+ "native": [
+  640,
+  360
+ ],
+ "standLine": 298,
+ "layers": {
+  "far": {
+   "file": "desert_far_960x360.png",
+   "pad": 160
+  },
+  "mid": {
+   "file": "desert_mid_736x360.png",
+   "pad": 48
+  },
+  "ground": {
+   "file": "desert_ground_832x360.png",
+   "pad": 96
+  }
+ }
+}

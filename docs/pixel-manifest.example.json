@@ -1,0 +1,43 @@
+{
+  "version": 1,
+  "character": "tyrannosaurus",
+  "image": "tyrannosaurus.png",
+  "facing": "right",
+  "scale": 3,
+  "frames": [
+    { "x": 0, "y": 0, "w": 192, "h": 128, "anchor": { "x": 96, "y": 120 } },
+    { "x": 192, "y": 0, "w": 192, "h": 128, "anchor": { "x": 96, "y": 120 } },
+    { "x": 384, "y": 0, "w": 192, "h": 128, "anchor": { "x": 96, "y": 120 } },
+    { "x": 576, "y": 0, "w": 192, "h": 128, "anchor": { "x": 96, "y": 120 } },
+    { "x": 0, "y": 128, "w": 192, "h": 128, "anchor": { "x": 96, "y": 120 } },
+    { "x": 192, "y": 128, "w": 192, "h": 128, "anchor": { "x": 96, "y": 120 } },
+    { "x": 384, "y": 128, "w": 192, "h": 128, "anchor": { "x": 96, "y": 120 } },
+    { "x": 576, "y": 128, "w": 192, "h": 128, "anchor": { "x": 96, "y": 120 } },
+    { "x": 0, "y": 256, "w": 192, "h": 128, "anchor": { "x": 96, "y": 120 } },
+    { "x": 192, "y": 256, "w": 192, "h": 128, "anchor": { "x": 96, "y": 120 } },
+    { "x": 384, "y": 256, "w": 192, "h": 128, "anchor": { "x": 96, "y": 120 } },
+    { "x": 576, "y": 256, "w": 192, "h": 128, "anchor": { "x": 96, "y": 120 } },
+    { "x": 0, "y": 384, "w": 192, "h": 128, "anchor": { "x": 96, "y": 120 } },
+    { "x": 192, "y": 384, "w": 192, "h": 128, "anchor": { "x": 96, "y": 120 } },
+    { "x": 384, "y": 384, "w": 192, "h": 128, "anchor": { "x": 96, "y": 120 } },
+    { "x": 576, "y": 384, "w": 192, "h": 128, "anchor": { "x": 96, "y": 120 } },
+    { "x": 0, "y": 512, "w": 192, "h": 128, "anchor": { "x": 96, "y": 120 } },
+    { "x": 192, "y": 512, "w": 192, "h": 128, "anchor": { "x": 96, "y": 120 } },
+    { "x": 384, "y": 512, "w": 192, "h": 128, "anchor": { "x": 96, "y": 120 } },
+    { "x": 576, "y": 512, "w": 192, "h": 128, "anchor": { "x": 96, "y": 120 } },
+    { "x": 0, "y": 640, "w": 192, "h": 128, "anchor": { "x": 96, "y": 120 } },
+    { "x": 192, "y": 640, "w": 192, "h": 128, "anchor": { "x": 96, "y": 120 } },
+    { "x": 384, "y": 640, "w": 192, "h": 128, "anchor": { "x": 96, "y": 120 } },
+    { "x": 576, "y": 640, "w": 192, "h": 128, "anchor": { "x": 96, "y": 120 } },
+    { "x": 0, "y": 768, "w": 192, "h": 128, "anchor": { "x": 96, "y": 120 } },
+    { "x": 192, "y": 768, "w": 192, "h": 128, "anchor": { "x": 96, "y": 120 } }
+  ],
+  "clips": {
+    "idle": { "loop": true, "sequence": [{ "frame": 0, "ticks": 10 }, { "frame": 1, "ticks": 10 }, { "frame": 2, "ticks": 10 }, { "frame": 3, "ticks": 10 }] },
+    "walk": { "loop": true, "sequence": [{ "frame": 4, "ticks": 5 }, { "frame": 5, "ticks": 5 }, { "frame": 6, "ticks": 5 }, { "frame": 7, "ticks": 5 }, { "frame": 8, "ticks": 5 }, { "frame": 9, "ticks": 5 }, { "frame": 10, "ticks": 5 }, { "frame": 11, "ticks": 5 }] },
+    "bite": { "loop": false, "sequence": [{ "frame": 12, "ticks": 3 }, { "frame": 13, "ticks": 3 }, { "frame": 14, "ticks": 3 }, { "frame": 15, "ticks": 3 }, { "frame": 16, "ticks": 4 }, { "frame": 17, "ticks": 4 }, { "frame": 18, "ticks": 5 }, { "frame": 19, "ticks": 5 }] },
+    "hit": { "loop": false, "sequence": [{ "frame": 20, "ticks": 3 }, { "frame": 21, "ticks": 4 }, { "frame": 22, "ticks": 5 }] },
+    "down": { "loop": false, "sequence": [{ "frame": 23, "ticks": 5 }, { "frame": 24, "ticks": 5 }, { "frame": 25, "ticks": 6 }] }
+  },
+  "biteContactFrames": [14, 16]
+}

@@ -6,6 +6,8 @@ import { TitleScene } from './TitleScene';
 import { drawText, fillRoundRect } from '../ui/draw';
 import { moveListIndex } from '../ui/menu';
 import { COLORS, FONTS } from '../ui/theme';
+import { dotUiEnabled } from '../rendering/pixel/pilotFlag';
+import { drawSettingsScreen } from '../rendering/pixel/PixelScreens';
 
 type Mode = 'main' | 'keys';
 
@@ -46,6 +48,8 @@ const VOLUME_STEP = 0.1;
  * 난이도·도움·음량·흔들림·진동·전체화면·키 재지정을 바꾸면 즉시 저장·적용된다.
  */
 export class SettingsScene extends BaseScene {
+  /** 캡처 스크립트·진단용 고정 이름(번들에서 클래스 이름이 압축되어도 유지). */
+  readonly sceneId = 'SettingsScene';
   private mode: Mode = 'main';
   private index = 0;
   private keyPlayer: PlayerIndex = 0;
@@ -185,6 +189,22 @@ export class SettingsScene extends BaseScene {
   }
 
   render(g: CanvasRenderingContext2D, width: number, height: number): void {
+    if (dotUiEnabled(import.meta.env.DEV, typeof location === 'undefined' ? '' : location.search)) {
+      if (this.mode === 'keys') {
+        this.renderDotKeys(g);
+      } else {
+        drawSettingsScreen(g, {
+          loader: this.context.assets,
+          title: '어른 설정',
+          hint: '좌우로 값을 바꾸고, 확인으로 선택합니다',
+          rows: ROWS.map((row) => row.label),
+          values: ROWS.map((row) => this.rowValue(row.kind)),
+          index: this.index,
+          footer: '음원이 없으면 무음으로 진행합니다',
+        });
+      }
+      return;
+    }
     g.fillStyle = COLORS.bg;
     g.fillRect(0, 0, width, height);
 
@@ -226,6 +246,24 @@ export class SettingsScene extends BaseScene {
     drawText(g, '음원이 없으면 무음으로 진행합니다 · 취소 뒤로', width / 2, height - 60, {
       font: FONTS.small,
       color: COLORS.textDim,
+    });
+  }
+
+  /** 도트 키 재지정 화면(같은 표 형식). */
+  private renderDotKeys(g: CanvasRenderingContext2D): void {
+    const rows = [...ACTIONS.map((action) => ACTION_LABELS[action]), '초기화', '뒤로'];
+    const values = [
+      ...ACTIONS.map((action) => (this.capturing === action ? '입력 대기…' : this.codesLabel(this.keyPlayer, action))),
+      '', '',
+    ];
+    drawSettingsScreen(g, {
+      loader: this.context.assets,
+      title: `${this.keyPlayer + 1}P 키 재지정`,
+      hint: this.capturing ? `"${ACTION_LABELS[this.capturing]}" 에 쓸 키를 누르세요` : '동작을 고르고 확인을 누른 뒤 새 키를 누릅니다',
+      rows,
+      values,
+      index: this.keyIndex,
+      footer: '취소: 설정으로 돌아가기',
     });
   }
 

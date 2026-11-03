@@ -1,0 +1,181 @@
+{
+ "version": 1,
+ "cell": [
+  502,
+  304
+ ],
+ "footY": 298,
+ "anchorX": 251,
+ "scale": 4,
+ "species": {
+  "anky": {
+   "character": "ankylosaurus",
+   "frames": 42,
+   "sheet": [
+    1504,
+    540
+   ],
+   "idle": {
+    "h": [
+     80,
+     82
+    ]
+   }
+  },
+  "brachio": {
+   "character": "brachiosaurus",
+   "frames": 40,
+   "sheet": [
+    1736,
+    775
+   ],
+   "idle": {
+    "h": [
+     146,
+     152
+    ]
+   }
+  },
+  "carno": {
+   "character": "carnotaurus",
+   "frames": 40,
+   "sheet": [
+    1400,
+    545
+   ],
+   "idle": {
+    "h": [
+     102,
+     107
+    ]
+   }
+  },
+  "dilo": {
+   "character": "dilophosaurus",
+   "frames": 40,
+   "sheet": [
+    1184,
+    485
+   ],
+   "idle": {
+    "h": [
+     89,
+     94
+    ]
+   }
+  },
+  "pachy": {
+   "character": "pachycephalosaurus",
+   "frames": 40,
+   "sheet": [
+    1160,
+    500
+   ],
+   "idle": {
+    "h": [
+     94,
+     97
+    ]
+   }
+  },
+  "ptera": {
+   "character": "pteranodon",
+   "frames": 40,
+   "sheet": [
+    960,
+    450
+   ],
+   "idle": {
+    "h": [
+     83,
+     87
+    ]
+   }
+  },
+  "spino": {
+   "character": "spinosaurus",
+   "frames": 40,
+   "sheet": [
+    1656,
+    545
+   ],
+   "idle": {
+    "h": [
+     106,
+     106
+    ]
+   }
+  },
+  "stego": {
+   "character": "stegosaurus",
+   "frames": 40,
+   "sheet": [
+    1440,
+    525
+   ],
+   "idle": {
+    "h": [
+     102,
+     102
+    ]
+   }
+  },
+  "theri": {
+   "character": "therizinosaurus",
+   "frames": 40,
+   "sheet": [
+    1160,
+    575
+   ],
+   "idle": {
+    "h": [
+     108,
+     112
+    ]
+   }
+  },
+  "trex": {
+   "character": "tyrannosaurus",
+   "frames": 40,
+   "sheet": [
+    1344,
+    800
+   ],
+   "idle": {
+    "h": [
+     108,
+     113
+    ]
+   },
+   "p2Sheet": "sheet_p2.png"
+  },
+  "trike": {
+   "character": "triceratops",
+   "frames": 40,
+   "sheet": [
+    1272,
+    465
+   ],
+   "idle": {
+    "h": [
+     87,
+     90
+    ]
+   }
+  },
+  "velo": {
+   "character": "velociraptor",
+   "frames": 40,
+   "sheet": [
+    1152,
+    445
+   ],
+   "idle": {
+    "h": [
+     83,
+     86
+    ]
+   }
+  }
+ }
+}

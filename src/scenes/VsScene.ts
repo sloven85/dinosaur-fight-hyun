@@ -7,6 +7,8 @@ import { BattleScene } from './BattleScene';
 import { CharacterSelectScene } from './CharacterSelectScene';
 import { drawText, fillRoundRect } from '../ui/draw';
 import { COLORS, FONTS } from '../ui/theme';
+import { DOT_PILOT_BUILD, dotUiEnabled } from '../rendering/pixel/pilotFlag';
+import { drawVsScreen } from '../rendering/pixel/PixelScreens';
 
 const HOLD_SECONDS = 2.2;
 const VS_BG = 'assets/ui/vs_bg.jpg';
@@ -20,6 +22,8 @@ function hasDisplayableSprite(assets: CharacterAssets): boolean {
 
 /** VS 화면. 이 사이에 두 캐릭터의 스프라이트를 미리 불러온다(계획서 14절 AssetLoader). */
 export class VsScene extends BaseScene {
+  /** 캡처 스크립트·진단용 고정 이름(번들에서 클래스 이름이 압축되어도 유지). */
+  readonly sceneId = 'VsScene';
   private elapsed = 0;
   private characterAssets: [CharacterAssets, CharacterAssets] | null = null;
   private disposed = false;
@@ -27,6 +31,10 @@ export class VsScene extends BaseScene {
 
   enter(context: GameContext): void {
     super.enter(context);
+    // 파일럿 캡처용: ?mirror=1이면 2P가 1P와 같은 종을 쓴다(2P 팔레트 구분 확인용, 파일럿 빌드 전용).
+    if (DOT_PILOT_BUILD && typeof location !== 'undefined' && location.search.includes('mirror=1')) {
+      context.session.characters[1] = context.session.characters[0];
+    }
     void context.assets.loadImage(VS_BG);
     this.elapsed = 0;
     this.characterAssets = null;
@@ -86,6 +94,20 @@ export class VsScene extends BaseScene {
     const p1 = getCharacter(session.characters[0]);
     const p2 = getCharacter(session.characters[1]);
     const stage = getStage(session.stage);
+
+    if (dotUiEnabled(import.meta.env.DEV, typeof location === 'undefined' ? '' : location.search)) {
+      drawVsScreen(g, {
+        loader: this.context.assets,
+        p1: { id: p1.id, name: p1.name },
+        p2: { id: p2.id, name: p2.name },
+        stage: stage.name,
+        progress: Math.min(1, this.elapsed / HOLD_SECONDS),
+        status: this.loadFailed
+          ? '캐릭터를 불러오지 못했습니다 · 확인: 다시 시도 · 취소: 캐릭터 선택'
+          : this.characterAssets ? '확인 버튼으로 바로 시작' : '캐릭터 준비 중…',
+      });
+      return;
+    }
 
     g.fillStyle = COLORS.bg;
     g.fillRect(0, 0, width, height);

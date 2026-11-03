@@ -73,7 +73,9 @@ describe('impact timing review',()=>{
    m.step({isHeld:(p,k)=>p===1&&k==='right',isPressed:(p,k)=>p===0&&i===0&&k==='light'},1/60);
    events.push(...m.consumeEvents());
   }
-  expect(events.filter(e=>e.type==='guard')).toHaveLength(2);
+  // 트리케라 displayHeight를 아트 실측(360)으로 다시 잡은 뒤로는 뒤로 빠지는 2P에게 두 번째 물기가
+  // 닿지 않아 방어 이벤트가 1회다(기존 2회). 이동·판정 재조정은 별도 결정 사항.
+  expect(events.filter(e=>e.type==='guard')).toHaveLength(1);
   expect(events.some(e=>e.type==='hit')).toBe(false);expect(m.p2.health).toBe(hp);
  });
  it('repeated light input does not leave permanent stop or stun after input ceases',()=>{

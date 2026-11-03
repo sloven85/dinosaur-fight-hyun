@@ -10,12 +10,22 @@ import { TitleScene } from '../scenes/TitleScene';
 import { renderPauseMenu, renderPauseOverlay } from '../ui/PauseOverlay';
 import { PauseMenu } from '../ui/pauseMenu';
 import { CharacterSelectScene } from '../scenes/CharacterSelectScene';
+import { dotUiEnabled } from '../rendering/pixel/pilotFlag';
+import { drawPauseScreen } from '../rendering/pixel/PixelScreens';
+import { PAUSE_ITEMS } from '../ui/pauseMenu';
 
 /**
  * 게임 루프를 소유한다. 시뮬레이션은 FIXED_DT(60Hz)로 고정하고
  * 렌더링은 매 프레임 수행한다(계획서 14절).
  * 일시정지는 전투 상태와 별도의 상위 플래그로 관리한다(계획서 15절).
  */
+/** 일시정지 이유 문구(도트 오버레이용). */
+function pauseReasonText(reason: string | null): string {
+  if (reason === 'gamepad-disconnected') return '게임패드 연결이 끊어졌습니다';
+  if (reason === 'focus-lost') return '창이 활성 상태가 아닙니다';
+  return '';
+}
+
 export class Game {
   private readonly ctx: CanvasRenderingContext2D;
   private readonly input: InputManager;
@@ -49,6 +59,30 @@ export class Game {
     this.installAudioUnlock();
     this.scenes = new SceneManager(this.input, createSession(), this.assets, this.settings, this.audio);
     this.scenes.change(new TitleScene());
+    if ((import.meta.env as Record<string, string | undefined>).VITE_DOT_PILOT === '1'
+      && new URLSearchParams(location.search).get('badge') === '1') {
+      // 파일럿 표식: 검수용으로만 `?badge=1`일 때 띄운다.
+      // (기본으로 항상 띄우면 배포 화면에서 HUD 초상을 덮는다 — 검수 요청 2026-10-30)
+      const badge = document.createElement('div');
+      badge.textContent = '도트 통합 빌드 · 화면 전체 도트 · 파일럿';
+      badge.style.cssText = 'position:fixed;top:10px;left:10px;z-index:30;color:#fff;background:#B3261E;'
+        + 'padding:8px 12px;border-radius:6px;font:600 14px/1.3 system-ui;letter-spacing:.2px';
+      document.body.append(badge);
+    } else if (import.meta.env.DEV && new URLSearchParams(location.search).get('pixelPilot') !== '1') {
+      const pilot = document.createElement('a');
+      pilot.href = '?pixelPilot=1';
+      pilot.textContent = '개발용 티라노 도트 비교판 열기';
+      pilot.style.cssText = 'position:fixed;top:8px;left:8px;z-index:10;color:white;background:#152536;padding:10px';
+      document.body.append(pilot);
+      const review = document.createElement('a');
+      review.href = 'pixel-review.html'; review.textContent = 'v2 동일 입력 A/B 검수 · 영상 기록';
+      review.style.cssText = 'position:fixed;top:8px;left:290px;z-index:10;color:white;background:#152536;padding:10px';
+      document.body.append(review);
+      const stage = document.createElement('a');
+      stage.href = '?pixelStage=1'; stage.textContent = '개발용 12종 도트 스프라이트 비교판';
+      stage.style.cssText = 'position:fixed;top:8px;left:610px;z-index:10;color:white;background:#1c3a52;padding:10px';
+      document.body.append(stage);
+    }
   }
 
   /**
@@ -86,7 +120,23 @@ export class Game {
 
     this.scenes.render(this.ctx, DESIGN_WIDTH, DESIGN_HEIGHT);
     if (this.input.isPaused) {
-      if (this.scenes.pausable) {
+      if (dotUiEnabled(import.meta.env.DEV, typeof location === 'undefined' ? '' : location.search)) {
+        // 도트 화면의 일시정지: 같은 격자·같은 팔레트로 다시 그린다(벡터 오버레이 없음).
+        const confirming = this.pauseMenu.confirming
+          ? PAUSE_ITEMS.find((item) => item.choice === this.pauseMenu.confirming)?.label ?? null
+          : null;
+        drawPauseScreen(this.ctx, {
+          loader: this.assets,
+          items: this.scenes.pausable
+            ? PAUSE_ITEMS.map((item) => item.label)
+            : ['계속하기'],
+          index: this.scenes.pausable ? this.pauseMenu.index : 0,
+          title: '일시정지',
+          detail: pauseReasonText(this.input.pauseReason),
+          confirming,
+          confirmIndex: this.pauseMenu.confirmIndex,
+        });
+      } else if (this.scenes.pausable) {
         renderPauseMenu(this.ctx, DESIGN_WIDTH, DESIGN_HEIGHT, this.input.pauseReason, this.pauseMenu);
       } else {
         renderPauseOverlay(this.ctx, DESIGN_WIDTH, DESIGN_HEIGHT, this.input.pauseReason);

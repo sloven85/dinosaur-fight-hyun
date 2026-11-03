@@ -42,7 +42,17 @@ export interface CharacterData {
   baseHealth: number;
   speedScale: number;
   damageScale: number;
+  /**
+   * **판정 키** — 몸통 박스·피격 상자·사거리의 기준 높이. 아트를 갈아 끼워도 이 값은 움직이지 않는다
+   * (마스터 확정 2026-10-29: 그림 크기와 판정 키를 분리).
+   */
   displayHeight: number;
+  /**
+   * **렌더 키** — 도트 그림의 실측 키 = idle 최고 프레임 알파 bbox 높이 × 4.
+   * 도트 화면은 아트 1px = 화면 4px 고정이라 이 값이 곧 화면 크기다. 판정에는 쓰지 않는다.
+   * 두 값의 차이는 docs/height-ratio-20261029.md 표(±2% 확인)로만 관리한다.
+   */
+  artHeight: number;
   /** 임시 도형 렌더링용 대표색. 계획서 4절 색상 열. */
   color: string;
   /** 배·프릴·등판 등 보조색. 계획서 5~10절. */
