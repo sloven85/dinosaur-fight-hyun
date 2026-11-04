@@ -89,8 +89,16 @@ class DotSpriteSet implements DotSpritesApi {
     if (!manifest) { this.manifests.set(characterId, null); return; }
     this.manifests.set(characterId, manifest);
     this.sheets.set(characterId, await this.loader.loadImage(`${ROOT}${folder}/${manifest.image}`));
+    // 2P 팔레트 시트는 미러전에서만 쓴다. 선택 화면에서 12종을 한꺼번에 받으면 대역폭이 두 배가 되고
+    // 썸네일이 그만큼 늦게 뜬다(정종길 11/4). 1P 시트가 뜬 뒤 유휴 시간에 채운다.
     if (manifest.p2Image) {
-      this.p2Sheets.set(characterId, await this.loader.loadImage(`${ROOT}${folder}/${manifest.p2Image}`));
+      const p2Path = `${ROOT}${folder}/${manifest.p2Image}`;
+      const loadP2 = (): void => {
+        void this.loader.loadImage(p2Path).then((image) => this.p2Sheets.set(characterId, image));
+      };
+      const ric = (globalThis as { requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number }).requestIdleCallback;
+      if (ric) ric(loadP2, { timeout: 1500 });
+      else setTimeout(loadP2, 120);
     }
   }
 

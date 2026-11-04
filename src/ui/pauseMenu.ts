@@ -8,6 +8,8 @@ export type PauseChoice = 'resume' | 'characterSelect' | 'title';
 export interface PauseMenuInput {
   up: boolean;
   down: boolean;
+  left?: boolean;
+  right?: boolean;
   confirm: boolean;
   cancel: boolean;
   /** 일시정지 버튼을 다시 누르면 바로 계속한다. */
@@ -40,7 +42,8 @@ export class PauseMenu {
         this.confirming = null;
         return null;
       }
-      if (input.up || input.down) this.confirmIndex = 1 - this.confirmIndex;
+      // 확인창 버튼은 가로 배치 — 좌우(및 위아래) 모두 받는다.
+      if (input.left || input.right || input.up || input.down) this.confirmIndex = 1 - this.confirmIndex;
       if (input.confirm) {
         const choice = this.confirming;
         this.confirming = null;

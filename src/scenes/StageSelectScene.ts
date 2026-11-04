@@ -1,6 +1,6 @@
 import type { GameContext } from '../core/GameContext';
 import { STAGES } from '../data';
-import { preloadStages } from '../rendering/stageRenderer';
+import { preloadStages, preloadStageInIdle } from '../rendering/stageRenderer';
 import { BaseScene } from './BaseScene';
 import { CharacterSelectScene } from './CharacterSelectScene';
 import { VsScene } from './VsScene';
@@ -29,8 +29,10 @@ export class StageSelectScene extends BaseScene {
 
   enter(context: GameContext): void {
     super.enter(context);
-    void preloadStages(context.assets, STAGES);
+    // 지금 고른 경기장만 먼저 받고 나머지는 유휴 시간에.
+    void preloadStages(context.assets, [STAGES[this.cursor]]);
     void context.assets.loadImages(STAGES.map((s) => s.thumbnailPath));
+    void preloadStageInIdle(context.assets);
   }
 
   protected tick(_dt: number): void {

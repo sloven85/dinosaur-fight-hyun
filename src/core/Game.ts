@@ -174,6 +174,8 @@ export class Game {
     const choice = this.pauseMenu.update({
       up: input.anyPressed('up'),
       down: input.anyPressed('down'),
+      left: input.anyPressed('left'),
+      right: input.anyPressed('right'),
       confirm: input.anyPressed('confirm'),
       cancel: input.anyPressed('cancel'),
       pause: input.anyPressed('pause'),

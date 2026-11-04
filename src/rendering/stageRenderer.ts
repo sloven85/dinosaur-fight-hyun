@@ -1,5 +1,5 @@
 import type { AssetLoader } from './AssetLoader';
-import type { StageData } from '../data';
+import { STAGES, type StageData } from '../data';
 
 /**
  * 경기장 배경(마스터 결정 2026-10-01): 하늘·중경·바닥(+앞쪽 장식) 겹을 카메라 기준점에 따라
@@ -27,6 +27,29 @@ export function setStageLoader(next: AssetLoader): void {
  * 경기장 그림 미리 불러오기(jk 2026-10-02: '배경 로딩에 시차'). 제목 화면에서 4곳 전부를,
  * 경기장 선택에서 고른 곳을 먼저 받아 두고, 녹인 겹(fadedLayer)도 미리 만들어 둔다.
  */
+/**
+ * 경기장 전경을 유휴 시간에 한 곳씩 받는다. 8곳을 동시에 요청하면 5MB가 넘어
+ * 첫 화면·선택 화면이 그만큼 늦게 뜬다(정종길 11/4 "불러오는 속도가 느려").
+ */
+export function preloadStageInIdle(next: AssetLoader): Promise<void> {
+  return new Promise((resolve) => {
+    const queue: StageData[] = [...STAGES];
+    const schedule = (fn: () => void): void => {
+      const ric = (globalThis as { requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number }).requestIdleCallback;
+      if (ric) ric(() => fn(), { timeout: 1200 });
+      else setTimeout(fn, 60);
+    };
+    const step = (): void => {
+      const stage = queue.shift();
+      if (!stage) { resolve(); return; }
+      schedule((): void => {
+        void preloadStages(next, [stage]).finally(() => schedule(step));
+      });
+    };
+    step();
+  });
+}
+
 export function preloadStages(next: AssetLoader, stages: readonly StageData[]): Promise<void> {
   loader = next;
   return Promise.all(

@@ -1,6 +1,6 @@
 import type { GameContext } from '../core/GameContext';
 import { STAGES } from '../data';
-import { preloadStages } from '../rendering/stageRenderer';
+import { preloadStageInIdle } from '../rendering/stageRenderer';
 import { BaseScene } from './BaseScene';
 import { ModeScene } from './ModeScene';
 import { SettingsScene } from './SettingsScene';
@@ -27,8 +27,9 @@ export class TitleScene extends BaseScene {
     this.elapsed = 0;
     context.audio.playBgm('title');
     // 경기장 배경·썸네일을 미리 받아 둔다(대전 시작 때 배경이 늦게 뜨지 않게).
-    void preloadStages(context.assets, STAGES);
+    // 작은 썸네일만 먼저 받고, 전경 8곳(5MB)은 유휴 시간에 한 곳씩 받는다.
     void context.assets.loadImages(STAGES.map((s) => s.thumbnailPath));
+    void preloadStageInIdle(context.assets);
   }
 
   private get options(): TitleOption[] {

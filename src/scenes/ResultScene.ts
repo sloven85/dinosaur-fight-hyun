@@ -43,8 +43,9 @@ export class ResultScene extends BaseScene {
     const input = this.context.input;
     const options = this.options;
 
-    if (input.anyPressed('up')) this.index = moveListIndex(this.index, options.length, -1);
-    if (input.anyPressed('down')) this.index = moveListIndex(this.index, options.length, 1);
+    // 결과 화면 버튼은 가로로 늘어놓는다 — 좌우로도 움직여야 보이는 방향과 맞는다(정종길 11/4).
+    if (input.anyPressed('left') || input.anyPressed('up')) this.index = moveListIndex(this.index, options.length, -1);
+    if (input.anyPressed('right') || input.anyPressed('down')) this.index = moveListIndex(this.index, options.length, 1);
     if (input.anyPressed('confirm')) {
       options[this.index].run();
     }

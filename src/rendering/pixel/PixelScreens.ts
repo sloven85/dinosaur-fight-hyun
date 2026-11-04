@@ -342,12 +342,12 @@ export function drawStageScreen(g: CanvasRenderingContext2D, view: StageView): v
       box(c, islandX + 1, islandY + 11, 28, 5, DOT.shade);
       box(c, islandX + 6, islandY + 2, 16, 4, DOT.moss);
       box(c, islandX + 10, islandY, 8, 3, DOT.stoneLight);
-      text(c, clipText(stage.name, 12, cardW - 48), x + 36, y + 10, { size: 12, color: selected ? DOT.gold : DOT.white });
-      text(c, clipText(stage.note, 11, cardW - 46), x + 36, y + 25, { size: 11, color: DOT.dim });
+      // 카드에는 경기장 이름만 쓴다. '도트 배경' 같은 제작 용어는 화면에 내보내지 않는다(정종길 11/4).
+      text(c, clipText(stage.name, 12, cardW - 44), x + 36, y + 16, { size: 12, color: selected ? DOT.gold : DOT.white });
       if (selected) cursor(c, x + cardW - 10, y + 8, DOT.gold, 2);
     });
 
-    textCenter(c, '좌우·위아래 이동 · 확인 선택 · 취소 뒤로', W / 2, 346, { size: 11, color: DOT.parchment });
+    // 조작 안내는 타이틀·선택 화면에 이미 있다. 카드 아래 한 줄은 카드와 겹치고 화면 밖으로 잘려서 뺐다.
   });
 }
 
