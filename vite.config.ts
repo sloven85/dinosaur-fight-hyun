@@ -108,6 +108,9 @@ export default defineConfig({
     host: true,
     allowedHosts,
   },
+  // 공격 시트가 502×304 격자(52프레임, 시트 4016×2128)로 커지면서 PNG 전수 스캔 테스트가
+  // 기본 5초를 넘긴다(displayHeightLock·p2Palette). 병렬 실행 여유까지 둔 값.
+  test: { testTimeout: 20000 },
   build: {
     rollupOptions: { input: { game: 'index.html' } },
     target: 'es2022',

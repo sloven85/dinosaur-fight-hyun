@@ -107,6 +107,7 @@ describe('artHeight lock: 종별 아트 실측 키 × 4', () => {
   const byId = new Map(CHARACTERS.map((c) => [c.id, c]));
   const entries = Object.entries<{ character: string }>(index.species);
 
+  // 시트가 502×304 격자(52프레임)로 커져 PNG 디코드+전수 스캔이 기본 5s를 넘는다.
   it('12종이 모두 아트 실측 키 × 4를 artHeight로 쓴다', () => {
     const rows: string[] = [];
     for (const [folder, entry] of entries) {
@@ -121,7 +122,7 @@ describe('artHeight lock: 종별 아트 실측 키 × 4', () => {
         .toBe(art * SCALE);
     }
     expect(rows).toHaveLength(12);
-  });
+  }, 30000);
 });
 
 describe('displayHeight는 판정 키다 — 아트 교체로 움직이지 않는다', () => {
@@ -189,5 +190,5 @@ describe('지면 1.00 시차가 레이어 여백 안에서 성립한다', () => 
           .toBeLessThanOrEqual(slackArt);
       }
     }
-  });
+  }, 30000);
 });
