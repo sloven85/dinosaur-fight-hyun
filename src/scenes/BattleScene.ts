@@ -20,7 +20,10 @@ import { DOT_PILOT_BUILD } from '../rendering/pixel/pilotFlag';
 import type { SpriteStage } from '../rendering/pixel/SpriteStage';
 import { drawPixelCallout, drawPixelHud } from '../rendering/pixel/PixelHud';
 import { dotSprites } from '../rendering/pixel/DotSprites';
-import { DOT } from '../rendering/pixel/PixelStyle';
+import { DOT, DOT_K_BATTLE } from '../rendering/pixel/PixelStyle';
+
+/** 컷인 초상 자르기 크기(아트 px). 배율 4로 그려 화면 416px. */
+const CUTIN_PORTRAIT_ART = 104;
 
 const HUD_BAR_W = 700;
 const HUD_BAR_H = 42;
@@ -339,6 +342,7 @@ export class BattleScene extends BaseScene {
     const fighter = this.match.fighters[this.cutinPlayer as 0 | 1];
     const fromLeft = this.cutinPlayer === 0;
     const fade = Math.min(1, t * 5, (1 - t) * 5);
+    const tilt = fromLeft ? -0.08 : 0.08;
     g.save();
     g.fillStyle = `rgba(0, 0, 0, ${0.55 * fade})`;
     g.fillRect(0, 0, width, height);
@@ -346,7 +350,7 @@ export class BattleScene extends BaseScene {
     const bandH = 300;
     const cy = height * 0.5;
     g.translate(width / 2, cy);
-    g.rotate(fromLeft ? -0.08 : 0.08);
+    g.rotate(tilt);
     g.globalAlpha = fade;
     g.fillStyle = fighter.data.color;
     g.fillRect(-width, -bandH / 2, width * 2, bandH);
@@ -368,19 +372,54 @@ export class BattleScene extends BaseScene {
     // 초상: 빠르게 들어와 가운데서 천천히, 다시 빠르게 나간다.
     const ease = t < 0.25 ? 1 - Math.pow(1 - t / 0.25, 3) : t > 0.8 ? 1 + Math.pow((t - 0.8) / 0.2, 2) : 1 + (t - 0.25) * 0.15;
     const px = (fromLeft ? -1 : 1) * (width * 0.9) * (1 - ease);
-    const portrait = fighter.assets.portrait;
-    const size = 420;
-    if (portrait) {
+    if (this.spriteStage) {
+      // 도트 빌드: 컷인 초상도 같은 도트 시트에서 머리를 잘라 그린다(예전 3D 초상 금지).
+      // 띠는 기울어져 있지만 초상만은 회전을 되돌려 축에 맞춘다 — 돌리면 픽셀 격자가 깨진다.
       g.save();
-      if (!fromLeft) g.scale(-1, 1);
-      g.drawImage(portrait, (fromLeft ? px : -px) - size / 2 - 260, -size / 2, size, size);
+      g.rotate(-tilt);
+      this.drawDotCutinPortrait(g, fighter, fromLeft, px);
       g.restore();
+    } else {
+      const portrait = fighter.assets.portrait;
+      const size = 420;
+      if (portrait) {
+        g.save();
+        if (!fromLeft) g.scale(-1, 1);
+        g.drawImage(portrait, (fromLeft ? px : -px) - size / 2 - 260, -size / 2, size, size);
+        g.restore();
+      }
     }
     g.rotate(fromLeft ? 0.08 : -0.08);
     drawText(g, fighter.attack?.move.name ?? '', px + (fromLeft ? 220 : -220), 0, {
       font: FONTS.heading,
       color: '#ffffff',
     });
+    g.restore();
+  }
+
+  /**
+   * 컷인 초상(도트): idle 첫 칸에서 머리를 잘라 배율 4로 그린다.
+   * 띠 위에서 묻히지 않게 어두운 판을 깔고, 1P/2P는 서로 반대 방향에서 들어온다.
+   */
+  private drawDotCutinPortrait(
+    g: CanvasRenderingContext2D,
+    fighter: Fighter,
+    fromLeft: boolean,
+    px: number,
+  ): void {
+    const dot = dotSprites(this.context.assets).portrait(fighter.data.id, fighter.useAlternatePalette, CUTIN_PORTRAIT_ART);
+    if (!dot) return;
+    const k = DOT_K_BATTLE;
+    const dw = dot.sw * k;
+    const dh = dot.sh * k;
+    const left = Math.round((fromLeft ? px : -px) - 260 - dw / 2);
+    const top = Math.round(-dh / 2);
+    g.save();
+    g.imageSmoothingEnabled = false;
+    if (!fromLeft) g.scale(-1, 1);
+    fillRoundRect(g, left - 18, top - 18, dw + 36, dh + 36, 18, DOT.ink);
+    fillRoundRect(g, left - 9, top - 9, dw + 18, dh + 18, 12, DOT.panel);
+    g.drawImage(dot.image, dot.sx, dot.sy, dot.sw, dot.sh, left, top, dw, dh);
     g.restore();
   }
 
