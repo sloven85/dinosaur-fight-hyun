@@ -81,7 +81,7 @@ export class ResultScene extends BaseScene {
       drawButton(g, width / 2 - 320, y, 640, 120, option.label, index === this.index);
     });
 
-    drawText(g, '위아래 이동 · 확인 선택', width / 2, 1010, {
+    drawText(g, '좌우 이동 · 확인 선택', width / 2, 1010, {
       font: FONTS.small,
       color: COLORS.textDim,
     });

@@ -469,7 +469,7 @@ export function drawResultScreen(g: CanvasRenderingContext2D, view: ResultView):
       sprites.drawState(c, view.winnerId, 'victory', 0, W / 2, RESULT_GROUND_Y, view.winner === 1 ? -1 : 1);
     }
     tabRow(c, view.options.map((label) => ({ label })), view.index, W / 2, RESULT_DOCK_TOP + 14, 26);
-    textCenter(c, '위아래 이동 · 확인 선택', W / 2, 346, { size: 10, color: DOT.dim });
+    textCenter(c, '좌우 이동 · 확인 선택', W / 2, 346, { size: 10, color: DOT.dim });
   });
 }
 
