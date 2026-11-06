@@ -94,10 +94,12 @@ export function contactRamp(move: MoveData, attackFrame: number): number {
   return Math.max(0, 1 - back);
 }
 
-/** 지금 프레임에서 그림을 내밀 거리(아트 px, 정수). */
+/** 지금 프레임에서 그림을 내밀 거리(아트 px, 정수). 그림이 판정보다 길면 음수(당김). */
 export function contactOffsetArt(fighter: Fighter, move: MoveData, manifest: SpriteManifest): number {
   if (fighter.state !== 'attack' || !fighter.attack) return 0;
   const gap = contactGap(fighter, move, manifest);
-  if (gap <= 0) return 0;
+  // 2026-11-06: 접촉 자세가 판정 앞끝보다 긴 클립(프테라 약공격 실측 −9.8px)은 밀 수 없어
+  // 그림이 판정 밖으로 삐져나왔다. 게이트 표는 이미 음수 보정을 전제하므로 런타임도 같은
+  // 부호 규칙을 쓴다 — 접촉 순간 주둥이가 정확히 판정 앞끝에 선다.
   return Math.round((gap * contactRamp(move, fighter.attack.frame)) / PIXEL_ART_SCALE);
 }

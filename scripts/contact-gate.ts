@@ -180,8 +180,9 @@ function main(): void {
   }
   const table = lines.join('\n');
   console.log(table);
-  writeFileSync('docs/contact-gate-20261031.md', `${table}\n`);
-  console.log('\n→ docs/contact-gate-20261031.md');
+  const out = process.env.GATE_DOC ?? 'docs/contact-gate-20261031.md';
+  writeFileSync(out, `${table}\n`);
+  console.log(`\n→ ${out}`);
   if (failed.length > 0) process.exitCode = 1;
 }
 

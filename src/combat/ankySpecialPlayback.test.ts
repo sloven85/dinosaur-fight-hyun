@@ -83,12 +83,14 @@ function specialRun(counter: boolean): Run {
 }
 
 describe('안킬로 특수기 재생', () => {
-  it('헛휘두름은 97프레임에서 끝나고 클립 6장을 모두 그린다', () => {
+  it('헛휘두름은 97프레임에서 끝나고 클립 전장을 모두 그린다', () => {
     const run = specialRun(false);
     // 기존 길이(97f)를 넘지 않는다: 마지막으로 돈 프레임이 96(0부터 셈).
     expect(run.maxFrame).toBe(96);
-    // 그래도 클립 6장(인덱스 0~5)이 모두 화면에 나온다.
-    expect(run.framesDrawn).toEqual([22, 23, 24, 25, 26, 27]);
+    // 2026-11-06 공격 시트 재제작으로 클립이 4→8칸이 됐다. 계약은 "클립 전장이 다 보인다"이므로
+    // 인덱스를 하드코딩하지 않고 manifest의 클립 프레임과 직접 맞춘다.
+    const manifest = manifestOf('anky');
+    expect(run.framesDrawn).toEqual([...manifest.clips.special.frames].sort((a, b) => a - b));
   });
 
   it('헛휘두름 피해는 땅 강타 1회(후속타 없음)', () => {
